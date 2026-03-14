@@ -3,6 +3,10 @@ import os
 import re
 
 import utils.currency
+from utils.tax_warning import get_tax_warning
+from utils.accommodation import get_accommodation_links
+from utils.planb import get_planb_suggestions
+from api.schengen_calculator import SCHENGEN_COUNTRIES
 
 # Module-level cache for visa URLs loaded from data/visa_urls.json
 _VISA_URLS: dict | None = None
@@ -139,6 +143,17 @@ def format_step1_markdown(data: dict) -> str:
                 lines.append(f"- {w}")
             lines.append("")
 
+        # 세금 거주지 경고
+        country_id = city.get("country_id", "")
+        timeline = data.get("_user_profile", {}).get("timeline", "")
+        language = data.get("_user_profile", {}).get("language", "한국어")
+        tax_warn = get_tax_warning(country_id, timeline, language)
+        if tax_warn:
+            if language == "English":
+                lines.append(f"\n**💼 Tax Note**\n\n{tax_warn}\n")
+            else:
+                lines.append(f"\n**💼 세금 주의사항**\n\n{tax_warn}\n")
+
         # 참고 자료
         references = city.get("references")
         if references:
@@ -251,5 +266,46 @@ def format_step2_markdown(data: dict) -> str:
         for j, step in enumerate(first_steps, 1):
             lines.append(f"{j}. {step}")
         lines.append("")
+
+    # 숙소 딥링크 섹션
+    city_name = data.get("city", "")
+    if city_name:
+        links = get_accommodation_links(city_name)
+        accom_parts = []
+        if links["flatio_url"]:
+            rent_note = f" (평균 ${links['mid_term_rent_usd']:,}/월)" if links["mid_term_rent_usd"] else ""
+            accom_parts.append(f"- 🏠 [Flatio — 중기 임대{rent_note}]({links['flatio_url']})")
+        if links["anyplace_url"]:
+            accom_parts.append(f"- 🏡 [Anyplace — 가구 완비 원룸]({links['anyplace_url']})")
+        if links["nomad_meetup_url"]:
+            accom_parts.append(f"- 🤝 [노마드 밋업 그룹]({links['nomad_meetup_url']})")
+        if accom_parts:
+            lines.append("\n---\n\n### 🏠 중기 숙소 & 커뮤니티\n")
+            lines.extend(accom_parts)
+            lines.append("")
+
+    # 플랜B 섹션 (쉥겐 국가 선택 시만)
+    country_id = data.get("country_id", "")
+    language = data.get("_user_profile", {}).get("language", "한국어") if "_user_profile" in data else "한국어"
+    if country_id in SCHENGEN_COUNTRIES:
+        suggestions = get_planb_suggestions(country_id, language=language, max_suggestions=3)
+        if suggestions:
+            if language == "English":
+                header = "\n---\n\n### 🔄 Plan B: After Your 90-Day Schengen Limit\n\n"
+                header += "_When your 90 Schengen days are used up, these non-Schengen countries make ideal next stops:_\n\n"
+            else:
+                header = "\n---\n\n### 🔄 플랜B: 쉥겐 90일 소진 후 대안\n\n"
+                header += "_쉥겐 체류일을 모두 소진한 후, 아래 비쉥겐 국가로 이동하여 체류를 이어갈 수 있습니다:_\n\n"
+
+            planb_items = []
+            for s in suggestions:
+                name_display = s["name"] if language == "English" else s["name_kr"]
+                income_note = f" (소득 기준 없음)" if s["min_income_usd"] == 0 else f" (월 ${s['min_income_usd']:,}+ 필요)"
+                if language == "English":
+                    income_note = " (no income requirement)" if s["min_income_usd"] == 0 else f" (${s['min_income_usd']:,}+/month required)"
+                planb_items.append(
+                    f"**{name_display}** ({s['visa_type']}){income_note}\n> {s['reason']}"
+                )
+            lines.append(header + "\n\n".join(planb_items) + "\n")
 
     return "\n".join(lines)
