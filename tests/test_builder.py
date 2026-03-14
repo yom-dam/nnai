@@ -88,15 +88,15 @@ def test_build_detail_prompt_includes_city_info():
     user_profile = {
         "nationality": "Korean",
         "income_usd": 6000,
-        "purpose": "자녀 교육 이민",
+        "purpose": "자녀 교육 동반 장기 체류",
         "languages": ["영어"],
-        "timeline": "영구 이민",
+        "timeline": "5년 이상 초장기 체류",
     }
     result = build_detail_prompt(selected_city, user_profile)
 
     last_user = result[-1]["content"]
     assert "Lisbon" in last_user or "PT" in last_user
-    assert "자녀 교육 이민" in last_user
+    assert "자녀 교육 동반 장기 체류" in last_user
 
 
 def test_build_prompt_includes_preferred_countries_hint():

@@ -299,10 +299,10 @@ def test_step2_user_profile_passed_to_prompt():
             "nationality": "Korean",
             "income_usd": 6000,
             "income_krw": 840,
-            "purpose": "자녀 교육 이민",
+            "purpose": "자녀 교육 동반 장기 체류",
             "lifestyle": [],
             "languages": ["영어"],
-            "timeline": "영구 이민",
+            "timeline": "5년 이상 초장기 체류",
         },
     }
 
@@ -321,5 +321,5 @@ def test_step2_user_profile_passed_to_prompt():
     assert mock_build.called
     call_args = mock_build.call_args
     passed_profile = call_args[0][1]
-    assert passed_profile["purpose"] == "자녀 교육 이민"
+    assert passed_profile["purpose"] == "자녀 교육 동반 장기 체류"
     assert passed_profile["nationality"] == "Korean"
