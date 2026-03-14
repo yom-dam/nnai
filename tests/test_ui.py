@@ -7,16 +7,22 @@ def test_create_theme_returns_gradio_theme():
 def test_create_layout_returns_blocks():
     import gradio as gr
     from ui.layout import create_layout
-    dummy_fn = lambda *args: ("결과 마크다운", None)
-    demo = create_layout(dummy_fn)
+    dummy_fn = lambda *args: ("결과 마크다운", [], {})
+    dummy_detail_fn = lambda *args: ("상세 결과", None)
+    demo = create_layout(dummy_fn, dummy_detail_fn)
     assert isinstance(demo, gr.Blocks)
 
 def test_create_layout_has_correct_inputs():
     import gradio as gr
     from ui.layout import create_layout
-    demo = create_layout(lambda *a: ("", None))
+    demo = create_layout(lambda *a: ("", [], {}), lambda *a: ("", None))
     component_types = {type(c).__name__ for c in demo.blocks.values()}
     assert "Dropdown"      in component_types
     assert "Slider"        in component_types
     assert "CheckboxGroup" in component_types
     assert "Radio"         in component_types
+
+def test_language_options_has_korean():
+    from ui.layout import LANGUAGE_OPTIONS
+    assert "🇰🇷 한국어" in LANGUAGE_OPTIONS
+    assert "🇰🇷 한국어만 가능" not in LANGUAGE_OPTIONS

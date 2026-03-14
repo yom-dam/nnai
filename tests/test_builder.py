@@ -64,7 +64,7 @@ def test_build_detail_prompt_returns_list():
         "nationality": "Korean",
         "income_usd": 3570,
         "purpose": "디지털 노마드",
-        "languages": ["한국어만 가능"],
+        "languages": ["한국어"],
         "timeline": "1년 단기 체험",
     }
     result = build_detail_prompt(selected_city, user_profile)

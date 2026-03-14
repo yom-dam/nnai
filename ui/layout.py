@@ -29,7 +29,7 @@ LIFESTYLE_OPTIONS = [
 ]
 
 LANGUAGE_OPTIONS = [
-    "🇰🇷 한국어만 가능",
+    "🇰🇷 한국어",
     "🇺🇸 영어 (기본 소통)",
     "🇺🇸 영어 (업무 가능 수준)",
     "🇯🇵 일본어",
@@ -124,8 +124,11 @@ def create_layout(advisor_fn, detail_fn):
 
         # ── Step 1 이벤트 ──────────────────────────────────────────────
         def run_step1(nat, inc, purpose, life, langs, tl):
-            markdown, cities, parsed = advisor_fn(nat, inc, purpose, life, langs, tl)
-            return markdown, parsed
+            try:
+                markdown, cities, parsed = advisor_fn(nat, inc, purpose, life, langs, tl)
+                return markdown, parsed
+            except Exception as e:
+                return f"⚠️ 오류가 발생했습니다: {str(e)}", {}
 
         btn_step1.click(
             fn=run_step1,
@@ -136,8 +139,11 @@ def create_layout(advisor_fn, detail_fn):
 
         # ── Step 2 이벤트 ──────────────────────────────────────────────
         def run_step2(parsed, choice):
-            idx = {"1순위 도시": 0, "2순위 도시": 1, "3순위 도시": 2}.get(choice, 0)
-            return detail_fn(parsed, city_index=idx)
+            try:
+                idx = {"1순위 도시": 0, "2순위 도시": 1, "3순위 도시": 2}.get(choice, 0)
+                return detail_fn(parsed, city_index=idx)
+            except Exception as e:
+                return f"⚠️ 오류가 발생했습니다: {str(e)}", None
 
         btn_step2.click(
             fn=run_step2,

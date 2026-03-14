@@ -111,7 +111,7 @@ def test_step1_full_pipeline():
             income_krw=500,
             immigration_purpose="💻 디지털 노마드 / 원격 근무",
             lifestyle=["저물가"],
-            languages=["🇰🇷 한국어만 가능"],
+            languages=["🇰🇷 한국어"],
             timeline="1년 단기 체험",
         )
 
@@ -154,7 +154,7 @@ def test_step1_api_error_returns_error_string():
             income_krw=300,
             immigration_purpose="💻 디지털 노마드 / 원격 근무",
             lifestyle=[],
-            languages=["🇰🇷 한국어만 가능"],
+            languages=["🇰🇷 한국어"],
             timeline="1년 단기 체험",
         )
 
@@ -188,7 +188,7 @@ def test_step1_income_krw_converted_to_usd():
             income_krw=500,
             immigration_purpose="💻 디지털 노마드 / 원격 근무",
             lifestyle=[],
-            languages=["🇰🇷 한국어만 가능"],
+            languages=["🇰🇷 한국어"],
             timeline="1년 단기 체험",
         )
 
@@ -227,7 +227,7 @@ def test_step2_full_pipeline(tmp_path, monkeypatch):
             "income_krw": 500,
             "purpose": "디지털 노마드",
             "lifestyle": [],
-            "languages": ["한국어만 가능"],
+            "languages": ["한국어"],
             "timeline": "1년 단기 체험",
         },
     }
