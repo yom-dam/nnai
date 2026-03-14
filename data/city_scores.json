@@ -1,0 +1,24 @@
+{
+  "cities": [
+    {"id":"KL","city":"Kuala Lumpur","city_kr":"쿠알라룸푸르","country":"Malaysia","country_id":"MY","monthly_cost_usd":1500,"internet_mbps":100,"safety_score":6,"english_score":8,"nomad_score":8,"climate":"tropical","cowork_usd_month":150},
+    {"id":"PG","city":"Penang","city_kr":"페낭","country":"Malaysia","country_id":"MY","monthly_cost_usd":1200,"internet_mbps":80,"safety_score":7,"english_score":7,"nomad_score":7,"climate":"tropical","cowork_usd_month":100},
+    {"id":"LIS","city":"Lisbon","city_kr":"리스본","country":"Portugal","country_id":"PT","monthly_cost_usd":2600,"internet_mbps":200,"safety_score":8,"english_score":8,"nomad_score":9,"climate":"mediterranean","cowork_usd_month":300},
+    {"id":"PTO","city":"Porto","city_kr":"포르투","country":"Portugal","country_id":"PT","monthly_cost_usd":2100,"internet_mbps":180,"safety_score":8,"english_score":7,"nomad_score":8,"climate":"mediterranean","cowork_usd_month":220},
+    {"id":"CNX","city":"Chiang Mai","city_kr":"치앙마이","country":"Thailand","country_id":"TH","monthly_cost_usd":1100,"internet_mbps":150,"safety_score":7,"english_score":6,"nomad_score":9,"climate":"tropical","cowork_usd_month":80},
+    {"id":"BKK","city":"Bangkok","city_kr":"방콕","country":"Thailand","country_id":"TH","monthly_cost_usd":1400,"internet_mbps":200,"safety_score":6,"english_score":7,"nomad_score":8,"climate":"tropical","cowork_usd_month":120},
+    {"id":"TLL","city":"Tallinn","city_kr":"탈린","country":"Estonia","country_id":"EE","monthly_cost_usd":2200,"internet_mbps":300,"safety_score":9,"english_score":9,"nomad_score":8,"climate":"continental","cowork_usd_month":250},
+    {"id":"BCN","city":"Barcelona","city_kr":"바르셀로나","country":"Spain","country_id":"ES","monthly_cost_usd":2900,"internet_mbps":250,"safety_score":6,"english_score":7,"nomad_score":8,"climate":"mediterranean","cowork_usd_month":350},
+    {"id":"MAD","city":"Madrid","city_kr":"마드리드","country":"Spain","country_id":"ES","monthly_cost_usd":2700,"internet_mbps":250,"safety_score":7,"english_score":6,"nomad_score":7,"climate":"semi-arid","cowork_usd_month":300},
+    {"id":"DPS","city":"Bali (Canggu)","city_kr":"발리 (짱구)","country":"Indonesia","country_id":"ID","monthly_cost_usd":1400,"internet_mbps":50,"safety_score":6,"english_score":7,"nomad_score":8,"climate":"tropical","cowork_usd_month":100},
+    {"id":"BLN","city":"Berlin","city_kr":"베를린","country":"Germany","country_id":"DE","monthly_cost_usd":3200,"internet_mbps":150,"safety_score":7,"english_score":9,"nomad_score":8,"climate":"continental","cowork_usd_month":400},
+    {"id":"TBS","city":"Tbilisi","city_kr":"트빌리시","country":"Georgia","country_id":"GE","monthly_cost_usd":1000,"internet_mbps":100,"safety_score":8,"english_score":5,"nomad_score":7,"climate":"continental","cowork_usd_month":80},
+    {"id":"SJO","city":"San Jose","city_kr":"산호세","country":"Costa Rica","country_id":"CR","monthly_cost_usd":2200,"internet_mbps":80,"safety_score":6,"english_score":7,"nomad_score":6,"climate":"tropical","cowork_usd_month":200},
+    {"id":"SJD","city":"Tamarindo","city_kr":"타마린도","country":"Costa Rica","country_id":"CR","monthly_cost_usd":2500,"internet_mbps":60,"safety_score":7,"english_score":8,"nomad_score":7,"climate":"tropical","cowork_usd_month":180},
+    {"id":"ATH","city":"Athens","city_kr":"아테네","country":"Greece","country_id":"GR","monthly_cost_usd":2000,"internet_mbps":100,"safety_score":7,"english_score":7,"nomad_score":7,"climate":"mediterranean","cowork_usd_month":200},
+    {"id":"HER","city":"Heraklion","city_kr":"헤라클리온 (크레타)","country":"Greece","country_id":"GR","monthly_cost_usd":1800,"internet_mbps":80,"safety_score":8,"english_score":6,"nomad_score":6,"climate":"mediterranean","cowork_usd_month":150},
+    {"id":"MNL","city":"Manila","city_kr":"마닐라","country":"Philippines","country_id":"PH","monthly_cost_usd":1200,"internet_mbps":50,"safety_score":4,"english_score":9,"nomad_score":6,"climate":"tropical","cowork_usd_month":100},
+    {"id":"CEU","city":"Cebu","city_kr":"세부","country":"Philippines","country_id":"PH","monthly_cost_usd":1000,"internet_mbps":50,"safety_score":5,"english_score":9,"nomad_score":7,"climate":"tropical","cowork_usd_month":80},
+    {"id":"HAN","city":"Hanoi","city_kr":"하노이","country":"Vietnam","country_id":"VN","monthly_cost_usd":900,"internet_mbps":80,"safety_score":7,"english_score":5,"nomad_score":7,"climate":"subtropical","cowork_usd_month":70},
+    {"id":"SGN","city":"Ho Chi Minh City","city_kr":"호치민","country":"Vietnam","country_id":"VN","monthly_cost_usd":1000,"internet_mbps":80,"safety_score":6,"english_score":5,"nomad_score":7,"climate":"tropical","cowork_usd_month":80}
+  ]
+}
