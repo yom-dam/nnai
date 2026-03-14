@@ -4,7 +4,7 @@ import re
 import requests
 
 HF_TOKEN = os.getenv("HF_TOKEN", "")
-MODEL_ID  = "Qwen/Qwen3.5-27B"
+MODEL_ID  = "Qwen/Qwen2.5-7B-Instruct"
 _ROUTER_URL = "https://router.huggingface.co/v1/chat/completions"
 
 
@@ -18,7 +18,6 @@ def query_model(messages: list[dict], max_tokens: int = 2048) -> str:
             "temperature": 0.3,
             "top_p": 0.95,
             "top_k": 20,
-            "chat_template_kwargs": {"thinking": False},  # thinking 모드 비활성화 필수
         }
         resp = requests.post(
             _ROUTER_URL,
