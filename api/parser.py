@@ -3,6 +3,7 @@ import os
 import re
 
 import utils.currency
+from utils.tax_warning import get_tax_warning
 
 # Module-level cache for visa URLs loaded from data/visa_urls.json
 _VISA_URLS: dict | None = None
@@ -138,6 +139,17 @@ def format_step1_markdown(data: dict) -> str:
             for w in warnings:
                 lines.append(f"- {w}")
             lines.append("")
+
+        # 세금 거주지 경고
+        country_id = city.get("country_id", "")
+        timeline = data.get("_user_profile", {}).get("timeline", "")
+        language = data.get("_user_profile", {}).get("language", "한국어")
+        tax_warn = get_tax_warning(country_id, timeline, language)
+        if tax_warn:
+            if language == "English":
+                lines.append(f"\n**💼 Tax Note**\n\n{tax_warn}\n")
+            else:
+                lines.append(f"\n**💼 세금 주의사항**\n\n{tax_warn}\n")
 
         # 참고 자료
         references = city.get("references")
