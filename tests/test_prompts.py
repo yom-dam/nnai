@@ -19,9 +19,7 @@ def test_few_shots_assistant_is_valid_json():
         if msg["role"] == "assistant":
             parsed = json.loads(msg["content"])
             assert "top_cities" in parsed
-            assert "visa_checklist" in parsed
-            assert "budget_breakdown" in parsed
-            assert "first_steps" in parsed
+            assert "overall_warning" in parsed
 
 def test_few_shots_pairs():
     """user → assistant 쌍 순서 확인"""

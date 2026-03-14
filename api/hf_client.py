@@ -17,6 +17,8 @@ def query_model(messages: list[dict], max_tokens: int = 2048) -> str:
             "max_tokens": max_tokens,
             "temperature": 0.3,
             "top_p": 0.95,
+            "top_k": 20,
+            "chat_template_kwargs": {"thinking": False},  # thinking 모드 비활성화 필수
         }
         resp = requests.post(
             _ROUTER_URL,
@@ -25,7 +27,7 @@ def query_model(messages: list[dict], max_tokens: int = 2048) -> str:
                 "Content-Type": "application/json",
             },
             json=payload,
-            timeout=120,
+            timeout=180,
         )
         resp.raise_for_status()
         data = resp.json()
