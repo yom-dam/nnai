@@ -113,6 +113,7 @@ def test_step1_full_pipeline():
             lifestyle=["저물가"],
             languages=["🇰🇷 한국어"],
             timeline="1년 단기 체험",
+            preferred_countries=[],
         )
 
     assert isinstance(markdown, str)
@@ -156,6 +157,7 @@ def test_step1_api_error_returns_error_string():
             lifestyle=[],
             languages=["🇰🇷 한국어"],
             timeline="1년 단기 체험",
+            preferred_countries=[],
         )
 
     markdown, cities, parsed = result
@@ -190,6 +192,7 @@ def test_step1_income_krw_converted_to_usd():
             lifestyle=[],
             languages=["🇰🇷 한국어"],
             timeline="1년 단기 체험",
+            preferred_countries=[],
         )
 
     profile = parsed["_user_profile"]

@@ -14,6 +14,17 @@ def build_prompt(user_profile: dict) -> list[dict]:
     languages   = user_profile.get("languages", [])
     timeline    = user_profile.get("timeline", "1년 단기 체험")
 
+    preferred_countries = user_profile.get("preferred_countries", [])
+    # flag emoji 제거: "🇲🇾 말레이시아" → "말레이시아"
+    country_names = [c.split(" ", 1)[-1] for c in preferred_countries if c.strip()]
+
+    preferred_hint = ""
+    if country_names:
+        preferred_hint = (
+            f"※ 우선 고려 국가: {', '.join(country_names)} "
+            f"(단, 프로필에 더 적합한 다른 도시가 있다면 포함 가능)\n\n"
+        )
+
     rag_query = (
         f"{nationality} {purpose} 월 소득 ${income_usd:.0f} "
         f"라이프스타일 {' '.join(lifestyle)} {timeline} 비자 도시 추천"
@@ -28,6 +39,7 @@ def build_prompt(user_profile: dict) -> list[dict]:
         f"목표 체류 기간: {timeline}\n"
         f"라이프스타일 선호: {', '.join(lifestyle) if lifestyle else '특별한 선호 없음'}\n\n"
         f"{rag_context}\n\n"
+        f"{preferred_hint}"
         "위 프로필 기반으로 최적 거주 도시 TOP 3를 추천하세요. "
         "현실적 어려움과 위험 요소를 반드시 포함하세요. "
         "반드시 순수 JSON만 출력하세요."

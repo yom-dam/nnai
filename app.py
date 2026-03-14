@@ -25,6 +25,7 @@ def nomad_advisor(
     lifestyle: list,
     languages: list,
     timeline: str,
+    preferred_countries=None,   # 신규 — None을 기본값으로, 내부에서 [] 처리
 ) -> tuple[str, list, dict]:
     """
     Step 1 파이프라인: RAG → 프롬프트 → LLM → 파싱 → 마크다운 + 도시 리스트
@@ -32,6 +33,9 @@ def nomad_advisor(
     Returns:
         (markdown_str, top_cities_list, parsed_dict)
     """
+    if preferred_countries is None:
+        preferred_countries = []
+
     # 환율 조회 및 KRW → USD 변환 (income_krw 단위: 만원)
     try:
         rates = utils.currency.get_exchange_rates()
@@ -42,17 +46,18 @@ def nomad_advisor(
     income_usd = round(income_krw * 10000 * usd_rate)
 
     user_profile = {
-        "nationality": nationality,
-        "income_usd":  income_usd,
-        "income_krw":  income_krw,  # 만원 단위
-        "purpose":     immigration_purpose,
-        "lifestyle":   lifestyle if isinstance(lifestyle, list) else [lifestyle],
-        "languages":   languages if isinstance(languages, list) else [languages],
-        "timeline":    timeline,
+        "nationality":        nationality,
+        "income_usd":         income_usd,
+        "income_krw":         income_krw,  # 만원 단위
+        "purpose":            immigration_purpose,
+        "lifestyle":          lifestyle if isinstance(lifestyle, list) else [lifestyle],
+        "languages":          languages if isinstance(languages, list) else [languages],
+        "timeline":           timeline,
+        "preferred_countries": preferred_countries,
     }
 
     messages = build_prompt(user_profile)
-    raw      = query_model(messages, max_tokens=2048)
+    raw      = query_model(messages, max_tokens=4096)
 
     if raw.startswith("ERROR"):
         return f"⚠️ API 오류: {raw}", [], {}

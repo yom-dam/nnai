@@ -97,3 +97,31 @@ def test_build_detail_prompt_includes_city_info():
     last_user = result[-1]["content"]
     assert "Lisbon" in last_user or "PT" in last_user
     assert "자녀 교육 이민" in last_user
+
+
+def test_build_prompt_includes_preferred_countries_hint():
+    """preferred_countries가 있으면 프롬프트에 우선 고려 국가 힌트가 포함되어야 함"""
+    profile = {
+        **SAMPLE_PROFILE,
+        "preferred_countries": ["🇲🇾 말레이시아", "🇹🇭 태국"],
+    }
+    with patch("prompts.builder.retrieve_as_context", return_value=FAKE_RAG_CONTEXT):
+        from prompts.builder import build_prompt
+        result = build_prompt(profile)
+    last_user = result[-1]["content"]
+    assert "말레이시아" in last_user
+    assert "태국" in last_user
+    assert "우선 고려" in last_user
+
+
+def test_build_prompt_no_hint_when_empty_preferred_countries():
+    """preferred_countries가 빈 리스트이면 프롬프트에 힌트 줄이 없어야 함"""
+    profile = {
+        **SAMPLE_PROFILE,
+        "preferred_countries": [],
+    }
+    with patch("prompts.builder.retrieve_as_context", return_value=FAKE_RAG_CONTEXT):
+        from prompts.builder import build_prompt
+        result = build_prompt(profile)
+    last_user = result[-1]["content"]
+    assert "우선 고려 국가" not in last_user
