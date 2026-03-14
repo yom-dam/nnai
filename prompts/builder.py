@@ -76,9 +76,22 @@ _STEP2_SYSTEM_PROMPT = """당신은 특정 도시의 장기 체류 정착 가이
     ]
   },
   "visa_checklist": ["여권 사본 (유효기간 6개월 이상)", "소득 증빙 서류 (최근 3개월 은행 내역)", "여권 사진 2장"],
-  "budget_breakdown": {"rent": 숫자, "food": 숫자, "cowork": 숫자, "misc": 숫자},
+  "budget_breakdown": {
+    "rent": 600,
+    "food": 300,
+    "cowork": 100,
+    "misc": 150
+  },
+  "budget_source": "https://www.numbeo.com/cost-of-living/in/Chiang-Mai",
   "first_steps": ["비자 신청 서류 준비 시작", "항공권 및 숙소 예약", "현지 한인 커뮤니티 채널 가입"]
 }
+
+[budget_breakdown 작성 지침]
+budget_breakdown의 각 항목은 Numbeo(https://www.numbeo.com/cost-of-living/)의
+해당 도시 생활비 데이터를 기준으로 작성하라.
+budget_source 필드에 해당 도시의 Numbeo URL을 포함하라.
+예: "budget_source": "https://www.numbeo.com/cost-of-living/in/Chiang-Mai"
+(도시명은 영문 하이픈 형식으로 변환, 예: "Kuala Lumpur" → "Kuala-Lumpur")
 
 [중요] visa_checklist 예시 (올바른 형식):
 ["여권 사본", "소득 증빙 서류", "거주지 증명서", "건강보험 가입 증명서"]

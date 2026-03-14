@@ -167,11 +167,11 @@ def test_format_step2_budget_table_contains_total():
     assert "$1,100" in result
 
 
-def test_format_step2_budget_contains_krw():
-    """예산 테이블에 KRW 환산 컬럼이 있어야 함"""
+def test_format_step2_budget_contains_usd_column():
+    """예산 테이블에 USD 금액 컬럼이 있어야 함 (TASK-2c: KRW 컬럼 제거됨)"""
     result = format_step2_markdown(SAMPLE_STEP2_DATA)
-    assert "KRW" in result
-    assert "원" in result
+    assert "금액 (USD)" in result
+    assert "KRW" not in result
 
 
 def test_format_step2_first_steps_numbered():
@@ -556,3 +556,84 @@ def test_first_steps_empty_list_no_section_rendered():
     data["first_steps"] = []
     result = format_step2_markdown(data)
     assert "첫 번째 실행 스텝" not in result
+
+
+# ── TASK-2c/2d: budget table title + Numbeo source citation tests ─────────────
+
+def test_format_step2_budget_section_new_title():
+    """예산 섹션 제목이 '한 달 예상 지출 내역'으로 변경되어야 함"""
+    from api.parser import format_step2_markdown
+    result = format_step2_markdown(SAMPLE_STEP2_DATA)
+    assert "한 달 예상 지출 내역" in result
+    assert "월 예산 브레이크다운" not in result
+
+
+def test_format_step2_budget_table_format_with_total():
+    """예산 테이블에 항목 행과 합계 행이 올바른 형식으로 포함되어야 함"""
+    from api.parser import format_step2_markdown
+    data = dict(SAMPLE_STEP2_DATA)
+    data["budget_breakdown"] = {"rent": 600, "food": 300, "cowork": 100, "misc": 150}
+    result = format_step2_markdown(data)
+    assert "| 주거 | $600 |" in result
+    assert "| 식비 | $300 |" in result
+    assert "| 코워킹 | $100 |" in result
+    assert "| 기타 | $150 |" in result
+    assert "| **합계** | **$1,150** |" in result
+
+
+def test_format_step2_budget_table_total_calculation():
+    """합계가 rent + food + cowork + misc 의 합으로 정확히 계산되어야 함"""
+    from api.parser import format_step2_markdown
+    data = dict(SAMPLE_STEP2_DATA)
+    # SAMPLE_STEP2_DATA has rent=500, food=300, cowork=80, misc=220 → total=1100
+    result = format_step2_markdown(data)
+    assert "| **합계** | **$1,100** |" in result
+
+
+def test_format_step2_budget_source_citation_present():
+    """budget_source가 있으면 Numbeo 출처 인용 라인이 포함되어야 함"""
+    from api.parser import format_step2_markdown
+    data = dict(SAMPLE_STEP2_DATA)
+    data["budget_source"] = "https://www.numbeo.com/cost-of-living/in/Chiang-Mai"
+    result = format_step2_markdown(data)
+    assert "> 출처:" in result
+    assert "Numbeo" in result
+    assert "https://www.numbeo.com/cost-of-living/in/Chiang-Mai" in result
+    assert "Chiang Mai" in result
+
+
+def test_format_step2_budget_source_citation_absent_when_missing():
+    """budget_source가 없으면 출처 인용 라인이 포함되지 않아야 함"""
+    from api.parser import format_step2_markdown
+    data = dict(SAMPLE_STEP2_DATA)
+    data.pop("budget_source", None)
+    result = format_step2_markdown(data)
+    assert "> 출처:" not in result
+
+
+def test_format_step2_budget_source_citation_absent_when_empty():
+    """budget_source가 빈 문자열이면 출처 인용 라인이 포함되지 않아야 함"""
+    from api.parser import format_step2_markdown
+    data = dict(SAMPLE_STEP2_DATA)
+    data["budget_source"] = ""
+    result = format_step2_markdown(data)
+    assert "> 출처:" not in result
+
+
+def test_format_step2_budget_missing_keys_default_to_zero():
+    """budget_breakdown에 일부 키가 없어도 크래시 없이 0으로 처리되어야 함"""
+    from api.parser import format_step2_markdown
+    data = dict(SAMPLE_STEP2_DATA)
+    data["budget_breakdown"] = {"rent": 500}  # food, cowork, misc 누락
+    result = format_step2_markdown(data)
+    assert "| 주거 | $500 |" in result
+    assert "| 식비 | $0 |" in result
+    assert "| **합계** | **$500** |" in result
+
+
+def test_format_step2_budget_table_usd_only_columns():
+    """새 테이블은 USD 컬럼만 있어야 하며 KRW 컬럼은 없어야 함"""
+    from api.parser import format_step2_markdown
+    result = format_step2_markdown(SAMPLE_STEP2_DATA)
+    assert "금액 (USD)" in result
+    assert "KRW" not in result

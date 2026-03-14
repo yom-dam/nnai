@@ -225,18 +225,23 @@ def format_step2_markdown(data: dict) -> str:
     # 예산 테이블 (USD + KRW)
     bd = data.get("budget_breakdown", {})
     if bd:
-        lines.append("## 💰 월 예산 브레이크다운\n")
-        lines.append("| 항목 | USD | KRW (원화) |")
-        lines.append("|------|-----|-----------|")
+        lines.append("## 💰 한 달 예상 지출 내역\n")
+        lines.append("| 항목 | 금액 (USD) |")
+        lines.append("|------|-----------|")
         label_map = [("rent", "주거"), ("food", "식비"), ("cowork", "코워킹"), ("misc", "기타")]
         total_usd = 0
         for k, label in label_map:
             val = bd.get(k, 0)
             total_usd += val
-            krw_val = _usd_to_krw(val)
-            lines.append(f"| {label} | ${val:,} | {krw_val:,}원 |")
-        total_krw = _usd_to_krw(total_usd)
-        lines.append(f"| **합계** | **${total_usd:,}** | **{total_krw:,}원** |")
+            lines.append(f"| {label} | ${val:,} |")
+        lines.append(f"| **합계** | **${total_usd:,}** |")
+        budget_source = data.get("budget_source", "")
+        if budget_source:
+            # Extract city name from URL for display label
+            # e.g. https://www.numbeo.com/cost-of-living/in/Chiang-Mai → Chiang-Mai
+            city_slug = budget_source.rstrip("/").rsplit("/", 1)[-1]
+            city_display = city_slug.replace("-", " ")
+            lines.append(f"\n> 출처: [Numbeo — {city_display} 생활비]({budget_source})")
         lines.append("")
 
     # 첫 번째 실행 스텝 (type defense: str / list[str] / list[dict] 모두 처리)
