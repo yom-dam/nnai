@@ -91,19 +91,16 @@ _STEP2_LOADING = [
 ]
 
 
-def create_layout(advisor_fn, detail_fn):
-    theme = create_theme()
+_APP_CSS = """
+.main-header{text-align:center;padding:20px 0 10px}
+.main-header h1{font-size:2rem;color:#0C447C}
+.main-header p{color:#888780;font-size:.95rem}
+footer{display:none!important}
+"""
 
-    with gr.Blocks(
-        theme=theme,
-        title="NomadNavigator AI",
-        css="""
-        .main-header{text-align:center;padding:20px 0 10px}
-        .main-header h1{font-size:2rem;color:#0C447C}
-        .main-header p{color:#888780;font-size:.95rem}
-        footer{display:none!important}
-        """,
-    ) as demo:
+
+def create_layout(advisor_fn, detail_fn):
+    with gr.Blocks(title="NomadNavigator AI") as demo:
 
         # ── 헤더 ──────────────────────────────────────────────────────
         with gr.Column(elem_classes="main-header"):
