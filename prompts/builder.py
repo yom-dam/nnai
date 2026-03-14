@@ -34,7 +34,7 @@ def build_prompt(user_profile: dict) -> list[dict]:
     user_message = (
         f"국적: {nationality} | 월 수입: {income_krw * 100:,.0f}만원 "
         f"(약 ${income_usd:,.0f} USD) | "
-        f"이민 목적: {purpose} | "
+        f"장기 체류 목적: {purpose} | "
         f"사용 가능 언어: {', '.join(languages) if languages else '미응답'} | "
         f"목표 체류 기간: {timeline}\n"
         f"라이프스타일 선호: {', '.join(lifestyle) if lifestyle else '특별한 선호 없음'}\n\n"
@@ -51,8 +51,8 @@ def build_prompt(user_profile: dict) -> list[dict]:
     return messages
 
 
-_STEP2_SYSTEM_PROMPT = """당신은 특정 도시의 이민 실행 가이드 전문가입니다.
-선택된 도시와 사용자 프로필을 바탕으로 단계별 이민 준비 가이드를 JSON으로 작성하세요.
+_STEP2_SYSTEM_PROMPT = """당신은 특정 도시의 장기 체류 정착 가이드 전문가입니다.
+선택된 도시와 사용자 프로필을 바탕으로 단계별 장기 체류 준비 가이드를 JSON으로 작성하세요.
 
 [출력 규칙]
 1. 순수 JSON만 출력하세요. 코드 블록이나 설명 텍스트 없이.
@@ -98,7 +98,7 @@ def build_detail_prompt(selected_city: dict, user_profile: dict) -> list[dict]:
         f"월소득=${income_usd:,.0f}, "
         f"언어={', '.join(languages) if languages else '미응답'}, "
         f"기간={timeline}\n\n"
-        "위 정보를 바탕으로 이민 준비 단계별 가이드를 반드시 순수 JSON으로 작성하세요."
+        "위 정보를 바탕으로 장기 체류 준비 단계별 가이드를 반드시 순수 JSON으로 작성하세요."
     )
 
     return [

@@ -7,13 +7,13 @@ NATIONALITIES = [
     "British", "German", "French", "Australian", "Other",
 ]
 
-IMMIGRATION_PURPOSES = [
+STAY_PURPOSES = [
     "💻 디지털 노마드 / 원격 근무",
-    "👨‍👩‍👧 자녀 교육 이민",
-    "🏖️ 은퇴 이민",
-    "💼 취업 / 창업 이민",
-    "🎓 유학 후 이민",
-    "🌿 라이프스타일 이민 (삶의 질)",
+    "👨‍👩‍👧 자녀 교육 동반 장기 체류",
+    "🏖️ 은퇴 후 장기 체류",
+    "💼 취업 / 창업 장기 체류",
+    "🎓 유학 후 장기 체류",
+    "🌿 라이프스타일 장기 체류 (삶의 질)",
 ]
 
 LIFESTYLE_OPTIONS = [
@@ -86,7 +86,7 @@ def create_layout(advisor_fn, detail_fn):
         with gr.Column(elem_classes="main-header"):
             gr.HTML("""
                 <h1>🌏 NomadNavigator AI</h1>
-                <p>국적 · 소득 · 이민 목적을 입력하면 AI가 최적의 이민 설계를 제안합니다</p>
+                <p>국적 · 소득 · 체류 목적을 입력하면 AI가 최적의 장기 체류 도시를 제안합니다</p>
             """)
 
         # ── State ──────────────────────────────────────────────────────
@@ -112,9 +112,9 @@ def create_layout(advisor_fn, detail_fn):
                             info="세전 월 소득 (만원 단위, 예: 500 = 500만원)",
                         )
                         immigration_purpose = gr.Dropdown(
-                            choices=IMMIGRATION_PURPOSES,
-                            value=IMMIGRATION_PURPOSES[0],
-                            label="이민 목적",
+                            choices=STAY_PURPOSES,
+                            value=STAY_PURPOSES[0],
+                            label="장기 체류 목적",
                         )
                         lifestyle = gr.CheckboxGroup(
                             choices=LIFESTYLE_OPTIONS,
@@ -127,7 +127,7 @@ def create_layout(advisor_fn, detail_fn):
                             info="가능한 언어 모두 선택",
                         )
                         timeline = gr.Radio(
-                            choices=["1년 단기 체험", "3년 장기 이민", "영구 이민 (영주권 목표)"],
+                            choices=["1년 단기 체험", "3년 장기 체류", "5년 이상 초장기 체류"],
                             value="1년 단기 체험",
                             label="목표 체류 기간",
                         )
@@ -139,7 +139,7 @@ def create_layout(advisor_fn, detail_fn):
                         btn_step1 = gr.Button(
                             "🚀 도시 추천 받기", variant="primary", size="lg",
                         )
-                        gr.Markdown("_⚠️ 본 서비스는 참고용이며 법적 이민 조언이 아닙니다._")
+                        gr.Markdown("_⚠️ 본 서비스는 참고용이며 법적 비자/체류 조언이 아닙니다._")
 
                     # 결과 패널
                     with gr.Column(scale=1):

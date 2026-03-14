@@ -55,7 +55,7 @@ def format_result_markdown(data: dict) -> str:
 
 def _make_search_links(city: str, point: str) -> str:
     """source_url이 없을 때 Google/YouTube 자동 검색 링크를 생성합니다."""
-    query = quote(f"{city} {point[:20]} 이민")
+    query = quote(f"{city} {point[:20]} 장기 체류")
     google  = f"https://www.google.com/search?q={query}"
     youtube = f"https://www.youtube.com/results?search_query={query}"
     return f" ([🔍 검색]({google})) ([▶ 유튜브]({youtube}))"
@@ -77,7 +77,7 @@ def format_step1_markdown(data: dict) -> str:
     if not data:
         return "추천 결과를 불러올 수 없습니다."
 
-    lines = ["## 🌍 맞춤 이민 설계 — 추천 도시 TOP 3\n"]
+    lines = ["## 🌍 맞춤 장기 체류 설계 — 추천 도시 TOP 3\n"]
 
     for i, city in enumerate(data.get("top_cities", [])[:3], 1):
         city_en = city.get("city", "")
@@ -132,7 +132,7 @@ def format_step1_markdown(data: dict) -> str:
 
 
 def format_step2_markdown(data: dict) -> str:
-    """Step 2 결과(상세 이민 가이드)를 마크다운으로 포맷팅합니다."""
+    """Step 2 결과(상세 정착 가이드)를 마크다운으로 포맷팅합니다."""
     if not data:
         return "상세 가이드를 불러올 수 없습니다."
 
@@ -141,7 +141,7 @@ def format_step2_markdown(data: dict) -> str:
     city = data.get("city", "")
     guide = data.get("immigration_guide", {})
 
-    title = guide.get("title", f"{city} 이민 가이드")
+    title = guide.get("title", f"{city} 정착 가이드")
     lines.append(f"## 📋 {title}\n")
 
     # 단계별 섹션

@@ -75,12 +75,9 @@ def nomad_advisor(
 def show_city_detail(
     parsed_data: dict,
     city_index: int = 0,
-) -> tuple[str]:
+) -> str:
     """
     Step 2 파이프라인: 선택된 도시 → LLM → 상세 가이드 마크다운
-
-    Returns:
-        (markdown_str,)
     """
     top_cities = parsed_data.get("top_cities", [])
     if not top_cities or city_index >= len(top_cities):
