@@ -19,7 +19,7 @@ def _get_client() -> OpenAI:
     return _client
 
 
-_NO_THINKING = {"generationConfig": {"thinkingConfig": {"thinkingBudget": 0}}}
+_NO_THINKING = {"thinkingConfig": {"thinkingBudget": 0}}
 
 
 def query_model(messages: list[dict], max_tokens: int = 2048) -> str:
