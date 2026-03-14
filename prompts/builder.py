@@ -1,11 +1,13 @@
 # prompts/builder.py
 from prompts.system    import SYSTEM_PROMPT
+from prompts.system_en import SYSTEM_PROMPT_EN
 from prompts.few_shots import FEW_SHOT_EXAMPLES
 from rag.retriever     import retrieve_as_context
 
 
 def build_prompt(user_profile: dict) -> list[dict]:
     """Step 1 프롬프트 생성: 사용자 프로필 + RAG 컨텍스트 → messages list"""
+    language    = user_profile.get("language", "한국어")
     nationality = user_profile.get("nationality", "Korean")
     income_usd  = user_profile.get("income_usd", 3000)
     income_krw  = user_profile.get("income_krw", 420)
@@ -31,21 +33,37 @@ def build_prompt(user_profile: dict) -> list[dict]:
     )
     rag_context = retrieve_as_context(rag_query, top_k=6)
 
-    user_message = (
-        f"국적: {nationality} | 월 수입: {income_krw * 100:,.0f}만원 "
-        f"(약 ${income_usd:,.0f} USD) | "
-        f"장기 체류 목적: {purpose} | "
-        f"사용 가능 언어: {', '.join(languages) if languages else '미응답'} | "
-        f"목표 체류 기간: {timeline}\n"
-        f"라이프스타일 선호: {', '.join(lifestyle) if lifestyle else '특별한 선호 없음'}\n\n"
-        f"{rag_context}\n\n"
-        f"{preferred_hint}"
-        "위 프로필 기반으로 최적 거주 도시 TOP 3를 추천하세요. "
-        "현실적 어려움과 위험 요소를 반드시 포함하세요. "
-        "반드시 순수 JSON만 출력하세요."
-    )
+    if language == "English":
+        user_message = (
+            f"Nationality: {nationality} | Monthly income: ${income_usd:,.0f} USD | "
+            f"Stay purpose: {purpose} | "
+            f"Languages: {', '.join(languages) if languages else 'not specified'} | "
+            f"Target stay duration: {timeline}\n"
+            f"Lifestyle preferences: {', '.join(lifestyle) if lifestyle else 'no specific preference'}\n\n"
+            f"{rag_context}\n\n"
+            f"{preferred_hint}"
+            "Based on the above profile, recommend the top 3 best cities for long-term digital nomad living. "
+            "Include realistic challenges and risks. "
+            "Output pure JSON only."
+        )
+        system_prompt = SYSTEM_PROMPT_EN
+    else:
+        user_message = (
+            f"국적: {nationality} | 월 수입: {income_krw * 100:,.0f}만원 "
+            f"(약 ${income_usd:,.0f} USD) | "
+            f"장기 체류 목적: {purpose} | "
+            f"사용 가능 언어: {', '.join(languages) if languages else '미응답'} | "
+            f"목표 체류 기간: {timeline}\n"
+            f"라이프스타일 선호: {', '.join(lifestyle) if lifestyle else '특별한 선호 없음'}\n\n"
+            f"{rag_context}\n\n"
+            f"{preferred_hint}"
+            "위 프로필 기반으로 최적 거주 도시 TOP 3를 추천하세요. "
+            "현실적 어려움과 위험 요소를 반드시 포함하세요. "
+            "반드시 순수 JSON만 출력하세요."
+        )
+        system_prompt = SYSTEM_PROMPT
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    messages = [{"role": "system", "content": system_prompt}]
     messages.extend(FEW_SHOT_EXAMPLES)
     messages.append({"role": "user", "content": user_message})
     return messages
@@ -100,8 +118,42 @@ budget_source 필드에 해당 도시의 Numbeo URL을 포함하라.
 ["비자 신청서 작성 및 제출", "현지 은행 계좌 개설 예약", "코워킹 스페이스 단기 멤버십 신청"]"""
 
 
+_STEP2_SYSTEM_PROMPT_EN = """You are an expert long-term stay advisor for digital nomads.
+Based on the selected city and user profile, write a step-by-step relocation preparation guide in JSON.
+
+[OUTPUT RULES]
+1. Output ONLY pure JSON — no code blocks, no text.
+2. All text fields must be in English.
+3. visa_checklist and first_steps must be arrays of strings (list[str]). No dicts or nested objects.
+4. All array fields must contain at least 3 items.
+5. Output complete, valid JSON — do not truncate.
+
+[OUTPUT SCHEMA]
+{
+  "city": "City Name",
+  "country_id": "ISO code",
+  "immigration_guide": {
+    "title": "Guide title",
+    "sections": [
+      {"step": 1, "title": "Section title", "items": ["Action item 1", "Action item 2"]}
+    ]
+  },
+  "visa_checklist": ["Passport copy (valid 6+ months)", "Proof of income (last 3 months bank statements)", "Passport photos x2"],
+  "budget_breakdown": {"rent": 600, "food": 300, "cowork": 100, "misc": 150},
+  "budget_source": "https://www.numbeo.com/cost-of-living/in/Chiang-Mai",
+  "first_steps": ["Start gathering visa application documents", "Book flights and accommodation", "Join local expat/nomad community groups"]
+}
+
+[budget_breakdown guidelines]
+Base each item on Numbeo (https://www.numbeo.com/cost-of-living/) data for the city.
+Include budget_source with the Numbeo URL for that city.
+Example: "budget_source": "https://www.numbeo.com/cost-of-living/in/Chiang-Mai"
+(Convert city name to hyphenated English format, e.g. "Kuala Lumpur" → "Kuala-Lumpur")"""
+
+
 def build_detail_prompt(selected_city: dict, user_profile: dict) -> list[dict]:
     """Step 2 프롬프트 생성: 선택된 도시 + 사용자 프로필 → 상세 가이드 messages list"""
+    language    = user_profile.get("language", "한국어")
     city        = selected_city.get("city", "")
     country_id  = selected_city.get("country_id", "")
     visa_type   = selected_city.get("visa_type", "")
@@ -113,17 +165,30 @@ def build_detail_prompt(selected_city: dict, user_profile: dict) -> list[dict]:
     timeline    = user_profile.get("timeline", "")
     income_usd  = user_profile.get("income_usd", 0)
 
-    user_message = (
-        f"선택 도시: {city} ({country_id}) | 비자 유형: {visa_type} | "
-        f"월 예상 비용: ${cost:,}\n"
-        f"사용자 프로필: 국적={nationality}, 목적={purpose}, "
-        f"월소득=${income_usd:,.0f}, "
-        f"언어={', '.join(languages) if languages else '미응답'}, "
-        f"기간={timeline}\n\n"
-        "위 정보를 바탕으로 장기 체류 준비 단계별 가이드를 반드시 순수 JSON으로 작성하세요."
-    )
+    if language == "English":
+        user_message = (
+            f"Selected city: {city} ({country_id}) | Visa type: {visa_type} | "
+            f"Monthly cost estimate: ${cost:,}\n"
+            f"User profile: nationality={nationality}, purpose={purpose}, "
+            f"monthly income=${income_usd:,.0f}, "
+            f"languages={', '.join(languages) if languages else 'not specified'}, "
+            f"duration={timeline}\n\n"
+            "Based on the above, write a step-by-step long-term stay preparation guide in pure JSON."
+        )
+        step2_system = _STEP2_SYSTEM_PROMPT_EN
+    else:
+        user_message = (
+            f"선택 도시: {city} ({country_id}) | 비자 유형: {visa_type} | "
+            f"월 예상 비용: ${cost:,}\n"
+            f"사용자 프로필: 국적={nationality}, 목적={purpose}, "
+            f"월소득=${income_usd:,.0f}, "
+            f"언어={', '.join(languages) if languages else '미응답'}, "
+            f"기간={timeline}\n\n"
+            "위 정보를 바탕으로 장기 체류 준비 단계별 가이드를 반드시 순수 JSON으로 작성하세요."
+        )
+        step2_system = _STEP2_SYSTEM_PROMPT
 
     return [
-        {"role": "system", "content": _STEP2_SYSTEM_PROMPT},
+        {"role": "system", "content": step2_system},
         {"role": "user", "content": user_message},
     ]

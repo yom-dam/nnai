@@ -25,6 +25,7 @@ def nomad_advisor(
     languages: list,
     timeline: str,
     preferred_countries=None,   # 신규 — None을 기본값으로, 내부에서 [] 처리
+    preferred_language: str = "한국어",
 ) -> tuple[str, list, dict]:
     """
     Step 1 파이프라인: RAG → 프롬프트 → LLM → 파싱 → 마크다운 + 도시 리스트
@@ -53,6 +54,7 @@ def nomad_advisor(
         "languages":          languages if isinstance(languages, list) else [languages],
         "timeline":           timeline,
         "preferred_countries": preferred_countries,
+        "language":           preferred_language,
     }
 
     messages = build_prompt(user_profile)

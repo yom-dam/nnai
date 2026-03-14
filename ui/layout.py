@@ -74,6 +74,8 @@ COUNTRY_OPTIONS = [
     "🇻🇳 베트남",
 ]
 
+LANGUAGE_TOGGLE_OPTIONS = ["한국어", "English"]
+
 # Step 1 로딩 메시지 시퀀스
 _STEP1_LOADING = [
     "🔍 프로필을 분석하는 중이에요...",
@@ -122,6 +124,13 @@ def create_layout(advisor_fn, detail_fn):
                     # 입력 패널
                     with gr.Column(scale=1):
                         gr.Markdown("### 📋 내 프로필 입력")
+
+                        ui_language = gr.Radio(
+                            choices=["한국어", "English"],
+                            value="한국어",
+                            label="언어 / Language",
+                            info="UI and AI response language",
+                        )
 
                         nationality = gr.Dropdown(
                             choices=NATIONALITIES, value="Korean",
@@ -200,12 +209,12 @@ def create_layout(advisor_fn, detail_fn):
         # ── Step 1 이벤트 ──────────────────────────────────────────────
         _FALLBACK_LABELS = ["1순위 도시", "2순위 도시", "3순위 도시"]
 
-        def run_step1(nat, inc, purpose, life, langs, tl, pref_countries):
+        def run_step1(nat, inc, purpose, life, langs, tl, pref_countries, ui_lang):
             try:
                 for msg in _STEP1_LOADING:
                     yield msg, gr.update(), gr.update(visible=False), gr.update(), gr.update()
                 markdown, cities, parsed = advisor_fn(
-                    nat, inc, purpose, life, langs, tl, pref_countries
+                    nat, inc, purpose, life, langs, tl, pref_countries, ui_lang
                 )
                 labels = [
                     _city_btn_label(cities[i]) if i < len(cities) else _FALLBACK_LABELS[i]
@@ -232,6 +241,7 @@ def create_layout(advisor_fn, detail_fn):
             inputs=[
                 nationality, income_krw, immigration_purpose,
                 lifestyle, languages, timeline, preferred_countries,
+                ui_language,
             ],
             outputs=[step1_output, parsed_state, btn_go_step2, tabs, city_choice],
         )
