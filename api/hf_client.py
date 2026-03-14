@@ -19,14 +19,21 @@ def _get_client() -> OpenAI:
     return _client
 
 
+_NO_THINKING = {"generationConfig": {"thinkingConfig": {"thinkingBudget": 0}}}
+
+
 def query_model(messages: list[dict], max_tokens: int = 2048) -> str:
-    """Gemini API에 chat messages를 전송하고 텍스트 응답을 반환합니다."""
+    """Gemini API에 chat messages를 전송하고 텍스트 응답을 반환합니다.
+
+    thinking을 비활성화(thinkingBudget=0)하여 max_tokens 전체를 실제 출력에 사용합니다.
+    """
     try:
         response = _get_client().chat.completions.create(
             model=MODEL_ID,
             messages=messages,
             max_tokens=max_tokens,
             temperature=0.3,
+            extra_body=_NO_THINKING,
         )
         raw = response.choices[0].message.content or ""
         return re.sub(r"<think>[\s\S]*?</think>", "", raw).strip()
@@ -42,6 +49,7 @@ def query_model_with_thinking(messages: list[dict], max_tokens: int = 4096) -> t
             messages=messages,
             max_tokens=max_tokens,
             temperature=0.3,
+            extra_body=_NO_THINKING,
         )
         content = response.choices[0].message.content or ""
         return "", content
