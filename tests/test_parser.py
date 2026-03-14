@@ -115,14 +115,16 @@ def test_format_step1_contains_dual_currency():
 def test_format_step1_contains_reasons_as_bullets():
     """추천 근거가 불릿 형식으로 출력되어야 함"""
     result = format_step1_markdown(SAMPLE_STEP1_DATA)
+    # source_url=None → plain text bullet
     assert "- 디지털 노마드 커뮤니티" in result
-    assert "- 코워킹 월 $80" in result
+    # source_url present → hyperlink bullet
+    assert "코워킹 월 $80" in result
 
 
 def test_format_step1_contains_source_url():
-    """source_url이 있는 항목은 ([출처](url)) 형식을 포함해야 함"""
+    """source_url이 있는 항목은 [point](url) 하이퍼링크 형식을 포함해야 함"""
     result = format_step1_markdown(SAMPLE_STEP1_DATA)
-    assert "[출처]" in result
+    assert "[코워킹 월 $80 수준입니다.](https://example.com)" in result
 
 
 def test_format_step1_contains_warnings():
@@ -185,8 +187,8 @@ def test_format_step2_empty_data_no_crash():
     assert isinstance(result, str)
 
 
-def test_format_step1_no_source_url_generates_search_links():
-    """source_url=None 이면 Google/YouTube 자동 링크가 포함되어야 함"""
+def test_format_step1_no_source_url_renders_plain_text():
+    """source_url=None 이면 링크 없이 평문으로만 출력되어야 함"""
     data = {
         "top_cities": [{
             "city": "Chiang Mai",
@@ -203,12 +205,13 @@ def test_format_step1_no_source_url_generates_search_links():
         }],
     }
     result = format_step1_markdown(data)
-    assert "google.com/search" in result
-    assert "youtube.com/results" in result
+    assert "노마드 커뮤니티가 활발합니다." in result
+    assert "google.com/search" not in result
+    assert "youtube.com/results" not in result
 
 
 def test_format_step1_with_source_url_no_auto_links():
-    """source_url이 있으면 자동 링크 없이 출처 링크만 있어야 함"""
+    """source_url이 있으면 [point](url) 형식으로 렌더링되고 자동 링크는 없어야 함"""
     data = {
         "top_cities": [{
             "city": "Chiang Mai",
@@ -225,5 +228,5 @@ def test_format_step1_with_source_url_no_auto_links():
         }],
     }
     result = format_step1_markdown(data)
-    assert "[출처]" in result
+    assert "[노마드 커뮤니티가 활발합니다.](https://nomads.com)" in result
     assert "google.com/search" not in result
