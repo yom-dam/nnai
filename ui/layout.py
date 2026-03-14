@@ -296,11 +296,13 @@ def create_layout(advisor_fn, detail_fn):
                     dynamic_labels = [_city_btn_label(c) for c in cities]
                     idx = dynamic_labels.index(choice) if choice in dynamic_labels else 0
                 for msg in _STEP2_LOADING:
-                    yield [msg]
+                    yield msg
                 markdown = detail_fn(parsed, city_index=idx)
-                yield [markdown]
+                yield markdown
             except Exception as e:
-                yield [f"⚠️ 오류가 발생했습니다: {str(e)}"]
+                import traceback
+                traceback.print_exc()
+                yield f"⚠️ 오류가 발생했습니다: {str(e)}"
 
         btn_step2.click(
             fn=run_step2,
