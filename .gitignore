@@ -1,0 +1,11 @@
+rag/index.faiss
+rag/documents.pkl
+.env
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+dist/
+*.egg-info/
+.venv/
+reports/
