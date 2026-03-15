@@ -8,6 +8,194 @@ from utils.accommodation import get_accommodation_links
 from utils.planb import get_planb_suggestions
 from api.schengen_calculator import SCHENGEN_COUNTRIES
 
+# ── 도시 비교 테이블 ─────────────────────────────────────────────────────────
+
+# UTC 오프셋 딕셔너리 (KST = +9 기준 시차 계산용)
+_CITY_UTC_OFFSET: dict[str, int] = {
+    # 동남아시아
+    "Kuala Lumpur": 8, "Penang": 8,
+    "Chiang Mai": 7, "Bangkok": 7, "Chiang Rai": 7, "Koh Samui": 7, "Phuket": 7,
+    "Bali (Canggu)": 8, "Bali": 8,
+    "Hanoi": 7, "Ho Chi Minh City": 7, "Da Nang": 7,
+    "Manila": 8, "Cebu": 8,
+    # 동아시아
+    "Tokyo": 9, "Osaka": 9, "Fukuoka": 9,
+    "Taipei": 8,
+    # 남아시아 / 중앙아시아
+    "Tbilisi": 4,
+    # 유럽 서부 (UTC+0/+1)
+    "Lisbon": 0, "Porto": 0,
+    "Barcelona": 1, "Madrid": 1, "Valencia": 1,
+    "Berlin": 1, "Munich": 1,
+    "Amsterdam": 1,
+    "Vienna": 1,
+    "Warsaw": 1, "Krakow": 1,
+    "Prague": 1,
+    "Budapest": 1,
+    "Milan": 1,
+    "Dubrovnik": 1,
+    "Belgrade": 1,
+    "Skopje": 1,
+    # 유럽 동부 (UTC+2)
+    "Tallinn": 2,
+    "Athens": 2, "Heraklion": 2,
+    "Nicosia": 2,
+    # 중동 (UTC+3/+4)
+    "Istanbul": 3,
+    "Dubai": 4,
+    # 아프리카
+    "Marrakech": 1,
+    # 아메리카
+    "Mexico City": -6, "Oaxaca": -6,
+    "San Jose": -6, "Tamarindo": -6,
+    "Medellin": -5, "Lima": -5,
+    "Buenos Aires": -3,
+    "Miami": -5,
+}
+_KST_OFFSET = 9
+
+
+def _score_to_dots(score: int, max_score: int = 5) -> str:
+    """5점 척도를 ●○ 문자로 변환"""
+    score = max(1, min(5, score))
+    return "●" * score + "○" * (5 - score)
+
+
+def _internet_to_score(mbps: int) -> int:
+    """인터넷 속도(Mbps) → 1~5점"""
+    if mbps >= 100: return 5
+    if mbps >= 50:  return 4
+    if mbps >= 20:  return 3
+    if mbps >= 10:  return 2
+    return 1
+
+
+def _cost_to_score(usd: int) -> int:
+    """생활비(USD/월) → 1~5점 (저렴할수록 높음)"""
+    if usd < 1000:  return 5
+    if usd < 1500:  return 4
+    if usd < 2500:  return 3
+    if usd < 3500:  return 2
+    return 1
+
+
+def _safety_to_score(raw: int) -> int:
+    """safety_score(0~10) → 1~5점"""
+    return max(1, min(5, round(raw / 2)))
+
+
+def _korean_to_score(size: str) -> int | None:
+    """korean_community_size → 1~5점. 필드 없으면 None."""
+    return {"large": 5, "medium": 3, "small": 1}.get(size)
+
+
+def _get_timezone_diff(city: str) -> str:
+    offset = _CITY_UTC_OFFSET.get(city)
+    if offset is None:
+        return "정보 없음"
+    diff = offset - _KST_OFFSET
+    if diff == 0:
+        return "동일"
+    return f"{diff:+d}h"
+
+
+def _lookup_city_scores(city_name: str, scores_list: list) -> dict:
+    """city 이름으로 city_scores 항목 조회. 정확일치 → 부분일치 순."""
+    # 정확 일치
+    for c in scores_list:
+        if c.get("city", "").lower() == city_name.lower():
+            return c
+    # 부분 일치 (예: "Bali" → "Bali (Canggu)")
+    for c in scores_list:
+        if city_name.lower() in c.get("city", "").lower() or c.get("city", "").lower() in city_name.lower():
+            return c
+    return {}
+
+
+def generate_comparison_table(top_cities: list) -> str:
+    """
+    TOP 3 도시 데이터를 받아 5점 척도 비교 테이블 마크다운 반환.
+    city_scores.json을 직접 로드하여 참조.
+    """
+    if not top_cities:
+        return ""
+
+    # city_scores.json 로드
+    _scores_path = os.path.join(os.path.dirname(__file__), "..", "data", "city_scores.json")
+    try:
+        with open(_scores_path, encoding="utf-8") as f:
+            scores_list = json.load(f).get("cities", [])
+    except Exception:
+        return ""
+
+    cities = top_cities[:3]
+    city_names = [c.get("city", f"도시{i+1}") for i, c in enumerate(cities)]
+    city_scores_rows = [_lookup_city_scores(name, scores_list) for name in city_names]
+
+    # 헤더 너비 계산 (최소 12자)
+    col_w = 13
+    label_w = 10
+
+    def row(label: str, values: list[str]) -> str:
+        return f"{label:<{label_w}}" + "".join(f"{v:<{col_w}}" for v in values)
+
+    # 헤더
+    header_names = [f"{c.get('city_kr', name)}" for c, name in zip(cities, city_names)]
+    lines = [
+        "```",
+        row("", [f"{n[:11]:<{col_w}}" for n in header_names]),
+        row("─" * label_w, ["─" * (col_w - 1) + " "] * len(cities)),
+    ]
+
+    # 인터넷 속도
+    internet_vals = []
+    for s in city_scores_rows:
+        mbps = s.get("internet_mbps")
+        internet_vals.append(_score_to_dots(_internet_to_score(mbps)) if mbps else "정보 없음")
+    lines.append(row("인터넷", internet_vals))
+
+    # 치안
+    safety_vals = []
+    for s in city_scores_rows:
+        sv = s.get("safety_score")
+        safety_vals.append(_score_to_dots(_safety_to_score(sv)) if sv is not None else "정보 없음")
+    lines.append(row("치안", safety_vals))
+
+    # 생활비
+    cost_vals = []
+    for s, c in zip(city_scores_rows, cities):
+        usd = s.get("monthly_cost_usd") or c.get("monthly_cost_usd", 0)
+        cost_vals.append(_score_to_dots(_cost_to_score(usd)) if usd else "정보 없음")
+    lines.append(row("생활비", cost_vals))
+
+    # 한국어 접근성 (필드 없는 도시는 "정보 없음")
+    korean_vals = []
+    has_korean_data = False
+    for s in city_scores_rows:
+        ks = _korean_to_score(s.get("korean_community_size", ""))
+        if ks is not None:
+            korean_vals.append(_score_to_dots(ks))
+            has_korean_data = True
+        else:
+            korean_vals.append("정보 없음")
+    if has_korean_data:
+        lines.append(row("한국어접근성", korean_vals))
+
+    # 시차
+    tz_vals = [_get_timezone_diff(name) for name in city_names]
+    lines.append(row("시차(KST)", tz_vals))
+
+    # 비자 체류 기간
+    visa_vals = []
+    for c in cities:
+        vt = c.get("visa_type", "-")
+        # 간략화: 앞 15자
+        visa_vals.append(vt[:12] if vt else "-")
+    lines.append(row("비자 유형", visa_vals))
+
+    lines.append("```")
+    return "\n".join(lines)
+
 # Module-level cache for visa URLs loaded from data/visa_urls.json
 _VISA_URLS: dict | None = None
 
@@ -203,6 +391,14 @@ def format_step1_markdown(data: dict) -> str:
                 for ref in valid_refs:
                     lines.append(f"- [{ref.get('title', ref['url'])}]({ref['url']})")
                 lines.append("")
+
+    # 도시 비교 테이블 삽입 (TOP 3 카드 하단)
+    top_cities = data.get("top_cities", [])
+    if len(top_cities) >= 2:
+        language = data.get("_user_profile", {}).get("language", "한국어")
+        table_header = "### 📊 도시 비교" if language != "English" else "### 📊 City Comparison"
+        lines.append("\n" + table_header)
+        lines.append(generate_comparison_table(top_cities))
 
     # 전체 경고
     overall = data.get("overall_warning", "")
