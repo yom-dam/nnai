@@ -122,7 +122,10 @@ def format_step1_markdown(data: dict) -> str:
 
         # 비자 유형 (하이퍼링크)
         if visa_url:
-            lines.append(f"- **비자 유형**: [{visa_type}]({visa_url})")
+            if "google.com/search" in visa_url:
+                lines.append(f"- **비자 유형**: {visa_type} — [공식 링크 확인 중 — 검색으로 찾기]({visa_url})")
+            else:
+                lines.append(f"- **비자 유형**: [{visa_type}]({visa_url})")
         else:
             lines.append(f"- **비자 유형**: {visa_type}")
 

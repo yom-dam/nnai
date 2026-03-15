@@ -637,3 +637,39 @@ def test_format_step2_budget_table_usd_only_columns():
     result = format_step2_markdown(SAMPLE_STEP2_DATA)
     assert "금액 (USD)" in result
     assert "KRW" not in result
+
+
+def test_format_step1_google_fallback_label():
+    """Google 검색 URL이면 '[공식 링크 확인 중]' 레이블로 표시."""
+    data = {
+        "top_cities": [{
+            "city": "Lisbon", "city_kr": "리스본", "country": "Portugal",
+            "country_id": "PT", "visa_type": "D8",
+            "visa_url": "https://www.google.com/search?q=PT+visa",
+            "monthly_cost_usd": 2000, "score": 8,
+            "reasons": [{"point": "좋음", "source_url": None}],
+            "realistic_warnings": []
+        }],
+        "overall_warning": ""
+    }
+    result = format_step1_markdown(data)
+    assert "공식 링크 확인 중" in result
+    assert "검색으로 찾기" in result
+
+
+def test_format_step1_valid_url_normal_label():
+    """일반 URL은 visa_type 텍스트 그대로 링크로 표시."""
+    data = {
+        "top_cities": [{
+            "city": "Lisbon", "city_kr": "리스본", "country": "Portugal",
+            "country_id": "PT", "visa_type": "D8",
+            "visa_url": "https://imigracao.pt/en/visas/digital-nomad",
+            "monthly_cost_usd": 2000, "score": 8,
+            "reasons": [{"point": "좋음", "source_url": None}],
+            "realistic_warnings": []
+        }],
+        "overall_warning": ""
+    }
+    result = format_step1_markdown(data)
+    assert "[D8]" in result or "D8" in result
+    assert "공식 링크 확인 중" not in result
