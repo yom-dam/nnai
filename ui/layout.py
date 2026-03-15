@@ -55,11 +55,11 @@ LANGUAGE_OPTIONS = [
 ]
 
 CONTINENT_OPTIONS = [
-    "아시아",
-    "유럽",
-    "중남미",
-    "중동/아프리카",
-    "북미",
+    "아시아",    # TH, MY, ID, PH, VN, JP, GE
+    "유럽",      # PT, EE, ES, DE, GR, HR, CZ, HU, SI, MT, RS, AL, MK
+    "중남미",    # CR, MX, CO, AR, BR
+    # "북미",          # DB 미보유 — city_scores.json에 해당 도시 없음
+    # "중동/아프리카",  # DB 미보유 — city_scores.json에 해당 도시 없음
 ]
 
 LANGUAGE_TOGGLE_OPTIONS = ["한국어", "English"]

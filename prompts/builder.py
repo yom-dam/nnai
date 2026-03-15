@@ -312,7 +312,18 @@ budget_source 필드에 해당 도시의 Numbeo URL을 포함하라.
 ["여권 사본", "소득 증빙 서류", "거주지 증명서", "건강보험 가입 증명서 (SafetyWing 또는 Cigna Global 권장)"]
 
 [중요] first_steps 예시 (올바른 형식):
-["비자 신청서 작성 및 제출", "Wise 또는 Revolut 국제 계좌 개설 (환전 수수료 최소화)", "현지 은행 계좌 개설 예약", "코워킹 스페이스 단기 멤버십 신청"]"""
+["비자 신청서 작성 및 제출", "Wise 또는 Revolut 국제 계좌 개설 (환전 수수료 최소화)", "현지 은행 계좌 개설 예약", "코워킹 스페이스 단기 멤버십 신청"]
+
+[first_steps 순서 규칙 — 반드시 준수]
+1. 기한이 있는 항목을 무조건 최우선 배치한다.
+   - 건강보험 임의계속가입 신청: 퇴직/출국 전 2개월 이내 (기한 소멸 시 영구 불가)
+   - 국민연금 납부예외 신청: 출국 전
+   - 비자 서류 준비: 신청 마감 역산 기준
+2. 기한 없는 항목은 기한 있는 항목 이후에 배치한다.
+   - Wise/Revolut 계좌 개설 (2주 후 개설해도 무방)
+   - 항공권·숙소 예약
+   - 현지 SIM 카드 준비
+기한 항목이 후순위로 밀리는 것은 사용자에게 실질적 피해를 줄 수 있다."""
 
 
 _STEP2_SYSTEM_PROMPT_EN = """You are an expert long-term stay advisor for digital nomads.
@@ -346,7 +357,18 @@ Base each item on Numbeo (https://www.numbeo.com/cost-of-living/) data for the c
 The insurance item should estimate $45-80/month based on SafetyWing Nomad Insurance pricing.
 Include budget_source with the Numbeo URL for that city.
 Example: "budget_source": "https://www.numbeo.com/cost-of-living/in/Chiang-Mai"
-(Convert city name to hyphenated English format, e.g. "Kuala Lumpur" → "Kuala-Lumpur")"""
+(Convert city name to hyphenated English format, e.g. "Kuala Lumpur" → "Kuala-Lumpur")
+
+[first_steps ordering rules — strictly follow]
+1. Deadline-sensitive items MUST come first:
+   - Korean health insurance continuation (within 2 months of resignation — permanent forfeiture if missed)
+   - National pension exemption application (before departure)
+   - Visa document preparation (counted back from application deadline)
+2. Non-deadline items come after:
+   - Wise/Revolut account opening (can be done 2 weeks later)
+   - Flight and accommodation booking
+   - Local SIM card preparation
+Placing deadline items after convenience items can cause real harm to users."""
 
 
 def build_detail_prompt(selected_city: dict, user_profile: dict) -> list[dict]:

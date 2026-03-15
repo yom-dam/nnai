@@ -43,10 +43,13 @@ def test_layout_has_preferred_countries_checkbox():
     import gradio as gr
     from ui.layout import create_layout, CONTINENT_OPTIONS
     demo = create_layout(lambda *a: ("", [], {}), lambda *a: "")
-    # CONTINENT_OPTIONS 리스트가 존재하고 5개 대륙을 포함해야 함
-    assert len(CONTINENT_OPTIONS) == 5
+    # CONTINENT_OPTIONS: DB 보유 대륙만 노출 (북미·중동/아프리카 DB 미보유 제외)
+    assert len(CONTINENT_OPTIONS) == 3
     assert "아시아" in CONTINENT_OPTIONS
     assert "유럽" in CONTINENT_OPTIONS
+    assert "중남미" in CONTINENT_OPTIONS
+    assert "북미" not in CONTINENT_OPTIONS
+    assert "중동/아프리카" not in CONTINENT_OPTIONS
 
 
 # ── TASK-2a: flag helper and city button label tests ──────────────────────────
