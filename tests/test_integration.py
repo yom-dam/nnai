@@ -134,7 +134,7 @@ def test_step1_full_pipeline():
     assert "쿠알라룸푸르" in markdown or "Kuala Lumpur" in markdown
     # visa_url is overridden by _inject_visa_urls — hallucinated LLM URL replaced with official
     assert "digitalnomad.gov.my" not in markdown
-    assert "imi.gov.my" in markdown
+    assert "mm2h.gov.my" in markdown
     assert "현실적 고려 사항" in markdown
 
     assert isinstance(cities, list)
