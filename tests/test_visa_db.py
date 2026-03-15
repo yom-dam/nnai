@@ -4,6 +4,7 @@ tests/test_visa_db.py
 visa_db.json 구조 및 신규 필드 유효성 테스트
 """
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -78,3 +79,81 @@ def test_cost_tier_valid_values(visa_db):
     valid = {"low", "medium", "high"}
     for c in visa_db["countries"]:
         assert c["cost_tier"] in valid, f"{c['id']} cost_tier={c['cost_tier']} 유효하지 않음"
+
+
+# ===== P0 비자 현행화 검증 테스트 =====
+
+def _country(cid):
+    d = json.load(open(os.path.join(os.path.dirname(__file__), "..", "data", "visa_db.json")))
+    return next(c for c in d["countries"] if c["id"] == cid)
+
+
+def test_ge_regulation_change_field():
+    """GE: 2026-03-01 노동이민법 regulation_change 필드 존재."""
+    ge = _country("GE")
+    assert "regulation_change" in ge
+    assert ge["regulation_change"]["effective_date"] == "2026-03-01"
+    assert ge["regulation_change"]["risk_level"] == "HIGH"
+
+
+def test_ge_realistic_warnings_forced():
+    """GE: 노동 허가 경고 realistic_warnings_forced 필드 존재."""
+    ge = _country("GE")
+    assert "realistic_warnings_forced" in ge
+    assert len(ge["realistic_warnings_forced"]) >= 1
+    assert "노동" in ge["realistic_warnings_forced"][0]
+
+
+def test_th_ltr_categories_updated():
+    """TH: LTR 카테고리별 요건 업데이트 확인."""
+    th = _country("TH")
+    assert "ltr_categories" in th
+    wgc = th["ltr_categories"]["wealthy_global_citizens"]
+    assert wgc["income_requirement"] is None  # 소득 요건 폐지
+    assert wgc["asset_requirement_usd"] == 1000000
+    wft = th["ltr_categories"]["work_from_thailand"]
+    assert wft["employer_revenue_usd"] == 50000000
+
+
+def test_th_family_accompaniment():
+    """TH: 동반 가족 인원 제한 없음 확인."""
+    th = _country("TH")
+    assert "family_accompaniment" in th
+    assert th["family_accompaniment"]["max_members"] is None
+    assert th["family_accompaniment"]["parents_included"] is True
+
+
+def test_th_min_income_usd_removed():
+    """TH: min_income_usd 80000 제거 (소득 요건 폐지 반영)."""
+    th = _country("TH")
+    # null이거나 필드 자체가 없어야 함
+    assert th.get("min_income_usd") != 80000
+
+
+def test_pt_income_monthly_eur():
+    """PT: D8 소득 기준 €3,680/월 업데이트."""
+    pt = _country("PT")
+    assert pt.get("min_income_monthly_eur") == 3680
+    assert pt.get("min_wage_eur") == 920
+
+
+def test_es_income_monthly_eur():
+    """ES: DNV 소득 기준 €2,849/월 업데이트."""
+    es = _country("ES")
+    assert es.get("min_income_monthly_eur") == 2849
+
+
+def test_es_family_income_addition():
+    """ES: 가족 동반 소득 기준 필드 존재."""
+    es = _country("ES")
+    assert "family_income_addition" in es
+    assert es["family_income_addition"]["spouse_eur"] == 916
+    assert es["family_income_addition"]["per_child_eur"] == 305
+
+
+def test_all_4_countries_have_data_verified_date():
+    """P0 수정 4개국 모두 data_verified_date 필드 있음."""
+    d = json.load(open(os.path.join(os.path.dirname(__file__), "..", "data", "visa_db.json")))
+    countries = {c["id"]: c for c in d["countries"]}
+    for cid in ["GE", "TH", "PT", "ES"]:
+        assert "data_verified_date" in countries[cid], f"{cid} missing data_verified_date"
