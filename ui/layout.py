@@ -163,10 +163,20 @@ def create_layout(advisor_fn, detail_fn):
                             choices=NATIONALITIES, value="Korean",
                             label="국적", info="여권 발급 국가 기준",
                         )
-                        income_krw = gr.Slider(
-                            minimum=100, maximum=2000, value=500, step=50,
-                            label="월 수입 (만원)",
-                            info="세전 월 소득 (만원 단위, 예: 500 = 500만원)",
+                        income_krw = gr.Number(
+                            label="월 소득 (만원)", value=500, minimum=100,
+                            info="세전 월 소득 기준. 비자 신청 소득 기준 검토에 사용됩니다.",
+                        )
+                        income_type = gr.Dropdown(
+                            label="소득 증빙 형태",
+                            choices=[
+                                "한국 법인 재직 (재직증명서 + 급여명세서)",
+                                "프리랜서 / 개인사업자 (해외 송금 내역)",
+                                "한국 개인사업자 (종합소득세 신고 기반)",
+                                "무소득 / 배우자 부양",
+                            ],
+                            value="한국 법인 재직 (재직증명서 + 급여명세서)",
+                            info="비자 신청 시 소득 증빙 방식이 신청 가능 비자를 결정합니다.",
                         )
                         immigration_purpose = gr.Dropdown(
                             choices=STAY_PURPOSES,
@@ -236,7 +246,7 @@ def create_layout(advisor_fn, detail_fn):
         # ── Step 1 이벤트 ──────────────────────────────────────────────
         _FALLBACK_LABELS = ["1순위 도시", "2순위 도시", "3순위 도시"]
 
-        def run_step1(nat, inc, purpose, life, langs, tl, pref_countries, ui_lang,
+        def run_step1(nat, inc, inc_type, purpose, life, langs, tl, pref_countries, ui_lang,
                       q_motiv, q_euro, q_stay, q_work, q_concern_val):
             try:
                 from utils.persona import diagnose_persona
@@ -244,7 +254,8 @@ def create_layout(advisor_fn, detail_fn):
                 for msg in _STEP1_LOADING:
                     yield msg, gr.update(), gr.update(visible=False), gr.update(), gr.update()
                 markdown, cities, parsed = advisor_fn(
-                    nat, inc, purpose, life, langs, tl, pref_countries, ui_lang, persona_type
+                    nat, inc, purpose, life, langs, tl, pref_countries, ui_lang, persona_type,
+                    income_type=inc_type,
                 )
                 labels = [
                     _city_btn_label(cities[i]) if i < len(cities) else _FALLBACK_LABELS[i]
@@ -269,7 +280,7 @@ def create_layout(advisor_fn, detail_fn):
         btn_step1.click(
             fn=run_step1,
             inputs=[
-                nationality, income_krw, immigration_purpose,
+                nationality, income_krw, income_type, immigration_purpose,
                 lifestyle, languages, timeline, preferred_countries,
                 ui_language,
                 q_motivation, q_europe, q_stay_duration, q_work_type, q_concern,

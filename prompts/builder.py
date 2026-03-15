@@ -46,6 +46,13 @@ def build_prompt(user_profile: dict) -> list[dict]:
             slowmad_hint_en = "※ User prefers frequent moves (1-2 months per city) — prioritize cities with tourist visa or easy short-stay options.\n\n"
             slowmad_hint_kr = "※ 잦은 이동 선호 (도시당 1~2개월) — 관광 비자 또는 단기 체류가 용이한 도시 우선 고려.\n\n"
 
+    income_type = user_profile.get("income_type", "")
+    income_type_hint = ""
+    if income_type == "프리랜서 / 개인사업자 (해외 송금 내역)":
+        income_type_hint = "※ 소득 증빙: 프리랜서/개인사업자 — 포르투갈 D8, 독일 프리랜서 비자 서류 거절 리스크 주의. 해외 송금 내역 3개월치 필수.\n\n"
+    elif income_type == "무소득 / 배우자 부양":
+        income_type_hint = "※ 소득 없음 / 배우자 부양 — 배우자 동반 비자 또는 가족 비자 가능 국가를 우선 추천하세요.\n\n"
+
     if language == "English":
         user_message = (
             f"Nationality: {nationality} | Monthly income: ${income_usd:,.0f} USD | "
@@ -55,6 +62,7 @@ def build_prompt(user_profile: dict) -> list[dict]:
             f"Lifestyle preferences: {', '.join(lifestyle) if lifestyle else 'no specific preference'}\n\n"
             f"{DATA_CONTEXT}\n\n"
             f"{persona_hint}"
+            f"{income_type_hint}"
             f"{slowmad_hint_en}"
             f"{preferred_hint}"
             "Based on the above profile, recommend the top 3 best cities for long-term digital nomad living. "
@@ -72,6 +80,7 @@ def build_prompt(user_profile: dict) -> list[dict]:
             f"라이프스타일 선호: {', '.join(lifestyle) if lifestyle else '특별한 선호 없음'}\n\n"
             f"{DATA_CONTEXT}\n\n"
             f"{persona_hint}"
+            f"{income_type_hint}"
             f"{slowmad_hint_kr}"
             f"{preferred_hint}"
             "위 프로필 기반으로 최적 거주 도시 TOP 3를 추천하세요. "

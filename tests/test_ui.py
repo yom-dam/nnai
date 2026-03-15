@@ -18,7 +18,7 @@ def test_create_layout_has_correct_inputs():
     demo = create_layout(lambda *a: ("", [], {}), lambda *a: "")
     component_types = {type(c).__name__ for c in demo.blocks.values()}
     assert "Dropdown"      in component_types
-    assert "Slider"        in component_types
+    assert "Number"        in component_types  # income_krw replaced Slider with Number (P0)
     assert "CheckboxGroup" in component_types
     assert "Radio"         in component_types
 
