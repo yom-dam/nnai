@@ -82,16 +82,16 @@ def test_build_detail_prompt_includes_city_info():
 
 
 def test_build_prompt_includes_preferred_countries_hint():
-    """preferred_countries가 있으면 프롬프트에 우선 고려 국가 힌트가 포함되어야 함"""
+    """preferred_countries에 대륙명이 있으면 프롬프트에 우선 고려 대륙 힌트가 포함되어야 함"""
     profile = {
         **SAMPLE_PROFILE,
-        "preferred_countries": ["🇲🇾 말레이시아", "🇹🇭 태국"],
+        "preferred_countries": ["아시아", "유럽"],
     }
     result = build_prompt(profile)
     last_user = result[-1]["content"]
-    assert "말레이시아" in last_user
-    assert "태국" in last_user
-    assert "우선 고려" in last_user
+    assert "아시아" in last_user
+    assert "유럽" in last_user
+    assert "우선 고려 대륙" in last_user
 
 
 def test_build_prompt_no_hint_when_empty_preferred_countries():
@@ -102,7 +102,7 @@ def test_build_prompt_no_hint_when_empty_preferred_countries():
     }
     result = build_prompt(profile)
     last_user = result[-1]["content"]
-    assert "우선 고려 국가" not in last_user
+    assert "우선 고려 대륙" not in last_user
 
 
 def test_build_prompt_english_uses_english_system_prompt():

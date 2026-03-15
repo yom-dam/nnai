@@ -55,19 +55,12 @@ LANGUAGE_OPTIONS = [
     "영어 업무 수준",
 ]
 
-COUNTRY_OPTIONS = [
-    "🇲🇾 말레이시아",
-    "🇵🇹 포르투갈",
-    "🇹🇭 태국",
-    "🇪🇪 에스토니아",
-    "🇪🇸 스페인",
-    "🇮🇩 인도네시아",
-    "🇩🇪 독일",
-    "🇬🇪 조지아",
-    "🇨🇷 코스타리카",
-    "🇬🇷 그리스",
-    "🇵🇭 필리핀",
-    "🇻🇳 베트남",
+CONTINENT_OPTIONS = [
+    "아시아",
+    "유럽",
+    "중남미",
+    "중동/아프리카",
+    "북미",
 ]
 
 LANGUAGE_TOGGLE_OPTIONS = ["한국어", "English"]
@@ -189,9 +182,9 @@ def create_layout(advisor_fn, detail_fn):
                             info="가능한 언어 모두 선택",
                         )
                         preferred_countries = gr.CheckboxGroup(
-                            choices=COUNTRY_OPTIONS,
-                            label="관심 국가 선택",
-                            info="선택한 국가를 우선 고려하지만, AI가 더 적합한 곳을 제안할 수 있어요. 선택 안 하면 전체 고려",
+                            choices=CONTINENT_OPTIONS,
+                            label="관심 대륙 선택",
+                            info="선택한 대륙의 도시가 추천에 우선 반영됩니다. 선택하지 않으면 전체 대상으로 추천합니다.",
                         )
 
                         # P1-2: Accordion 하단 이동, open=False, Q3/Q4 제거, Q5 → CheckboxGroup

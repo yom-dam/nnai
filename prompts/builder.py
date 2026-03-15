@@ -18,15 +18,23 @@ def build_prompt(user_profile: dict) -> list[dict]:
     stay_duration = user_profile.get("stay_duration", "")
 
     preferred_countries = user_profile.get("preferred_countries", [])
-    # flag emoji 제거: "🇲🇾 말레이시아" → "말레이시아"
-    country_names = [c.split(" ", 1)[-1] for c in preferred_countries if c.strip()]
+
+    CONTINENT_TO_HINT = {
+        "아시아": "동남아시아·동아시아 도시 (치앙마이, 발리, 쿠알라룸푸르, 다낭, 도쿄 등)",
+        "유럽": "유럽 도시 (리스본, 바르셀로나, 탈린, 베를린, 아테네 등)",
+        "중남미": "중남미 도시 (멕시코시티, 메데진, 부에노스아이레스 등)",
+        "중동/아프리카": "중동·아프리카 도시 (두바이, 마라케시 등)",
+        "북미": "북미 도시 (마이애미, 캐나다 등)",
+    }
 
     preferred_hint = ""
-    if country_names:
-        preferred_hint = (
-            f"※ 우선 고려 국가: {', '.join(country_names)} "
-            f"(단, 프로필에 더 적합한 다른 도시가 있다면 포함 가능)\n\n"
-        )
+    if preferred_countries:
+        hints = [CONTINENT_TO_HINT[c] for c in preferred_countries if c in CONTINENT_TO_HINT]
+        if hints:
+            preferred_hint = (
+                f"※ 우선 고려 대륙: {', '.join(preferred_countries)}. "
+                f"해당 대륙 도시({'; '.join(hints)})를 TOP 3 추천에 우선 반영할 것.\n\n"
+            )
 
     persona_type = user_profile.get("persona_type", "")
     persona_hint = ""
@@ -140,20 +148,29 @@ def build_step1_user_message(user_profile: dict) -> str:
     stay_duration = user_profile.get("stay_duration", "")
 
     preferred_countries = user_profile.get("preferred_countries", [])
-    country_names = [c.split(" ", 1)[-1] for c in preferred_countries if c.strip()]
+
+    _CONTINENT_TO_HINT = {
+        "아시아": "동남아시아·동아시아 도시 (치앙마이, 발리, 쿠알라룸푸르, 다낭, 도쿄 등)",
+        "유럽": "유럽 도시 (리스본, 바르셀로나, 탈린, 베를린, 아테네 등)",
+        "중남미": "중남미 도시 (멕시코시티, 메데진, 부에노스아이레스 등)",
+        "중동/아프리카": "중동·아프리카 도시 (두바이, 마라케시 등)",
+        "북미": "북미 도시 (마이애미, 캐나다 등)",
+    }
 
     preferred_hint = ""
-    if country_names:
-        if language == "English":
-            preferred_hint = (
-                f"※ Preferred countries: {', '.join(country_names)} "
-                f"(other cities may still be recommended if better fit)\n\n"
-            )
-        else:
-            preferred_hint = (
-                f"※ 우선 고려 국가: {', '.join(country_names)} "
-                f"(단, 프로필에 더 적합한 다른 도시가 있다면 포함 가능)\n\n"
-            )
+    if preferred_countries:
+        hints = [_CONTINENT_TO_HINT[c] for c in preferred_countries if c in _CONTINENT_TO_HINT]
+        if hints:
+            if language == "English":
+                preferred_hint = (
+                    f"※ Preferred continents: {', '.join(preferred_countries)}. "
+                    f"Prioritize cities in these continents ({'; '.join(hints)}) in TOP 3.\n\n"
+                )
+            else:
+                preferred_hint = (
+                    f"※ 우선 고려 대륙: {', '.join(preferred_countries)}. "
+                    f"해당 대륙 도시({'; '.join(hints)})를 TOP 3 추천에 우선 반영할 것.\n\n"
+                )
 
     persona_type = user_profile.get("persona_type", "")
     persona_hint = ""
