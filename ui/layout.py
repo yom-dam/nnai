@@ -50,13 +50,9 @@ LIFESTYLE_OPTIONS = [
 ]
 
 LANGUAGE_OPTIONS = [
-    "🇰🇷 한국어",
-    "🇺🇸 영어 (기본 소통)",
-    "🇺🇸 영어 (업무 가능 수준)",
-    "🇯🇵 일본어",
-    "🇨🇳 중국어",
-    "🇪🇸 스페인어",
-    "🇵🇹 포르투갈어",
+    "영어 불가 / 한국어만",
+    "영어 기본 소통 가능",
+    "영어 업무 수준",
 ]
 
 COUNTRY_OPTIONS = [
@@ -129,44 +125,29 @@ def create_layout(advisor_fn, detail_fn):
                             info="UI and AI response language",
                         )
 
-                        with gr.Accordion("🔍 내 노마드 유형 진단 (선택사항)", open=True):
-                            gr.Markdown("_5가지 질문으로 AI가 당신의 노마드 스타일을 파악합니다._")
-
-                            q_motivation = gr.Radio(
-                                choices=["번아웃 탈출 / 삶 리셋", "비용 최적화 (FIRE / 저물가)",
-                                         "유럽 여행 루트 (쉥겐 90일)", "사회 이탈 (탈조선)", "자유로운 삶 / 원격근무"],
-                                label="Q1. 노마드 생활을 고려하는 주된 이유는?",
-                                value="자유로운 삶 / 원격근무",
-                            )
-                            q_europe = gr.Radio(
-                                choices=["예 (유럽 루트 계획 있음)", "아니오"],
-                                label="Q2. 유럽에서 활동할 계획이 있나요?",
-                                value="아니오",
-                            )
-                            q_stay_duration = gr.Radio(
-                                choices=["1개월 이하", "1~3개월", "3~6개월", "6개월 이상"],
-                                label="Q3. 한 도시에 얼마나 머물 계획인가요?",
-                                value="1~3개월",
-                            )
-                            q_work_type = gr.Radio(
-                                choices=["직장인 (원격근무)", "프리랜서", "사업자", "구직 중"],
-                                label="Q4. 원격근무 형태는?",
-                                value="프리랜서",
-                            )
-                            q_concern = gr.Radio(
-                                choices=["비자/체류일 관리", "생활비 예산", "세금/법적 문제", "외로움/커뮤니티", "숙소 구하기"],
-                                label="Q5. 가장 걱정되는 것은?",
-                                value="생활비 예산",
-                            )
-
                         nationality = gr.Dropdown(
                             choices=NATIONALITIES, value="Korean",
                             label="국적", info="여권 발급 국가 기준",
                         )
+
+                        # P1-1: 동반 여부 + 자녀 연령대
+                        travel_type = gr.Radio(
+                            label="동반 여부",
+                            choices=["혼자", "배우자 동반", "자녀 동반", "가족 전체 동반"],
+                            value="혼자",
+                        )
+                        with gr.Column(visible=False) as children_info_col:
+                            children_ages = gr.CheckboxGroup(
+                                label="자녀 연령대 (해당 항목 모두 선택)",
+                                choices=["미취학 (0~6세)", "초등 (7~12세)", "중고등 (13~18세)"],
+                            )
+
+                        # P0-1: Slider → Number
                         income_krw = gr.Number(
                             label="월 소득 (만원)", value=500, minimum=100,
                             info="세전 월 소득 기준. 비자 신청 소득 기준 검토에 사용됩니다.",
                         )
+                        # P0-2: 소득 증빙 형태
                         income_type = gr.Dropdown(
                             label="소득 증빙 형태",
                             choices=[
@@ -183,6 +164,14 @@ def create_layout(advisor_fn, detail_fn):
                             value=STAY_PURPOSES[0],
                             label="장기 체류 목적",
                         )
+
+                        # P1-4: "90일 이하" 옵션 추가
+                        timeline = gr.Radio(
+                            choices=["90일 이하 (비자 없이 탐색)", "1년 단기 체험", "3년 장기 체류", "5년 이상 초장기 체류"],
+                            value="1년 단기 체험",
+                            label="목표 체류 기간",
+                        )
+
                         lifestyle = gr.CheckboxGroup(
                             choices=LIFESTYLE_OPTIONS,
                             label="라이프스타일 선호",
@@ -193,16 +182,41 @@ def create_layout(advisor_fn, detail_fn):
                             label="사용 가능 언어",
                             info="가능한 언어 모두 선택",
                         )
-                        timeline = gr.Radio(
-                            choices=["1년 단기 체험", "3년 장기 체류", "5년 이상 초장기 체류"],
-                            value="1년 단기 체험",
-                            label="목표 체류 기간",
-                        )
                         preferred_countries = gr.CheckboxGroup(
                             choices=COUNTRY_OPTIONS,
                             label="관심 국가 선택",
                             info="선택한 국가를 우선 고려하지만, AI가 더 적합한 곳을 제안할 수 있어요. 선택 안 하면 전체 고려",
                         )
+
+                        # P1-2: Accordion 하단 이동, open=False, Q3/Q4 제거, Q5 → CheckboxGroup
+                        with gr.Accordion("🔍 내 노마드 유형 진단 (선택사항)", open=False):
+                            gr.Markdown("_질문으로 AI가 당신의 노마드 스타일을 파악합니다._")
+
+                            q_motivation = gr.Radio(
+                                choices=["번아웃 탈출 / 삶 리셋", "비용 최적화 (FIRE / 저물가)",
+                                         "유럽 여행 루트 (쉥겐 90일)", "사회 이탈 (탈조선)", "자유로운 삶 / 원격근무"],
+                                label="Q1. 노마드 생활을 고려하는 주된 이유는?",
+                                value="자유로운 삶 / 원격근무",
+                            )
+                            q_europe = gr.Radio(
+                                choices=["예 (유럽 루트 계획 있음)", "아니오"],
+                                label="Q2. 유럽에서 활동할 계획이 있나요?",
+                                value="아니오",
+                            )
+                            # Q5 — CheckboxGroup (복수 선택 가능)
+                            q_concern = gr.CheckboxGroup(
+                                choices=["비자/체류일 관리", "생활비 예산", "세금/법적 문제", "외로움/커뮤니티", "숙소 구하기", "건강보험 공백"],
+                                label="걱정되는 항목을 모두 선택하세요",
+                                value=["생활비 예산"],
+                            )
+
+                        # P1-1 event handler — children_info_col 표시/숨김
+                        travel_type.change(
+                            fn=lambda t: gr.update(visible=t in ["자녀 동반", "가족 전체 동반"]),
+                            inputs=[travel_type],
+                            outputs=[children_info_col],
+                        )
+
                         btn_step1 = gr.Button(
                             "🚀 도시 추천 받기", variant="primary", size="lg",
                         )
@@ -247,15 +261,16 @@ def create_layout(advisor_fn, detail_fn):
         _FALLBACK_LABELS = ["1순위 도시", "2순위 도시", "3순위 도시"]
 
         def run_step1(nat, inc, inc_type, purpose, life, langs, tl, pref_countries, ui_lang,
-                      q_motiv, q_euro, q_stay, q_work, q_concern_val):
+                      q_motiv, q_euro, q_concern_val, travel_type_val, children_ages_val):
             try:
                 from utils.persona import diagnose_persona
-                persona_type = diagnose_persona(q_motiv, q_euro, q_stay, q_work, q_concern_val)
+                persona_type = diagnose_persona(q_motiv, q_euro, None, None, q_concern_val)
                 for msg in _STEP1_LOADING:
                     yield msg, gr.update(), gr.update(visible=False), gr.update(), gr.update()
                 markdown, cities, parsed = advisor_fn(
                     nat, inc, purpose, life, langs, tl, pref_countries, ui_lang, persona_type,
                     income_type=inc_type,
+                    travel_type=travel_type_val, children_ages=children_ages_val,
                 )
                 labels = [
                     _city_btn_label(cities[i]) if i < len(cities) else _FALLBACK_LABELS[i]
@@ -283,7 +298,8 @@ def create_layout(advisor_fn, detail_fn):
                 nationality, income_krw, income_type, immigration_purpose,
                 lifestyle, languages, timeline, preferred_countries,
                 ui_language,
-                q_motivation, q_europe, q_stay_duration, q_work_type, q_concern,
+                q_motivation, q_europe, q_concern,
+                travel_type, children_ages,
             ],
             outputs=[step1_output, parsed_state, btn_go_step2, tabs, city_choice],
         )
