@@ -163,6 +163,11 @@ def create_layout(advisor_fn, detail_fn):
                             choices=NATIONALITIES, value="Korean",
                             label="국적", info="여권 발급 국가 기준",
                         )
+                        dual_nationality = gr.Checkbox(
+                            label="복수국적 보유 (예: 한국-미국 이중국적)",
+                            value=False,
+                            info="복수국적 보유 시 보조 여권 기준 체류 가능 여부를 추가 안내합니다.",
+                        )
                         income_krw = gr.Slider(
                             minimum=100, maximum=2000, value=500, step=50,
                             label="월 수입 (만원)",
@@ -236,7 +241,7 @@ def create_layout(advisor_fn, detail_fn):
         # ── Step 1 이벤트 ──────────────────────────────────────────────
         _FALLBACK_LABELS = ["1순위 도시", "2순위 도시", "3순위 도시"]
 
-        def run_step1(nat, inc, purpose, life, langs, tl, pref_countries, ui_lang,
+        def run_step1(nat, dual_nat, inc, purpose, life, langs, tl, pref_countries, ui_lang,
                       q_motiv, q_euro, q_stay, q_work, q_concern_val):
             try:
                 from utils.persona import diagnose_persona
@@ -244,7 +249,8 @@ def create_layout(advisor_fn, detail_fn):
                 for msg in _STEP1_LOADING:
                     yield msg, gr.update(), gr.update(visible=False), gr.update(), gr.update()
                 markdown, cities, parsed = advisor_fn(
-                    nat, inc, purpose, life, langs, tl, pref_countries, ui_lang, persona_type
+                    nat, inc, purpose, life, langs, tl, pref_countries, ui_lang, persona_type,
+                    dual_nationality=dual_nat,
                 )
                 labels = [
                     _city_btn_label(cities[i]) if i < len(cities) else _FALLBACK_LABELS[i]
@@ -269,7 +275,7 @@ def create_layout(advisor_fn, detail_fn):
         btn_step1.click(
             fn=run_step1,
             inputs=[
-                nationality, income_krw, immigration_purpose,
+                nationality, dual_nationality, income_krw, immigration_purpose,
                 lifestyle, languages, timeline, preferred_countries,
                 ui_language,
                 q_motivation, q_europe, q_stay_duration, q_work_type, q_concern,

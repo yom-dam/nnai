@@ -35,6 +35,11 @@ def build_prompt(user_profile: dict) -> list[dict]:
         if persona_hint:
             persona_hint = persona_hint + "\n\n"
 
+    dual_nationality = user_profile.get("dual_nationality", False)
+    dual_nat_hint = ""
+    if dual_nationality:
+        dual_nat_hint = "※ 복수국적 보유 — 쉥겐 90일은 한국 여권 기준이며, 보조 여권으로 체류 가능 여부를 포함하여 안내하세요.\n\n"
+
     if language == "English":
         user_message = (
             f"Nationality: {nationality} | Monthly income: ${income_usd:,.0f} USD | "
@@ -45,6 +50,7 @@ def build_prompt(user_profile: dict) -> list[dict]:
             f"{DATA_CONTEXT}\n\n"
             f"{persona_hint}"
             f"{preferred_hint}"
+            f"{dual_nat_hint}"
             "Based on the above profile, recommend the top 3 best cities for long-term digital nomad living. "
             "Include realistic challenges and risks. "
             "Output pure JSON only."
@@ -61,6 +67,7 @@ def build_prompt(user_profile: dict) -> list[dict]:
             f"{DATA_CONTEXT}\n\n"
             f"{persona_hint}"
             f"{preferred_hint}"
+            f"{dual_nat_hint}"
             "위 프로필 기반으로 최적 거주 도시 TOP 3를 추천하세요. "
             "현실적 어려움과 위험 요소를 반드시 포함하세요. "
             "반드시 순수 JSON만 출력하세요."
