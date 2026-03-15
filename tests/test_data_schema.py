@@ -31,10 +31,11 @@ def test_visa_db_schema():
         assert not missing, f"{c.get('id','?')} 누락 필드: {missing}"
 
 def test_visa_db_income_non_negative():
-    """min_income_usd는 0 이상 (무비자 국가는 0 허용)."""
+    """min_income_usd는 0 이상 또는 null (카테고리별 요건 국가는 null 허용)."""
     db = load_visa_db()
     for c in db["countries"]:
-        assert c["min_income_usd"] >= 0
+        if c["min_income_usd"] is not None:
+            assert c["min_income_usd"] >= 0
 
 def test_visa_db_key_docs_nonempty():
     db = load_visa_db()

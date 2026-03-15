@@ -22,8 +22,10 @@ def _build() -> str:
         treaty   = "조세조약O" if c.get("double_tax_treaty_with_kr") else "조세조약X"
         buffer   = " buffer_zone" if c.get("buffer_zone") else ""
         tax_days = c.get("tax_residency_days", "-")
+        min_income = c['min_income_usd']
+        income_str = f"${min_income:,}" if min_income is not None else "카테고리별 상이"
         lines.append(
-            f"{c['name_kr']}({c['id']}) | {c['visa_type']} | 소득≥${c['min_income_usd']:,} | "
+            f"{c['name_kr']}({c['id']}) | {c['visa_type']} | 소득≥{income_str} | "
             f"{c['stay_months']}개월({'갱신O' if c['renewable'] else '갱신X'}) | "
             f"비용${c.get('visa_fee_usd', 0)} | {schengen} | 세금거주{tax_days}일 | {treaty}{buffer}"
         )
