@@ -443,7 +443,7 @@ def _normalize_string_list(value) -> list:
     return []
 
 
-def format_step2_markdown(data: dict) -> str:
+def format_step2_markdown(data: dict, visa_data: dict | None = None) -> str:
     """Step 2 결과(상세 정착 가이드)를 마크다운으로 포맷팅합니다."""
     if not data:
         return "상세 가이드를 불러올 수 없습니다."
@@ -543,5 +543,15 @@ def format_step2_markdown(data: dict) -> str:
                     f"**{name_display}** ({s['visa_type']}){income_note}\n> {s['reason']}"
                 )
             lines.append(header + "\n\n".join(planb_items) + "\n")
+
+    # 출처 및 기준일 블록 (visa_data 전달 시)
+    if visa_data is not None:
+        verified_date = visa_data.get("data_verified_date", "정보 없음") or "정보 없음"
+        source = visa_data.get("source", "")
+        lines.append("\n---")
+        lines.append(f"**데이터 기준일**: {verified_date}")
+        if source:
+            lines.append(f"**출처**: {source}")
+        lines.append("\n※ 비자 규정은 수시로 변경될 수 있습니다. 최종 신청 전 해당국 공식 기관에서 재확인을 권장합니다.")
 
     return _clean_output("\n".join(lines))

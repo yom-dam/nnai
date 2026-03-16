@@ -715,3 +715,38 @@ class TestCleanOutput:
         }
         result = format_step1_markdown(data)
         assert "!" not in result
+
+
+# ── PDF 출처기준일: format_step2_markdown 출처 블록 테스트 ──────────────────────
+
+def test_format_step2_source_block_with_visa_data():
+    """visa_data 전달 시 data_verified_date와 source가 출력 하단에 포함되어야 함."""
+    visa_data = {
+        "data_verified_date": "2026-03",
+        "source": "aeroseer.com, consiliojus.com",
+    }
+    result = format_step2_markdown(SAMPLE_STEP2_DATA, visa_data=visa_data)
+    assert "2026-03" in result
+    assert "aeroseer.com" in result
+
+
+def test_format_step2_source_block_no_visa_data_no_crash():
+    """visa_data 미전달 시 기존 출력과 동일하게 동작해야 함 (크래시 없음)."""
+    result = format_step2_markdown(SAMPLE_STEP2_DATA)
+    assert isinstance(result, str)
+    assert "Step 1." in result
+
+
+def test_format_step2_source_block_missing_date_shows_fallback():
+    """data_verified_date 없는 visa_data 전달 시 '정보 없음' 표시."""
+    visa_data = {"source": "some.gov"}
+    result = format_step2_markdown(SAMPLE_STEP2_DATA, visa_data=visa_data)
+    assert "정보 없음" in result
+
+
+def test_format_step2_source_block_position():
+    """출처 블록은 마크다운 출력의 하단(마지막 200자 이내)에 위치해야 함."""
+    visa_data = {"data_verified_date": "2026-01", "source": "official.gov"}
+    result = format_step2_markdown(SAMPLE_STEP2_DATA, visa_data=visa_data)
+    tail = result[-300:]
+    assert "2026-01" in tail or "official.gov" in tail
