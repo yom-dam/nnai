@@ -181,3 +181,71 @@ def test_step2_system_prompt_requires_work_disclosure_warning():
     """원격근무 발설 주의 지시가 system 프롬프트에 있어야 함."""
     prompt = _get_step2_system_prompt()
     assert "원격근무" in prompt
+
+
+# ── 상세가이드 개인화 테스트 ──────────────────────────────────────────────────
+
+def _detail_user_msg(**overrides) -> str:
+    """build_detail_prompt()의 user 메시지 반환 헬퍼."""
+    selected_city = {"city": "Chiang Mai", "country_id": "TH",
+                     "visa_type": "무비자", "monthly_cost_usd": 1100}
+    profile = {"nationality": "Korean", "income_usd": 3000,
+               "purpose": "디지털 노마드", "languages": ["한국어"],
+               "timeline": "1년 단기 체험", "language": "한국어", **overrides}
+    msgs = build_detail_prompt(selected_city, profile)
+    return msgs[-1]["content"]
+
+
+def test_detail_prompt_includes_income_type_hint_freelancer():
+    """income_type=프리랜서이면 user 메시지에 해외 송금 내역 안내가 포함되어야 함."""
+    msg = _detail_user_msg(income_type="프리랜서 (계약서·해외 송금 내역)")
+    assert "해외 송금 내역" in msg
+
+
+def test_detail_prompt_includes_income_type_hint_employee():
+    """income_type=한국 법인 재직이면 재직증명서 안내가 포함되어야 함."""
+    msg = _detail_user_msg(income_type="한국 법인 재직 (재직증명서 + 급여명세서)")
+    assert "재직증명서" in msg
+
+
+def test_detail_prompt_includes_stay_duration_hint_short():
+    """timeline=90일 이하이면 왕복 항공권 필수 소지 안내가 포함되어야 함."""
+    msg = _detail_user_msg(timeline="90일 이하 (비자 없이 탐색)")
+    assert "왕복 항공권" in msg
+
+
+def test_detail_prompt_includes_stay_duration_hint_long():
+    """timeline=5년 이상이면 영주권 경로 안내가 포함되어야 함."""
+    msg = _detail_user_msg(timeline="5년 이상 초장기 체류")
+    assert "영주권" in msg
+
+
+def test_detail_prompt_includes_travel_type_hint_solo():
+    """travel_type=솔로이면 코워킹 스페이스 언급이 포함되어야 함."""
+    msg = _detail_user_msg(travel_type="혼자 (솔로)")
+    assert "코워킹" in msg
+
+
+def test_detail_prompt_includes_travel_type_hint_family():
+    """travel_type=가족 전체 동반이면 국제학교 언급이 포함되어야 함."""
+    msg = _detail_user_msg(travel_type="가족 전체 동반 (배우자 + 자녀)")
+    assert "국제학교" in msg
+
+
+def test_detail_prompt_no_hint_when_income_type_missing():
+    """income_type 미입력 시 소득 증빙 힌트 블록이 없어야 함."""
+    msg = _detail_user_msg()
+    assert "[소득 증빙 형태:" not in msg
+
+
+def test_detail_prompt_english_income_type_hint():
+    """language=English + income_type=프리랜서이면 영문 송금 내역 힌트가 포함되어야 함."""
+    selected_city = {"city": "Chiang Mai", "country_id": "TH",
+                     "visa_type": "Tourist Visa", "monthly_cost_usd": 1100}
+    profile = {"nationality": "Korean", "income_usd": 3000,
+               "purpose": "Digital Nomad", "languages": ["English"],
+               "timeline": "1 year short-term", "language": "English",
+               "income_type": "프리랜서 (계약서·해외 송금 내역)"}
+    msgs = build_detail_prompt(selected_city, profile)
+    msg = msgs[-1]["content"]
+    assert "remittance" in msg.lower() or "transfer" in msg.lower() or "송금" in msg
