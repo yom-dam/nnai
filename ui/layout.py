@@ -2,6 +2,118 @@
 import gradio as gr
 from ui.theme import create_theme
 
+# 모듈 레벨 환율 캐싱 (앱 기동 시 1회 조회 — 이후 재사용)
+_EXCHANGE_RATE_USD: float | None = None
+
+
+def _get_exchange_rate_usd() -> float:
+    """USD/KRW 환율을 캐싱하여 반환. 실패 시 기본값(0.000714 ≈ 1,400원/달러) 사용."""
+    global _EXCHANGE_RATE_USD
+    if _EXCHANGE_RATE_USD is None:
+        try:
+            import utils.currency
+            rates = utils.currency.get_exchange_rates()
+            _EXCHANGE_RATE_USD = rates.get("USD", 0.000714)
+        except Exception:
+            _EXCHANGE_RATE_USD = 0.000714
+    return _EXCHANGE_RATE_USD
+
+
+def check_income_warning(
+    income_krw: float,
+    preferred_countries: list,
+    travel_type: str,
+    timeline: str,
+    exchange_rate_usd: float | None = None,
+) -> tuple:
+    """
+    입력값 조합을 평가하여 경고 문구 반환. LLM 호출 없음.
+
+    Args:
+        income_krw: 월 소득 (만원 단위)
+        preferred_countries: 선택된 대륙 목록 (예: ["유럽", "아시아"])
+        travel_type: 동반 여부 문자열
+        timeline: 목표 체류 기간 문자열
+        exchange_rate_usd: USD 환율. None이면 캐싱값 사용.
+
+    Returns:
+        tuple: (income_warning_update, submit_warning_update, btn_interactive_update)
+    """
+    usd_rate = exchange_rate_usd if exchange_rate_usd is not None else _get_exchange_rate_usd()
+    income_usd = (income_krw or 0) * 10000 * usd_rate
+
+    income_warnings: list[str] = []
+    submit_warnings: list[str] = []
+    hard_block = False
+
+    # Case 1: 유럽 소득 기준
+    if "유럽" in (preferred_countries or []):
+        if income_usd < 1000 and timeline in ["3년 장기 체류", "5년 이상 초장기 체류"]:
+            hard_block = True
+            submit_warnings.append(
+                "🚫 현재 조건으로는 추천 가능한 도시가 없어요. "
+                "소득을 높이거나 체류 기간 또는 대륙을 변경해주세요."
+            )
+        elif income_usd < 1500:
+            income_warnings.append(
+                "⚠️ 현재 소득으로는 유럽 장기 비자 신청이 어려울 수 있어요. "
+                "아시아·중남미로 대륙을 변경하거나 소득 기준이 낮은 도시를 추천받아보세요."
+            )
+        elif income_usd < 2849:
+            income_warnings.append(
+                "⚠️ 유럽 비자 최소 소득 기준($2,849~$3,680/월)에 미달할 수 있어요. "
+                "추천 결과가 제한될 수 있어요."
+            )
+
+    # Case 1: 중남미 소득 기준
+    if "중남미" in (preferred_countries or []) and income_usd < 1000:
+        income_warnings.append(
+            "⚠️ 중남미 일부 국가의 비자 소득 기준($1,000~$3,000/월)에 미달할 수 있어요."
+        )
+
+    # Case 2: 가족 전체 동반 소득
+    if "가족 전체 동반" in (travel_type or "") and income_usd < 3000:
+        income_warnings.append(
+            "⚠️ 가족 동반 + 현재 소득 조건으로는 추천 가능한 장기 비자가 제한돼요. "
+            "아시아 지역을 중심으로 추천이 진행됩니다."
+        )
+
+    # Case 3: 90일 이하
+    if timeline == "90일 이하 (비자 없이 탐색)":
+        income_warnings.append(
+            "ℹ️ 90일 이하 체류는 무비자 국가를 중심으로 추천돼요. "
+            "비자 신청 없이 입국 가능한 도시를 안내해드려요."
+        )
+
+    return (
+        gr.update(
+            visible=bool(income_warnings),
+            value="\n\n".join(income_warnings) if income_warnings else "",
+        ),
+        gr.update(
+            visible=bool(submit_warnings),
+            value="\n\n".join(submit_warnings) if submit_warnings else "",
+        ),
+        gr.update(interactive=not hard_block),
+    )
+
+
+def check_companion_warning(travel_type: str, has_spouse_income: str) -> dict:
+    """
+    배우자/가족 동반 시 소득 미입력 경고.
+
+    Returns:
+        gr.update dict (visible, value)
+    """
+    if travel_type in ["배우자·파트너 동반", "가족 전체 동반 (배우자 + 자녀)"]:
+        if has_spouse_income != "있음":
+            return gr.update(
+                visible=True,
+                value="ℹ️ 배우자 동반 시 일부 국가는 합산 소득 기준을 적용해요. "
+                      "배우자 소득을 입력하면 더 정확한 추천이 가능해요.",
+            )
+    return gr.update(visible=False, value="")
+
 
 def _country_code_to_flag(code: str) -> str:
     """Convert 2-letter ISO country code to flag emoji via Unicode regional indicators."""
@@ -265,6 +377,13 @@ def create_layout(advisor_fn, detail_fn):
                             outputs=[spouse_income_krw],
                         )
 
+                        # 소득·동반 인라인 경고 (입력 변경 시 즉시 노출)
+                        income_warning = gr.Markdown(visible=False, value="")
+                        companion_warning = gr.Markdown(visible=False, value="")
+
+                        # 하드 경고 — 제출 버튼 바로 위
+                        submit_warning = gr.Markdown(visible=False, value="")
+
                         btn_step1 = gr.Button(
                             "🚀 도시 추천 받기", variant="primary", size="lg",
                         )
@@ -358,6 +477,30 @@ def create_layout(advisor_fn, detail_fn):
                 has_spouse_income, spouse_income_krw,
             ],
             outputs=[step1_output, parsed_state, btn_go_step2, tabs, city_choice],
+        )
+
+        # ── 경고 이벤트 연결 ────────────────────────────────────────────
+        # check_income_warning: 소득·대륙·동반·기간 변경 시 호출
+        # outputs: [income_warning, submit_warning, btn_step1]
+        _income_warning_inputs = [income_krw, preferred_countries, travel_type, timeline]
+        for _trigger in _income_warning_inputs:
+            _trigger.change(
+                fn=check_income_warning,
+                inputs=_income_warning_inputs,
+                outputs=[income_warning, submit_warning, btn_step1],
+            )
+
+        # check_companion_warning: 동반 유형 또는 배우자 소득 여부 변경 시 호출
+        # outputs: [companion_warning]
+        travel_type.change(
+            fn=check_companion_warning,
+            inputs=[travel_type, has_spouse_income],
+            outputs=[companion_warning],
+        )
+        has_spouse_income.change(
+            fn=check_companion_warning,
+            inputs=[travel_type, has_spouse_income],
+            outputs=[companion_warning],
         )
 
         # Step 2 탭으로 이동
