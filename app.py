@@ -8,7 +8,7 @@ import utils.currency
 from api.hf_client      import query_model, query_model_cached
 from api.cache_manager  import get_or_create_cache, invalidate
 from api.parser         import parse_response, format_result_markdown, format_step1_markdown, format_step2_markdown
-from prompts.builder    import build_prompt, build_detail_prompt, build_step1_user_message
+from prompts.builder    import build_prompt, build_detail_prompt, build_step1_user_message, validate_user_profile
 from prompts.system     import SYSTEM_PROMPT
 from prompts.system_en  import SYSTEM_PROMPT_EN
 from prompts.data_context import DATA_CONTEXT
@@ -89,6 +89,16 @@ def nomad_advisor(
         "has_spouse_income":  has_spouse_income,
         "spouse_income_krw":  spouse_income_krw,
     }
+
+    # 사전 검증 — hard_block 시 LLM 호출 없이 즉시 안내 메시지 반환
+    validation = validate_user_profile(user_profile)
+    if validation["hard_block"]:
+        block_msg = validation["warnings"][0] if validation["warnings"] else "입력 조건 불충족"
+        return (
+            f"🚫 {block_msg}\n\n소득을 높이거나 체류 기간 또는 대륙을 변경해주세요.",
+            [],
+            {},
+        )
 
     # --- 서버사이드 Context Caching 시도 ---
     # SYSTEM_PROMPT + DATA_CONTEXT + FEW_SHOTS를 Gemini 서버에 캐싱.

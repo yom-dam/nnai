@@ -7,6 +7,11 @@ from prompts.data_context import DATA_CONTEXT
 
 def build_prompt(user_profile: dict) -> list[dict]:
     """Step 1 프롬프트 생성: 사용자 프로필 + RAG 컨텍스트 → messages list"""
+    # 사전 검증 — hard_block 시 ValueError 발생, LLM 호출 차단
+    validation = validate_user_profile(user_profile)
+    if validation["hard_block"]:
+        raise ValueError(f"입력 조건 불충족: {'; '.join(validation['warnings'])}")
+
     language      = user_profile.get("language", "한국어")
     nationality   = user_profile.get("nationality", "Korean")
     income_usd    = user_profile.get("income_usd", 3000)
@@ -421,6 +426,49 @@ _TRAVEL_TYPE_GUIDE_HINTS_EN = {
         "Combined assessment: spouse employment + children's education environment."
     ),
 }
+
+
+def validate_user_profile(user_profile: dict) -> dict:
+    """
+    LLM 호출 전 입력값 조합 유효성 검사. 규칙 기반, LLM 호출 없음.
+
+    Args:
+        user_profile: nomad_advisor()가 구성한 사용자 프로필 dict.
+
+    Returns:
+        {"valid": bool, "warnings": list[str], "hard_block": bool}
+    """
+    income_usd          = user_profile.get("income_usd", 0)
+    preferred_countries = user_profile.get("preferred_countries", []) or []
+    travel_type         = user_profile.get("travel_type", "")
+    timeline            = user_profile.get("timeline", "")
+
+    warnings: list[str] = []
+    hard_block = False
+
+    # 유럽 극단 조합 — hard block (제출 차단)
+    if (
+        "유럽" in preferred_countries
+        and income_usd < 1000
+        and timeline in ["3년 장기 체류", "5년 이상 초장기 체류"]
+    ):
+        hard_block = True
+        warnings.append(
+            "유럽 장기 비자 소득 기준($2,849~/월) 대비 현재 소득이 현저히 부족합니다. "
+            "추천 가능한 도시가 없습니다."
+        )
+
+    # 가족 동반 소득 경고 (soft — hard_block 아님)
+    if "가족 전체 동반" in travel_type and income_usd < 1500:
+        warnings.append(
+            "가족 동반 비자 소득 기준 미달 가능성 — 아시아 중심으로 추천이 제한됩니다."
+        )
+
+    return {
+        "valid":      not hard_block,
+        "warnings":   warnings,
+        "hard_block": hard_block,
+    }
 
 
 _STEP2_SYSTEM_PROMPT = """당신은 특정 도시의 장기 체류 정착 가이드 전문가입니다.

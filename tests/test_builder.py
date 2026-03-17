@@ -1,4 +1,4 @@
-from prompts.builder import build_prompt, build_detail_prompt
+from prompts.builder import build_prompt, build_detail_prompt, validate_user_profile
 
 SAMPLE_PROFILE = {
     "nationality": "Korean",
@@ -297,3 +297,65 @@ def test_build_detail_prompt_long_stay_includes_nonresident_order():
     msgs = build_detail_prompt(selected_city, profile)
     user_msg = msgs[-1]["content"]
     assert "비거주자" in user_msg or "183일" in user_msg
+
+
+class TestValidateUserProfile:
+    def test_hard_block_europe_low_income_long_stay(self):
+        """유럽 + $1,000 미만 + 3년 이상 → hard_block=True"""
+        result = validate_user_profile({
+            "income_usd": 900,
+            "preferred_countries": ["유럽"],
+            "travel_type": "혼자 (솔로)",
+            "timeline": "3년 장기 체류",
+        })
+        assert result["hard_block"] is True
+        assert result["valid"] is False
+        assert len(result["warnings"]) > 0
+
+    def test_hard_block_europe_five_year_stay(self):
+        """유럽 + $900 + 5년 이상 체류 → hard_block=True"""
+        result = validate_user_profile({
+            "income_usd": 900,
+            "preferred_countries": ["유럽"],
+            "travel_type": "혼자 (솔로)",
+            "timeline": "5년 이상 초장기 체류",
+        })
+        assert result["hard_block"] is True
+
+    def test_no_block_europe_sufficient_income(self):
+        """유럽 + $2,000 + 3년 → hard_block=False (소득 충분)"""
+        result = validate_user_profile({
+            "income_usd": 2000,
+            "preferred_countries": ["유럽"],
+            "travel_type": "혼자 (솔로)",
+            "timeline": "3년 장기 체류",
+        })
+        assert result["hard_block"] is False
+        assert result["valid"] is True
+
+    def test_no_block_asia_low_income(self):
+        """아시아 + $500 → hard_block=False (아시아는 차단 기준 없음)"""
+        result = validate_user_profile({
+            "income_usd": 500,
+            "preferred_countries": ["아시아"],
+            "travel_type": "혼자 (솔로)",
+            "timeline": "3년 장기 체류",
+        })
+        assert result["hard_block"] is False
+
+    def test_family_warning_low_income(self):
+        """가족 전체 동반 + $1,200 → warnings에 가족 소득 경고 포함"""
+        result = validate_user_profile({
+            "income_usd": 1200,
+            "preferred_countries": [],
+            "travel_type": "가족 전체 동반 (배우자 + 자녀)",
+            "timeline": "1년 단기 체험",
+        })
+        assert result["hard_block"] is False
+        assert any("가족" in w for w in result["warnings"])
+
+    def test_empty_profile_no_block(self):
+        """빈 프로필 → 차단 없음, 경고 없음"""
+        result = validate_user_profile({})
+        assert result["valid"] is True
+        assert result["hard_block"] is False
