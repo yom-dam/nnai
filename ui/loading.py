@@ -7,6 +7,8 @@ Exports:
     LOADING_CLEAR               str   Empty string — clears the overlay when yielded to gr.HTML
 """
 
+import html as _html
+
 LOADING_CLEAR = ""
 
 # Animation script kept as a separate constant so get_loading_html can use
@@ -152,7 +154,7 @@ def get_loading_html(message: str) -> str:
         'image-rendering:crisp-edges;"></canvas>'
         '<p style="color:rgba(255,255,255,0.75);font-size:0.85rem;'
         'font-family:Inter,sans-serif;margin:0;text-align:center;">'
-        + message
+        + _html.escape(message)
         + '</p>'
         + _ANIM_SCRIPT
         + '</div>'
