@@ -189,3 +189,52 @@ class TestCheckCompanionWarning:
         """가족 전체 동반 + 소득 없음 → 경고 가시"""
         result = self._call("가족 전체 동반 (배우자 + 자녀)", "없음")
         assert result["visible"] is True
+
+
+# ── Loading overlay tests ──────────────────────────────────────────────────────
+
+def test_loading_clear_is_empty_string():
+    from ui.loading import LOADING_CLEAR
+    assert LOADING_CLEAR == ""
+
+def test_get_loading_html_returns_string():
+    from ui.loading import get_loading_html
+    assert isinstance(get_loading_html("테스트"), str)
+
+def test_get_loading_html_contains_message():
+    from ui.loading import get_loading_html
+    html = get_loading_html("🔍 분석 중...")
+    assert "🔍 분석 중..." in html
+
+def test_get_loading_html_has_fixed_overlay():
+    from ui.loading import get_loading_html
+    html = get_loading_html("test")
+    assert "position:fixed" in html
+    assert "z-index:9999" in html
+    assert "backdrop-filter" in html
+
+def test_get_loading_html_has_canvas():
+    from ui.loading import get_loading_html
+    html = get_loading_html("test")
+    assert 'id="nnai-globe-canvas"' in html
+    assert 'width="88"' in html
+    assert 'height="108"' in html
+
+def test_get_loading_html_has_raf_guard():
+    from ui.loading import get_loading_html
+    html = get_loading_html("test")
+    assert "__nnaiRAF" in html
+    assert "cancelAnimationFrame" in html
+
+def test_get_loading_html_has_canvas_connected_check():
+    from ui.loading import get_loading_html
+    html = get_loading_html("test")
+    assert "isConnected" in html
+
+def test_get_loading_html_different_messages_are_independent():
+    from ui.loading import get_loading_html
+    html1 = get_loading_html("메시지1")
+    html2 = get_loading_html("메시지2")
+    assert "메시지1" in html1
+    assert "메시지2" in html2
+    assert "메시지1" not in html2
