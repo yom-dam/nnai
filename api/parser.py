@@ -3,6 +3,15 @@ import os
 import re
 
 import utils.currency
+
+
+def _data_path(filename: str) -> str:
+    """database/ 우선, 없으면 data/ 폴백."""
+    base = os.path.dirname(os.path.dirname(__file__))
+    db_path = os.path.join(base, "database", filename)
+    if os.path.exists(db_path):
+        return db_path
+    return os.path.join(base, "data", filename)
 from utils.tax_warning import get_tax_warning
 from utils.accommodation import get_accommodation_links
 from utils.planb import get_planb_suggestions
@@ -121,7 +130,7 @@ def generate_comparison_table(top_cities: list) -> str:
         return ""
 
     # city_scores.json 로드
-    _scores_path = os.path.join(os.path.dirname(__file__), "..", "data", "city_scores.json")
+    _scores_path = _data_path("city_scores.json")
     try:
         with open(_scores_path, encoding="utf-8") as f:
             scores_list = json.load(f).get("cities", [])
@@ -204,9 +213,9 @@ def _load_visa_urls() -> dict:
     """Load visa_urls.json once and cache it. Returns empty dict on failure."""
     global _VISA_URLS
     if _VISA_URLS is None:
-        _data_path = os.path.join(os.path.dirname(__file__), "..", "data", "visa_urls.json")
+        _visa_urls_path = _data_path("visa_urls.json")
         try:
-            with open(_data_path, encoding="utf-8") as f:
+            with open(_visa_urls_path, encoding="utf-8") as f:
                 _VISA_URLS = json.load(f)
         except (OSError, json.JSONDecodeError):
             _VISA_URLS = {}
