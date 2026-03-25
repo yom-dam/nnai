@@ -119,3 +119,45 @@ def test_no_duplicate_countries_in_results():
     result = recommend_from_db(_profile(income_usd=5000))
     country_ids = [c["country_id"] for c in result["top_cities"]]
     assert len(country_ids) == len(set(country_ids)), f"중복 국가: {country_ids}"
+
+
+def test_top_n_default_still_returns_3():
+    """Default top_n=3 keeps existing callers unchanged."""
+    profile = {"income_usd": 3000, "preferred_countries": [], "lifestyle": [], "timeline": "1년 단기 체험", "nationality": ""}
+    result = recommend_from_db(profile)
+    assert len(result["top_cities"]) <= 3
+
+def test_top_n_8_returns_up_to_8():
+    """top_n=8 can return more than 3 cities."""
+    profile = {"income_usd": 3000, "preferred_countries": [], "lifestyle": [], "timeline": "1년 단기 체험", "nationality": ""}
+    result = recommend_from_db(profile, top_n=8)
+    assert len(result["top_cities"]) >= 4  # must exceed old cap
+
+def test_6month_timeline_filters_stay_6():
+    """6개월 단기 체험 excludes countries with stay_months < 6."""
+    profile = {"income_usd": 2000, "preferred_countries": [], "lifestyle": [], "timeline": "6개월 단기 체험", "nationality": ""}
+    result = recommend_from_db(profile, top_n=8)
+    from recommender import _load_data
+    countries, _ = _load_data()
+    country_map = {c["id"]: c for c in countries}
+    for city in result["top_cities"]:
+        cid = city["country_id"]
+        country = country_map.get(cid, {})
+        assert (country.get("stay_months") or 0) >= 6, f"{cid} has stay_months < 6"
+
+def test_compute_disabled_options_returns_dict():
+    """compute_disabled_options returns a dict with expected keys."""
+    from recommender import compute_disabled_options
+    profile = {"income_usd": 2000, "preferred_countries": ["아시아"], "lifestyle": [], "timeline": "1년 단기 체험", "nationality": ""}
+    result = compute_disabled_options(profile)
+    assert "continents" in result
+    assert "timeline" in result
+    assert "lifestyle_tags" in result
+
+def test_compute_disabled_options_values_are_lists():
+    """disabled option values are lists of JS chip label strings."""
+    from recommender import compute_disabled_options
+    profile = {"income_usd": 100, "preferred_countries": [], "lifestyle": [], "timeline": "1년 단기 체험", "nationality": ""}
+    result = compute_disabled_options(profile)
+    for key, val in result.items():
+        assert isinstance(val, list), f"{key} should be a list"

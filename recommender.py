@@ -26,6 +26,7 @@ _CONTINENT_TO_IDS: dict[str, set[str]] = {
 # (min_stay_months, require_renewable)
 _TIMELINE_FILTER: dict[str, tuple[int, bool]] = {
     "90일 단기 체험":     (1,  False),
+    "6개월 단기 체험":    (6,  False),
     "1년 단기 체험":      (12, False),
     "3년 이상 장기 이민": (12, True),
     "5년 이상 장기 이민": (12, True),
@@ -158,8 +159,8 @@ def _passes_schengen_long_stay_filter(
 # Public API
 # ---------------------------------------------------------------------------
 
-def recommend_from_db(user_profile: dict) -> dict:
-    """Filter and rank cities from DB; return top-3 with warnings."""
+def recommend_from_db(user_profile: dict, top_n: int = 3) -> dict:
+    """Filter and rank cities from DB; return top-N with warnings."""
     countries_list, cities_list = _load_data()
 
     income_usd = float(user_profile.get("income_usd") or 0)
@@ -209,7 +210,7 @@ def recommend_from_db(user_profile: dict) -> dict:
             continue
         seen_country_ids.add(cid)
         top_cities_raw.append((score, city, country))
-        if len(top_cities_raw) == 3:
+        if len(top_cities_raw) == top_n:
             break
 
     # Build output city dicts
@@ -261,3 +262,99 @@ def recommend_from_db(user_profile: dict) -> dict:
         "top_cities":      top_cities,
         "overall_warning": overall_warning,
     }
+
+
+# ---------------------------------------------------------------------------
+# Faceted filter helpers
+# ---------------------------------------------------------------------------
+
+# JS chip label → _CONTINENT_TO_IDS key(s). "기타" maps to two keys.
+_CHIP_TO_CONTINENTS: dict[str, list[str]] = {
+    "아시아": ["아시아"],
+    "유럽":   ["유럽"],
+    "중남미": ["중남미"],
+    "기타":   ["중동/아프리카", "북미"],
+}
+
+# JS chip label → _TIMELINE_FILTER key
+_CHIP_TO_TIMELINE: dict[str, str] = {
+    "90일":  "90일 단기 체험",
+    "6개월": "6개월 단기 체험",
+    "1년":   "1년 단기 체험",
+    "3년+":  "3년 이상 장기 이민",
+}
+
+# JS chip label → _LIFESTYLE_MATCH key
+_CHIP_TO_LIFESTYLE: dict[str, str] = {
+    "저물가":     "저비용 생활",
+    "코워킹":     "코워킹스페이스 중시",
+    "안전":       "안전 중시",
+    "한인커뮤니티": "한인 커뮤니티",
+    "영어권":     "영어권 선호",
+}
+
+
+def _any_city_passes(profile: dict, countries_list: list, cities_list: list) -> bool:
+    """Return True if any city passes all hard filters for the given profile."""
+    income_usd = float(profile.get("income_usd") or 0)
+    timeline   = profile.get("timeline", "")
+    preferred  = profile.get("preferred_countries") or []
+    country_map = {c["id"]: c for c in countries_list}
+    for city in cities_list:
+        cid = city.get("country_id", "")
+        country = country_map.get(cid)
+        if country is None:
+            continue
+        if not _passes_income_filter(country, income_usd):
+            continue
+        if not _passes_timeline_filter(country, timeline):
+            continue
+        if not _passes_continent_filter(cid, preferred):
+            continue
+        if not _passes_schengen_long_stay_filter(country, timeline, income_usd):
+            continue
+        return True
+    return False
+
+
+def compute_disabled_options(db_profile: dict) -> dict:
+    """
+    Return chip label lists that would yield zero results if added to db_profile.
+
+    db_profile uses recommend_from_db() field names:
+      income_usd, preferred_countries, lifestyle, timeline, nationality
+
+    Returns dict with keys: continents, timeline, lifestyle_tags
+    Each value is a list of JS chip label strings that are disabled.
+    """
+    countries_list, cities_list = _load_data()
+
+    disabled: dict[str, list[str]] = {
+        "continents": [],
+        "timeline": [],
+        "lifestyle_tags": [],
+    }
+
+    # Test each continent chip in isolation
+    for chip_label, continent_keys in _CHIP_TO_CONTINENTS.items():
+        test_profile = {**db_profile, "preferred_countries": continent_keys}
+        if not _any_city_passes(test_profile, countries_list, cities_list):
+            disabled["continents"].append(chip_label)
+
+    # Test each timeline chip
+    for chip_label, timeline_key in _CHIP_TO_TIMELINE.items():
+        test_profile = {**db_profile, "timeline": timeline_key}
+        if not _any_city_passes(test_profile, countries_list, cities_list):
+            disabled["timeline"].append(chip_label)
+
+    # Test each lifestyle chip (added to existing selections)
+    current_lifestyle = list(db_profile.get("lifestyle") or [])
+    for chip_label, lifestyle_key in _CHIP_TO_LIFESTYLE.items():
+        if lifestyle_key in current_lifestyle:
+            continue  # already selected, cannot be disabled
+        test_lifestyle = current_lifestyle + [lifestyle_key]
+        test_profile = {**db_profile, "lifestyle": test_lifestyle}
+        if not _any_city_passes(test_profile, countries_list, cities_list):
+            disabled["lifestyle_tags"].append(chip_label)
+
+    return disabled
