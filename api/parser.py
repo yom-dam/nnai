@@ -3,18 +3,10 @@ import os
 import re
 
 import utils.currency
-
-
-def _data_path(filename: str) -> str:
-    """database/ 우선, 없으면 data/ 폴백."""
-    base = os.path.dirname(os.path.dirname(__file__))
-    db_path = os.path.join(base, "database", filename)
-    if os.path.exists(db_path):
-        return db_path
-    return os.path.join(base, "data", filename)
 from utils.tax_warning import get_tax_warning
 from utils.accommodation import get_accommodation_links
 from utils.planb import get_planb_suggestions
+from utils.data_paths import resolve_data_path
 from api.schengen_calculator import SCHENGEN_COUNTRIES
 
 # ── 도시 비교 테이블 ─────────────────────────────────────────────────────────
