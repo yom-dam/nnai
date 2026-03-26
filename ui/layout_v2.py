@@ -642,6 +642,8 @@ function scheduleFilterCall(immediate) {
 }
 
 async function doFilterCall() {
+  // Do not disrupt card reveal or detail view with background filter calls
+  if (state.phase === 'revealing' || state.phase === 'detail') return;
   if (_filterController) _filterController.abort();
   _filterController = new AbortController();
   const ctrl = _filterController;
@@ -787,10 +789,21 @@ function renderCards() {
       const el = existing.get(idx);
       el.querySelector('.card-back').classList.toggle('selected-state', isSelected);
       el.classList.toggle('selected', isSelected);
+      // Update front face in case city at this position changed
+      const front = el.querySelector('.card-front');
+      if (front) {
+        front.innerHTML =
+          '<span class="flag">' + (city.flag || '') + '</span>' +
+          '<span class="city">' + (city.city_kr || city.city) + '</span>' +
+          '<span class="cost">$' + (city.monthly_cost_usd || '?') + '/월</span>';
+      }
     } else {
       const el = makeCardEl(city, i, isSelected);
       el.style.animationDelay = (i * 0.08) + 's';
       el.classList.add('entering');
+      el.addEventListener('animationend', e => {
+        if (e.animationName === 'cardEnter') el.classList.remove('entering');
+      });
       grid.appendChild(el);
     }
   });
@@ -945,6 +958,11 @@ function resetToFiltering() {
   setState({ selectedCards: [], phase: 'selecting', step2Loading: false });
   document.getElementById('step2-result').innerHTML = '';
   document.getElementById('step2-btn').classList.remove('visible');
+  // Restore grid layout mutated by startReveal
+  const grid = document.getElementById('card-grid');
+  grid.style.gridTemplateColumns = '';
+  grid.style.maxWidth = '';
+  // Un-flip all cards
   document.querySelectorAll('.card-wrap.flipped').forEach(c => c.classList.remove('flipped'));
 }
 
