@@ -272,10 +272,12 @@ def create_layout(advisor_fn, detail_fn):
                                 choices=["있음", "없음"],
                                 value="없음",
                             )
-                            spouse_income_krw = gr.Number(
+                            spouse_income_krw = gr.Slider(
                                 label="배우자 월 수입 (만원)",
                                 value=300,
                                 minimum=0,
+                                maximum=5000,
+                                step=100,
                                 visible=False,
                             )
 
@@ -287,9 +289,13 @@ def create_layout(advisor_fn, detail_fn):
                                 value="없음",
                             )
 
-                        # P0-1: Slider → Number
-                        income_krw = gr.Number(
-                            label="월 소득 (만원)", value=500, minimum=100,
+                        # P0-1: Slider for income
+                        income_krw = gr.Slider(
+                            label="월 소득 (만원)",
+                            value=500,
+                            minimum=100,
+                            maximum=5000,
+                            step=100,
                             info="세전 월 소득 기준. 비자 신청 소득 기준 검토에 사용됩니다.",
                         )
                         # P0-2 / 변경 5-Q4: 소득 증빙 형태 (아코디언 Q4 통합, 5개 선택지)

@@ -115,7 +115,7 @@ def _lookup_city_scores(city_name: str, scores_list: list) -> dict:
 
 def generate_comparison_table(top_cities: list) -> str:
     """
-    TOP 3 도시 데이터를 받아 5점 척도 비교 테이블 마크다운 반환.
+    TOP 3 도시 데이터를 받아 HTML 테이블 형식의 비교표 반환.
     city_scores.json을 직접 로드하여 참조.
     """
     if not top_cities:
@@ -133,69 +133,97 @@ def generate_comparison_table(top_cities: list) -> str:
     city_names = [c.get("city", f"도시{i+1}") for i, c in enumerate(cities)]
     city_scores_rows = [_lookup_city_scores(name, scores_list) for name in city_names]
 
-    # 헤더 너비 계산 (최소 12자)
-    col_w = 13
-    label_w = 10
-
-    def row(label: str, values: list[str]) -> str:
-        return f"{label:<{label_w}}" + "".join(f"{v:<{col_w}}" for v in values)
-
-    # 헤더
-    header_names = [f"{c.get('city_kr', name)}" for c, name in zip(cities, city_names)]
-    lines = [
-        "```",
-        row("", [f"{n[:11]:<{col_w}}" for n in header_names]),
-        row("─" * label_w, ["─" * (col_w - 1) + " "] * len(cities)),
+    # HTML 테이블 시작
+    html_lines = [
+        '<style>',
+        '.comparison-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }',
+        '.comparison-table th { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; padding: 14px 10px; text-align: center; font-weight: 600; border: none; }',
+        '.comparison-table td { padding: 12px 10px; border: 1px solid #e0e0e0; text-align: center; }',
+        '.comparison-table tbody tr:hover { background: rgba(30, 58, 138, 0.04); }',
+        '.comparison-table tr:nth-child(even) td { background: #f8f9fa; }',
+        '.comparison-table tr:nth-child(odd) td { background: #ffffff; }',
+        '.comparison-table .label-col { text-align: left; font-weight: 600; background: #f3f4f6; color: #1f2937; border-right: 2px solid #1e3a8a; }',
+        '@media (prefers-color-scheme: dark) {',
+        '  .comparison-table { color: #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }',
+        '  .comparison-table th { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); }',
+        '  .comparison-table td { border-color: #374151; }',
+        '  .comparison-table tbody tr:hover { background: rgba(30, 58, 138, 0.1); }',
+        '  .comparison-table tr:nth-child(even) td { background: #1f2937; }',
+        '  .comparison-table tr:nth-child(odd) td { background: #111827; }',
+        '  .comparison-table .label-col { background: #0f172a; color: #e5e7eb; border-right-color: #3b82f6; }',
+        '}',
+        '</style>',
+        '<table class="comparison-table">',
+        '<thead>',
+        '<tr>',
+        '<th style="text-align: left;">항목</th>',
     ]
 
+    # 헤더 (도시명)
+    header_names = [f"{c.get('city_kr', name)}" for c, name in zip(cities, city_names)]
+    for name in header_names:
+        html_lines.append(f'<th>{name}</th>')
+    html_lines.append('</tr>')
+    html_lines.append('</thead>')
+    html_lines.append('<tbody>')
+
     # 인터넷 속도
-    internet_vals = []
+    html_lines.append('<tr>')
+    html_lines.append('<td class="label-col">인터넷 속도</td>')
     for s in city_scores_rows:
         mbps = s.get("internet_mbps")
-        internet_vals.append(_score_to_dots(_internet_to_score(mbps)) if mbps else "정보 없음")
-    lines.append(row("인터넷", internet_vals))
+        val = _score_to_dots(_internet_to_score(mbps)) if mbps else "정보 없음"
+        html_lines.append(f'<td>{val}</td>')
+    html_lines.append('</tr>')
 
     # 치안
-    safety_vals = []
+    html_lines.append('<tr>')
+    html_lines.append('<td class="label-col">치안 수준</td>')
     for s in city_scores_rows:
         sv = s.get("safety_score")
-        safety_vals.append(_score_to_dots(_safety_to_score(sv)) if sv is not None else "정보 없음")
-    lines.append(row("치안", safety_vals))
+        val = _score_to_dots(_safety_to_score(sv)) if sv is not None else "정보 없음"
+        html_lines.append(f'<td>{val}</td>')
+    html_lines.append('</tr>')
 
     # 생활비
-    cost_vals = []
+    html_lines.append('<tr>')
+    html_lines.append('<td class="label-col">생활비</td>')
     for s, c in zip(city_scores_rows, cities):
         usd = s.get("monthly_cost_usd") or c.get("monthly_cost_usd", 0)
-        cost_vals.append(_score_to_dots(_cost_to_score(usd)) if usd else "정보 없음")
-    lines.append(row("생활비", cost_vals))
+        val = _score_to_dots(_cost_to_score(usd)) if usd else "정보 없음"
+        html_lines.append(f'<td>{val}</td>')
+    html_lines.append('</tr>')
 
-    # 한국어 접근성 (필드 없는 도시는 "정보 없음")
-    korean_vals = []
-    has_korean_data = False
+    # 한국어 접근성
+    html_lines.append('<tr>')
+    html_lines.append('<td class="label-col">한국어 커뮤니티</td>')
     for s in city_scores_rows:
         ks = _korean_to_score(s.get("korean_community_size", ""))
-        if ks is not None:
-            korean_vals.append(_score_to_dots(ks))
-            has_korean_data = True
-        else:
-            korean_vals.append("정보 없음")
-    if has_korean_data:
-        lines.append(row("한국어접근성", korean_vals))
+        val = _score_to_dots(ks) if ks is not None else "정보 없음"
+        html_lines.append(f'<td>{val}</td>')
+    html_lines.append('</tr>')
 
     # 시차
+    html_lines.append('<tr>')
+    html_lines.append('<td class="label-col">시차 (KST 기준)</td>')
     tz_vals = [_get_timezone_diff(name) for name in city_names]
-    lines.append(row("시차(KST)", tz_vals))
+    for tz in tz_vals:
+        html_lines.append(f'<td>{tz}</td>')
+    html_lines.append('</tr>')
 
-    # 비자 체류 기간
-    visa_vals = []
+    # 비자 유형
+    html_lines.append('<tr>')
+    html_lines.append('<td class="label-col">비자 유형</td>')
     for c in cities:
         vt = c.get("visa_type", "-")
-        # 간략화: 앞 15자
-        visa_vals.append(vt[:12] if vt else "-")
-    lines.append(row("비자 유형", visa_vals))
+        visa_short = vt[:20] + "..." if len(vt) > 20 else vt
+        html_lines.append(f'<td>{visa_short}</td>')
+    html_lines.append('</tr>')
 
-    lines.append("```")
-    return "\n".join(lines)
+    html_lines.append('</tbody>')
+    html_lines.append('</table>')
+
+    return "\n".join(html_lines)
 
 # Module-level cache for visa URLs loaded from data/visa_urls.json
 _VISA_URLS: dict | None = None
@@ -342,6 +370,47 @@ def format_step1_markdown(data: dict) -> str:
 
     lines = ["## 🌍 맞춤 장기 체류 설계 — 추천 도시 TOP 3\n"]
 
+    # 카드 스타일 CSS
+    lines.append("""<style>
+.city-card {
+  border: 1px solid;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 16px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  color: #333;
+}
+
+@media (prefers-color-scheme: light) {
+  .city-card {
+    border-color: #d0d0d0;
+    background: linear-gradient(135deg, #f5f6f7 0%, #ffffff 100%);
+    color: #1a1a2e;
+  }
+  .city-card-header { color: #1a1a2e; }
+  .city-card-score { color: #ff6b6b; }
+  .city-card a { color: #0066cc; }
+  .city-card strong { color: #1a1a2e; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .city-card {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    color: #e5e7eb;
+  }
+  .city-card-header { color: #f0f9ff; }
+  .city-card-score { color: #fbbf24; }
+  .city-card a { color: #60a5fa; }
+  .city-card strong { color: #e5e7eb; }
+  .city-card p { color: #e5e7eb; }
+}
+
+.city-card-header { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.city-card-score { font-size: 18px; margin-bottom: 16px; }
+</style>
+""")
+
     for i, city in enumerate(data.get("top_cities", [])[:3], 1):
         city_en = city.get("city", "")
         city_kr = city.get("city_kr", city_en)
@@ -353,28 +422,30 @@ def format_step1_markdown(data: dict) -> str:
 
         cost_krw = _usd_to_krw(cost_usd)
 
-        # 도시 헤더
-        lines.append(f"### {i}. {city_kr} ({city_en}), {country}")
-        lines.append(f"⭐ 추천 점수: **{score}/10**\n")
+        # 카드 시작
+        lines.append('<div class="city-card">')
+        lines.append(f'<div class="city-card-header">#{i}. {city_kr} ({city_en}), {country}</div>')
+        lines.append(f'<div class="city-card-score">⭐ 추천 점수: {score}/10</div>')
 
-        # 비자 유형 (하이퍼링크)
+        # 비자 유형 (HTML 링크 사용)
         if visa_url:
             if "google.com/search" in visa_url:
-                lines.append(f"- **비자 유형**: {visa_type} — [공식 링크 확인 중 — 검색으로 찾기]({visa_url})")
+                lines.append(f'**비자 유형**: {visa_type} — <a href="{visa_url}">공식 링크 확인 중</a>')
             else:
-                lines.append(f"- **비자 유형**: [{visa_type}]({visa_url})")
+                lines.append(f'**비자 유형**: <a href="{visa_url}">{visa_type}</a>')
         else:
-            lines.append(f"- **비자 유형**: {visa_type}")
+            lines.append(f'**비자 유형**: {visa_type}')
 
-        # 월 예상 비용 (이중 통화)
-        lines.append(f"- **월 예상 비용**: ${cost_usd:,} (약 {cost_krw:,}원)\n")
+        # 월 예상 비용
+        lines.append(f'**월 예상 비용**: ${cost_usd:,} (약 {cost_krw:,}원)')
 
-        # 추천 근거 (항상 평문 — 출처는 하단 참고 자료 섹션에서 처리)
-        lines.append("**✅ 추천 근거**")
-        for reason in city.get("reasons", []):
-            point = reason.get("point", "")
-            lines.append(f"- {point}")
-        lines.append("")
+        # 추천 근거
+        reasons = city.get("reasons", [])
+        if reasons:
+            lines.append("**✅ 추천 근거**")
+            for reason in reasons:
+                point = reason.get("point", "")
+                lines.append(f"- {point}")
 
         # 현실적 고려 사항
         warnings = city.get("realistic_warnings", [])
@@ -382,7 +453,6 @@ def format_step1_markdown(data: dict) -> str:
             lines.append("**⚠️ 현실적 고려 사항**")
             for w in warnings:
                 lines.append(f"- {w}")
-            lines.append("")
 
         # 세금 거주지 경고
         country_id = city.get("country_id", "")
@@ -391,19 +461,21 @@ def format_step1_markdown(data: dict) -> str:
         tax_warn = get_tax_warning(country_id, timeline, language)
         if tax_warn:
             if language == "English":
-                lines.append(f"\n**💼 Tax Note**\n\n{tax_warn}\n")
+                lines.append(f"**💼 Tax Note**\n\n{tax_warn}")
             else:
-                lines.append(f"\n**💼 세금 주의사항**\n\n{tax_warn}\n")
+                lines.append(f"**💼 세금 주의사항**\n\n{tax_warn}")
 
         # 참고 자료
         references = city.get("references")
         if references:
             valid_refs = [r for r in references if r.get("url")]
             if valid_refs:
-                lines.append("### 참고 자료")
+                lines.append("**📚 참고 자료**")
                 for ref in valid_refs:
-                    lines.append(f"- [{ref.get('title', ref['url'])}]({ref['url']})")
-                lines.append("")
+                    lines.append(f"- <a href=\"{ref['url']}\">{ref.get('title', ref['url'])}</a>")
+
+        # 카드 종료
+        lines.append('</div>')
 
     # 도시 비교 테이블 삽입 (TOP 3 카드 하단)
     top_cities = data.get("top_cities", [])

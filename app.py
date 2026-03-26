@@ -192,6 +192,7 @@ from ui.layout import _APP_CSS
 from ui.theme import create_theme
 
 if _USE_NEW_UI:
+    from ui.layout_v2 import build_layout_v2
     demo = build_layout_v2(nomad_advisor, show_city_detail)
 else:
     demo = create_layout(nomad_advisor, show_city_detail)
