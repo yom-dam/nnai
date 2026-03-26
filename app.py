@@ -204,4 +204,5 @@ if __name__ == "__main__":
         server_name="0.0.0.0" if _is_hf else "127.0.0.1",
         server_port=7860,
         inbrowser=not _is_hf,
+        ssr_mode=False,
     )

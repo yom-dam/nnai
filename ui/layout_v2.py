@@ -984,7 +984,7 @@ def build_layout_v2(nomad_advisor_fn, show_city_detail_fn) -> gr.Blocks:
     nomad_advisor_fn and show_city_detail_fn are accepted for interface consistency
     with create_layout() in layout.py, but this layout uses module-level functions.
     """
-    with gr.Blocks(css="body { margin:0; }") as demo:
+    with gr.Blocks() as demo:
         gr.HTML(build_ui_html())
 
         # Hidden components — sole purpose is Gradio API routing
