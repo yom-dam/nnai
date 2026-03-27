@@ -188,14 +188,69 @@ def show_city_detail(
     return markdown
 
 
+def _get_language_by_nationality(nationality: str) -> str:
+    """국적(여권발급국가)에 따라 답변 언어 결정."""
+    nationality_to_lang = {
+        "Korean": "한국어",
+        "Japanese": "日本語",
+        "Chinese": "中文",
+        "German": "Deutsch",
+        "French": "Français",
+        "Spanish": "Español",
+        "Italian": "Italiano",
+        "American": "English",
+        "British": "English",
+        "Australian": "English",
+        "Other": "English",
+    }
+    return nationality_to_lang.get(nationality, "English")
+
+
+# Step 2 함수를 래핑하여 nationality 기반 언어 사용
+def show_city_detail_with_nationality(
+    parsed_data: dict,
+    city_index: int = 0,
+) -> str:
+    """Step 2: 국적 기반 언어로 상세 가이드 제공."""
+    top_cities = parsed_data.get("top_cities", [])
+    if not top_cities or city_index >= len(top_cities):
+        return "선택한 도시를 찾을 수 없습니다."
+
+    selected_city = top_cities[city_index]
+    user_profile  = parsed_data.get("_user_profile", {})
+
+    # 국적 기반 언어로 덮어쓰기
+    nationality = user_profile.get("nationality", "Other")
+    user_profile_for_step2 = user_profile.copy()
+    user_profile_for_step2["language"] = _get_language_by_nationality(nationality)
+
+    step2_messages = build_detail_prompt(
+        selected_city,
+        user_profile_for_step2,
+    )
+
+    raw = query_model(step2_messages, max_tokens=6144)
+
+    if raw.startswith("ERROR"):
+        return f"⚠️ API 오류: {raw}"
+
+    detail_parsed = parse_response(raw)
+
+    # visa_db에서 출처·기준일 조회
+    visa_data = _lookup_visa_data(selected_city.get("country_id", ""))
+    markdown = format_step2_markdown(detail_parsed, visa_data=visa_data)
+
+    return markdown
+
+
 from ui.layout import _APP_CSS
 from ui.theme import create_theme
 
 if _USE_NEW_UI:
     from ui.layout_v2 import build_layout_v2
-    demo = build_layout_v2(nomad_advisor, show_city_detail)
+    demo = build_layout_v2(nomad_advisor, show_city_detail_with_nationality)
 else:
-    demo = create_layout(nomad_advisor, show_city_detail)
+    demo = create_layout(nomad_advisor, show_city_detail_with_nationality)
 
 _is_hf = bool(os.getenv("SPACE_ID"))
 
