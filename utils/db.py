@@ -1,6 +1,7 @@
 """SQLite 연결 + 스키마 초기화."""
 import sqlite3
 import os
+import threading
 
 _DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "users.db")
 
@@ -36,11 +37,14 @@ def init_db(path: str | None = None) -> sqlite3.Connection:
 
 
 _conn: sqlite3.Connection | None = None
+_lock = threading.Lock()
 
 
 def get_conn() -> sqlite3.Connection:
     """앱 전역 싱글턴 연결 반환."""
     global _conn
     if _conn is None:
-        _conn = init_db()
+        with _lock:
+            if _conn is None:
+                _conn = init_db()
     return _conn

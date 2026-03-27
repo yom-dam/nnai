@@ -1,4 +1,4 @@
-import os, tempfile, pytest
+import os
 os.environ.setdefault("NNAI_DB_PATH", ":memory:")
 
 from utils.db import init_db, get_conn
@@ -30,3 +30,11 @@ def test_insert_and_fetch_pin():
     assert rows[0][0] == "방콕"
     assert rows[0][1] == "최고!"
     conn.close()
+
+def test_get_conn_returns_singleton():
+    import importlib
+    import utils.db as db_mod
+    importlib.reload(db_mod)
+    c1 = db_mod.get_conn()
+    c2 = db_mod.get_conn()
+    assert c1 is c2
