@@ -222,9 +222,15 @@ HEADER_GLOBE_HTML = (
     '<h1 style="display:flex;align-items:center;justify-content:center;'
     'font-size:2rem;color:var(--nn-title,#0C447C);margin:0 0 4px;">'
     '<canvas id="nnai-hdr-globe" width="48" height="48"'
+    ' onclick="if(window.nnaiOpenMap)window.nnaiOpenMap();"'
+    ' title="클릭하면 노마드 방명록 지도가 열려요 🗺️"'
     ' style="display:inline-block;vertical-align:middle;'
     'image-rendering:pixelated;image-rendering:crisp-edges;'
-    'margin-right:10px;"></canvas>'
+    'margin-right:10px;cursor:pointer;'
+    'transition:filter .2s;filter:drop-shadow(0 0 0px #4FC3F7);"'
+    ' onmouseover="this.style.filter=\'drop-shadow(0 0 6px #4FC3F7)\'"'
+    ' onmouseout="this.style.filter=\'drop-shadow(0 0 0px #4FC3F7)\'"'
+    '></canvas>'
     'NomadNavigator AI</h1>'
 )
 
