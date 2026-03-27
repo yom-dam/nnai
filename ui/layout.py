@@ -215,7 +215,51 @@ def create_layout(advisor_fn, detail_fn):
         )
 
         # ── 세계지도 모달 (position:fixed — DOM 위치 무관) ──────────────
-        gr.HTML(value=build_globe_map_html(), elem_id="nnai-globe-map-modal")
+        globe_html = build_globe_map_html()
+        gr.HTML(value=globe_html, elem_id="nnai-globe-map-modal")
+
+        # 글로벌 함수 초기화 (layout.py의 js_on_load로 실행)
+        init_script = """
+        // 모든 함수를 window에 할당 (Gradio가 inline script를 무시하므로 명시적으로 함수 정의)
+        setTimeout(function(){
+          // Leaflet 동적 로드
+          if(typeof L === 'undefined'){
+            var script = document.createElement('script');
+            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+            script.onload = function(){ console.log('✓ Leaflet loaded'); };
+            document.head.appendChild(script);
+
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            document.head.appendChild(link);
+          }
+
+          // 검색 함수들 재정의 (globe_map의 것을 wrapping)
+          window.setupNomadMap = function(){
+            var searchInput = document.getElementById('nnai-search-input');
+            if(!searchInput || searchInput.__setup) return;
+            searchInput.__setup = true;
+
+            searchInput.oninput = function(){
+              if(typeof onSearchInput === 'function') onSearchInput();
+            };
+          };
+
+          // 200ms 후 셋업
+          setTimeout(window.setupNomadMap, 200);
+          // 그 후 1초마다 재시도 (최대 10회)
+          var retries = 0;
+          var interval = setInterval(function(){
+            if(retries++ > 10 || (window.setupNomadMap && document.getElementById('nnai-search-input').__setup)){
+              clearInterval(interval);
+            } else {
+              window.setupNomadMap();
+            }
+          }, 1000);
+        }, 100);
+        """
+        gr.HTML(value="", js_on_load=init_script)
 
         # ── 헤더 ──────────────────────────────────────────────────────
         # js_on_load=: 컴포넌트 마운트 시 Gradio가 직접 JS를 실행해줌

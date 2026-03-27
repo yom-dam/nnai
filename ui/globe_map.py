@@ -99,7 +99,7 @@ def build_globe_map_html() -> str:
 </style>
 
 <!-- Modal markup -->
-<div id="nnai-map-modal-bg">
+<div id="nnai-map-modal-bg" onclick="if(event.target === this) this.classList.remove('open');">
   <div id="nnai-map-modal">
 
     <div id="nnai-map-top">
@@ -107,7 +107,7 @@ def build_globe_map_html() -> str:
         <h2>🗺️ 나의 노마드 방명록</h2>
         <p>방문한 도시를 검색해서 핀을 남겨보세요</p>
       </div>
-      <button id="nnai-map-close">✕</button>
+      <button id="nnai-map-close" onclick="document.getElementById('nnai-map-modal-bg').classList.remove('open');">✕</button>
     </div>
 
     <!-- 비로그인 CTA -->
@@ -135,7 +135,10 @@ def build_globe_map_html() -> str:
     <div id="nnai-search-wrap">
       <span id="nnai-search-icon">🔍</span>
       <input id="nnai-search-input" autocomplete="off"
-        placeholder="도시 검색... 쿠알라룸푸르, Tbilisi, Budapest 등 어떤 언어도 OK"/>
+        placeholder="도시 검색... 쿠알라룸푸르, Tbilisi, Budapest 등 어떤 언어도 OK"
+        oninput="if(typeof onSearchInput !== 'undefined') onSearchInput();"
+        onkeydown="if(typeof onSearchInput !== 'undefined' && event.key === 'Enter') event.preventDefault();"
+        />
       <span id="nnai-search-status"></span>
       <div id="nnai-ac"></div>
     </div>
@@ -476,6 +479,111 @@ $('nnai-pin-cancel').onclick=closePinPopup;
 $('nnai-pin-save').onclick=savePin;
 $('nnai-pp-note').addEventListener('keydown',function(e){if(e.key==='Enter')savePin();});
 
+})();
+</script>
+
+<script>
+// Leaflet과 스타일시트를 동적으로 로드
+(function(){
+  // Leaflet CSS 로드
+  if(!document.querySelector('link[href*="leaflet.css"]')){
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(link);
+  }
+
+  // Leaflet JS 로드
+  if(typeof L === 'undefined'){
+    var script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.onload = function(){
+      console.log('✓ Leaflet loaded');
+      setTimeout(initializeMap, 200);
+    };
+    script.onerror = function(){
+      console.error('Failed to load Leaflet from CDN');
+    };
+    document.head.appendChild(script);
+  } else {
+    setTimeout(initializeMap, 100);
+  }
+
+  function initializeMap(){
+    setupEventListeners();
+  }
+})();
+
+// Leaflet이 로드될 때까지 기다린 후 모든 이벤트 리스너 재설정
+(function(){
+  var attempts = 0;
+  var maxAttempts = 30;
+
+  function waitForLeaflet(){
+    attempts++;
+
+    // Leaflet 로드 확인
+    if(typeof L === 'undefined'){
+      if(attempts < maxAttempts){
+        setTimeout(waitForLeaflet, 100);
+      }
+      return;
+    }
+
+    setupEventListeners();
+  }
+
+  function setupEventListeners(){
+    var searchInput = document.getElementById('nnai-search-input');
+    var mapBg = document.getElementById('nnai-map-modal-bg');
+    var closeBtn = document.getElementById('nnai-map-close');
+    var mapContainer = document.getElementById('nnai-leaflet-map');
+
+    if(!searchInput || !mapBg || !closeBtn || !mapContainer){
+      if(attempts < maxAttempts){
+        setTimeout(setupEventListeners, 100);
+      }
+      return;
+    }
+
+    // 이미 설정되었으면 안 함
+    if(searchInput.__nnaiSetup) return;
+    searchInput.__nnaiSetup = true;
+
+    console.log('Setting up Nomad Map event listeners');
+
+    // 검색 입력 이벤트
+    searchInput.addEventListener('input', onSearchInput);
+    searchInput.addEventListener('keydown', function(e){
+      var items = document.getElementById('nnai-ac').querySelectorAll('.nnai-ac-item');
+      if(e.key==='ArrowDown'){_acHi=Math.min(_acHi+1,items.length-1);hiAc(_acHi);e.preventDefault();}
+      else if(e.key==='ArrowUp'){_acHi=Math.max(_acHi-1,0);hiAc(_acHi);e.preventDefault();}
+      else if(e.key==='Enter'&&_acHi>=0){selectCity(_acHi);}
+      else if(e.key==='Escape'){closeAc();}
+    });
+    searchInput.addEventListener('blur', function(){setTimeout(closeAc, 200);});
+
+    // 모달 닫기
+    closeBtn.onclick = function(){
+      mapBg.classList.remove('open');
+    };
+    mapBg.onclick = function(e){
+      if(e.target === this) mapBg.classList.remove('open');
+    };
+
+    // 핀 추가 팝업 버튼들
+    var pinCancel = document.getElementById('nnai-pin-cancel');
+    var pinSave = document.getElementById('nnai-pin-save');
+    var noteInput = document.getElementById('nnai-pp-note');
+
+    if(pinCancel) pinCancel.onclick = closePinPopup;
+    if(pinSave) pinSave.onclick = savePin;
+    if(noteInput) noteInput.addEventListener('keydown', function(e){if(e.key==='Enter')savePin();});
+
+    console.log('✓ Nomad Map ready!');
+  }
+
+  waitForLeaflet();
 })();
 </script>
 """
