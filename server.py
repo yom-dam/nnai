@@ -77,7 +77,7 @@ Google의 광고 개인정보 설정은
 <p>개인정보 열람·수정·삭제를 요청하시려면 아래 이메일로 문의해주세요.</p>
 
 <h2>7. 문의</h2>
-<p>이메일: <a href="mailto:contact@nnai.app">contact@nnai.app</a></p>
+<p>이메일: <a href="mailto:nnai.support@gmail.com">nnai.support@gmail.com</a></p>
 </body>
 </html>"""
 
