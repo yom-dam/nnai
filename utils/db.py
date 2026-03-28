@@ -1,46 +1,52 @@
-"""SQLite 연결 + 스키마 초기화."""
-import sqlite3
+"""PostgreSQL 연결 + 스키마 초기화."""
 import os
 import threading
+import psycopg2
+import psycopg2.extras
 
-_DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "users.db")
+_DATABASE_URL = os.environ.get("DATABASE_URL")
 
 
-def init_db(path: str | None = None) -> sqlite3.Connection:
-    """DB 연결 + 테이블 생성. path=':memory:' 이면 인메모리."""
-    db_path = path or os.environ.get("NNAI_DB_PATH") or _DEFAULT_PATH
-    conn = sqlite3.connect(db_path, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    conn.executescript("""
-        CREATE TABLE IF NOT EXISTS users (
-            id         TEXT PRIMARY KEY,
-            email      TEXT,
-            name       TEXT,
-            picture    TEXT,
-            created_at TEXT
-        );
-        CREATE TABLE IF NOT EXISTS pins (
-            id         INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id    TEXT NOT NULL REFERENCES users(id),
-            city       TEXT NOT NULL,
-            display    TEXT,
-            note       TEXT,
-            lat        REAL NOT NULL,
-            lng        REAL NOT NULL,
-            user_lat   REAL,
-            user_lng   REAL,
-            created_at TEXT NOT NULL
-        );
-    """)
+def init_db(url: str | None = None) -> psycopg2.extensions.connection:
+    """DB 연결 + 테이블 생성."""
+    db_url = url or _DATABASE_URL
+    if not db_url:
+        raise RuntimeError("DATABASE_URL 환경변수가 설정되지 않았습니다.")
+    conn = psycopg2.connect(db_url)
+    conn.autocommit = False
+    with conn.cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id         TEXT PRIMARY KEY,
+                email      TEXT,
+                name       TEXT,
+                picture    TEXT,
+                created_at TEXT
+            );
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS pins (
+                id         SERIAL PRIMARY KEY,
+                user_id    TEXT NOT NULL REFERENCES users(id),
+                city       TEXT NOT NULL,
+                display    TEXT,
+                note       TEXT,
+                lat        REAL NOT NULL,
+                lng        REAL NOT NULL,
+                user_lat   REAL,
+                user_lng   REAL,
+                created_at TEXT NOT NULL
+            );
+        """)
     conn.commit()
     return conn
 
 
-_conn: sqlite3.Connection | None = None
+_conn: psycopg2.extensions.connection | None = None
 _lock = threading.Lock()
 
 
-def get_conn() -> sqlite3.Connection:
+def get_conn() -> psycopg2.extensions.connection:
     """앱 전역 싱글턴 연결 반환."""
     global _conn
     if _conn is None:
