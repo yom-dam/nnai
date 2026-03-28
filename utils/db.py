@@ -2,7 +2,6 @@
 import os
 import threading
 import psycopg2
-import psycopg2.extras
 
 _DATABASE_URL = os.environ.get("DATABASE_URL")
 
