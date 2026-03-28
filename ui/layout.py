@@ -248,7 +248,11 @@ def _create_ad_sidebar_html():
 
 
 def create_layout(advisor_fn, detail_fn):
-    with gr.Blocks(title="NomadNavigator AI", css=_APP_CSS) as demo:
+    _ADSENSE_HEAD = (
+        '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'
+        '?client=ca-pub-8452594011595682" crossorigin="anonymous"></script>'
+    )
+    with gr.Blocks(title="NomadNavigator AI", css=_APP_CSS, head=_ADSENSE_HEAD) as demo:
 
         # ── 로딩 오버레이 (position:fixed — DOM 위치 무관) ───────────────
         # 초기값: 앱 로딩 중 지구본 애니메이션 표시 → demo.load() 시 클리어
