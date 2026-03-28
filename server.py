@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI, Request
+from fastapi.responses import PlainTextResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 import gradio as gr
 
@@ -29,6 +30,11 @@ class AuthMiddleware(BaseHTTPMiddleware):
 app.add_middleware(AuthMiddleware)
 app.include_router(auth_router)
 app.include_router(pins_router, prefix="/api")
+
+
+@app.get("/ads.txt", response_class=PlainTextResponse)
+async def ads_txt():
+    return "google.com, ca-pub-8452594011595682, DIRECT, f08c47fec0942fa0"
 
 
 # Gradio demo 임포트 (app.py에서 demo 객체만 꺼냄)
