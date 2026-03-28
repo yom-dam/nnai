@@ -16,3 +16,4 @@ reports/
 *.log
 .playwright-mcp/
 .superpowers/
+docs/superpowers/
