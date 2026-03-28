@@ -47,7 +47,7 @@ async def google_callback(request: Request, code: str = "", error: str = ""):
         redirect_uri=_REDIRECT_URI,
     ) as client:
         token = await client.fetch_token(GOOGLE_TOKEN_URL, code=code)
-        resp  = await client.get(GOOGLE_USER_URL, token=token)
+        resp  = await client.get(GOOGLE_USER_URL, headers={'Authorization': f'Bearer {token["access_token"]}'})
     info = resp.json()
     uid  = info.get("sub")
     if not uid:
