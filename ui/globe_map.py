@@ -115,7 +115,7 @@ def build_globe_map_html() -> str:
     </div>
 
     <!-- 비로그인 CTA -->
-    <div id="nnai-login-cta">
+    <div id="nnai-login-cta" style="display:none!important;">
       <span>✨ <strong>로그인하고 나만의 디지털 노마드 지도를 완성해보세요!</strong></span>
       <a id="nnai-google-btn" href="/auth/google">
         <svg width="15" height="15" viewBox="0 0 24 24">

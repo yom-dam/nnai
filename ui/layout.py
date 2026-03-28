@@ -351,13 +351,19 @@ function setLocStatus(ok,txt){
 /* ── 인증 상태 확인 ── */
 function checkAuth(){
   fetch('/auth/me').then(function(r){return r.json();}).then(function(d){
+    var cta=$('nnai-login-cta'), bar=$('nnai-user-bar');
     if(d.logged_in){
       _userId=d.uid;
-      $('nnai-login-cta').style.display='none';
-      var bar=$('nnai-user-bar'); bar.style.display='flex';
-      $('nnai-user-name').textContent=d.name+' 님의 지도';
-      if(d.picture) $('nnai-user-pic').src=d.picture;
+      if(cta) cta.style.display='none';
+      if(bar) bar.style.display='flex';
+      var nameEl=$('nnai-user-name');
+      if(nameEl) nameEl.textContent=d.name+' 님의 지도';
+      var pic=$('nnai-user-pic');
+      if(pic && d.picture) pic.src=d.picture;
       loadMyPins();
+    } else {
+      if(cta) cta.style.display='flex';
+      if(bar) bar.style.display='none';
     }
   });
 }
