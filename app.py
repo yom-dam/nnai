@@ -242,13 +242,15 @@ from ui.theme import create_theme
 demo = create_layout(nomad_advisor, show_city_detail_with_nationality)
 
 _is_hf = bool(os.getenv("SPACE_ID"))
+_is_railway = bool(os.getenv("RAILWAY_ENVIRONMENT"))
+_is_cloud = _is_hf or _is_railway
 
 if __name__ == "__main__" or _is_hf:
     demo.launch(
         theme=create_theme(),
         css=_APP_CSS,
-        server_name="0.0.0.0" if _is_hf else "127.0.0.1",
-        server_port=7860,
-        inbrowser=not _is_hf,
+        server_name="0.0.0.0" if _is_cloud else "127.0.0.1",
+        server_port=int(os.getenv("PORT", 7860)),
+        inbrowser=not _is_cloud,
         ssr_mode=False,
     )
