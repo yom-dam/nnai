@@ -20,9 +20,14 @@ init_db()
 app = FastAPI(title="NomadNavigator API")
 
 
+_ADS_TXT_CONTENT = "google.com, ca-pub-8452594011595682, DIRECT, f08c47fec0942fa0"
+
+
 class AuthMiddleware(BaseHTTPMiddleware):
     """쿠키에서 user_id를 꺼내 request.state.user_id에 주입."""
     async def dispatch(self, request: Request, call_next):
+        if request.url.path == "/ads.txt":
+            return PlainTextResponse(_ADS_TXT_CONTENT)
         request.state.user_id = extract_user_id(request)
         return await call_next(request)
 
@@ -30,11 +35,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
 app.add_middleware(AuthMiddleware)
 app.include_router(auth_router)
 app.include_router(pins_router, prefix="/api")
-
-
-@app.get("/ads.txt", response_class=PlainTextResponse)
-async def ads_txt():
-    return "google.com, ca-pub-8452594011595682, DIRECT, f08c47fec0942fa0"
 
 
 # Gradio demo 임포트 (app.py에서 demo 객체만 꺼냄)
