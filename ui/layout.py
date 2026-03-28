@@ -552,7 +552,10 @@ function setupNomadMap(){
 }
 
 // Initialize
-setTimeout(loadLeaflet, 100);
+setTimeout(function(){
+  loadLeaflet();
+  checkAuth();
+}, 100);
 })();
         """
         gr.HTML(value="", js_on_load=init_script)
