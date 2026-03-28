@@ -55,12 +55,13 @@ async def google_callback(request: Request, code: str = "", error: str = ""):
 
     # upsert user
     conn = get_conn()
-    conn.execute(
-        "INSERT INTO users(id,email,name,picture,created_at) VALUES(?,?,?,?,?) "
-        "ON CONFLICT(id) DO UPDATE SET email=excluded.email, name=excluded.name, picture=excluded.picture",
-        (uid, info.get("email"), info.get("name"),
-         info.get("picture"), datetime.now(timezone.utc).isoformat())
-    )
+    with conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO users(id,email,name,picture,created_at) VALUES(%s,%s,%s,%s,%s) "
+            "ON CONFLICT(id) DO UPDATE SET email=EXCLUDED.email, name=EXCLUDED.name, picture=EXCLUDED.picture",
+            (uid, info.get("email"), info.get("name"),
+             info.get("picture"), datetime.now(timezone.utc).isoformat())
+        )
     conn.commit()
 
     # 서명 쿠키 발급
