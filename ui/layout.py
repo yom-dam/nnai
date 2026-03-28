@@ -478,7 +478,13 @@ function closePinPopup(){$('nnai-pin-bg').classList.remove('open');}
 /* ── 핀 저장 ── */
 function savePin(){
   var c=_selCity; if(!c) return;
-  if(!_userId){showToast('로그인 후 핀을 저장할 수 있어요');return;}
+  if(!_userId){
+    var btn=$('nnai-pin-save');
+    btn.style.animation='none';
+    setTimeout(function(){btn.style.animation='nnaiLoginShake .4s';},10);
+    showToast('핀을 저장하려면 로그인하세요');
+    return;
+  }
   var note=$('nnai-pp-note').value.trim();
   $('nnai-pin-save').disabled=true;
   fetch('/api/pins',{
