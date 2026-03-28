@@ -1,0 +1,9 @@
+{
+  "google_adsense": {
+    "publisher_id": "ca-pub-xxxxxxxxxxxxxxxx",
+    "ad_slot_vertical": "1234567890"
+  },
+  "enabled": true,
+  "width_px": 300,
+  "height_px": 600
+}
