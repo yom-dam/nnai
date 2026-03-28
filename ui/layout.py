@@ -520,7 +520,7 @@ function showToast(msg){
 window.nnaiOpenMap=function(){
   $('nnai-map-modal-bg').classList.add('open');
   if(!_map){initMap(); setTimeout(function(){_map.invalidateSize();checkAuth();checkLocation();loadCommunityPins();},200);}
-  else{_map.invalidateSize();}
+  else{_map.invalidateSize();checkAuth();}
 };
 window.nnaiCloseMap=function(){$('nnai-map-modal-bg').classList.remove('open');};
 
