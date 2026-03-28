@@ -217,8 +217,11 @@ def _create_ad_sidebar_html():
     if not os.path.exists(ads_config_path):
         return '<div class="ad-sidebar"></div>'
 
-    with open(ads_config_path, 'r') as f:
-        ads_config = json.load(f)
+    try:
+        with open(ads_config_path, 'r') as f:
+            ads_config = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return '<div class="ad-sidebar"></div>'
 
     if not ads_config.get('enabled', False):
         return '<div class="ad-sidebar"></div>'
