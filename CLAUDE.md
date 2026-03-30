@@ -229,6 +229,21 @@ Response:
 - frontend/ 작업 시 backend API 스키마 변경 금지 (별도 협의 필요)
 - 시스템 언어 정책: 국적 기반 답변 언어 결정 (test_language_policy.py 참조)
 
+## Project Rules
+
+### cowork 문서 동기화 (필수)
+
+아래 두 문서는 항상 코드와 동기화 상태를 유지한다. 관련 코드 변경 시 **같은 작업 내에서** 반드시 업데이트한다.
+
+| 문서 | 업데이트 트리거 |
+|------|----------------|
+| `cowork/backend/api-reference.md` | 엔드포인트 추가/수정/삭제, 요청·응답 스키마 변경, 인증 로직 변경 |
+| `cowork/backend/db-schema.md` | 테이블 추가/삭제, 컬럼 추가/수정/삭제, 외래키 변경 (`utils/db.py` DDL 변경) |
+
+### GitHub Actions 테스트
+
+새 테스트 파일을 추가할 때마다 `.github/workflows/main-tests.yml`의 테스트 목록에 함께 등록한다.
+
 ## Deployment
 
 ### 배포 구조 (Vercel + Railway)

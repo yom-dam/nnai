@@ -93,3 +93,158 @@ def test_get_community_pins():
     assert r.status_code == 200
     data = r.json()
     assert any(p["city"] == "발리" for p in data)
+
+
+# ── PUT /api/pins/{pin_id} ────────────────────────────────────
+
+def test_put_pin_updates_note():
+    """저장한 핀의 note를 수정하면 200과 변경된 note를 반환한다."""
+    client = TestClient(_make_app("uid1"))
+    r = client.post("/api/pins", json={
+        "city": "도쿄", "display": "Tokyo, Japan", "note": "원래 메모",
+        "lat": 35.68, "lng": 139.69
+    })
+    pin_id = r.json()["id"]
+
+    r2 = client.put(f"/api/pins/{pin_id}", json={"note": "변경된 메모"})
+    assert r2.status_code == 200
+    body = r2.json()
+    assert body["id"] == pin_id
+    assert body["note"] == "변경된 메모"
+
+
+def test_put_pin_requires_auth():
+    """미로그인 상태에서 PUT 시 401을 반환한다."""
+    # uid1으로 핀 생성 후, 비로그인 클라이언트로 수정 시도
+    uid1_client = TestClient(_make_app("uid1"))
+    r = uid1_client.post("/api/pins", json={
+        "city": "파리", "display": "Paris, France", "note": "x",
+        "lat": 48.85, "lng": 2.35
+    })
+    pin_id = r.json()["id"]
+
+    anon_client = TestClient(_make_app(None))
+    r2 = anon_client.put(f"/api/pins/{pin_id}", json={"note": "해킹"})
+    assert r2.status_code == 401
+
+
+def test_put_pin_other_user_returns_404():
+    """다른 유저의 핀을 수정하려 하면 404를 반환한다."""
+    uid1_client = TestClient(_make_app("uid1"))
+    r = uid1_client.post("/api/pins", json={
+        "city": "베를린", "display": "Berlin, Germany", "note": "x",
+        "lat": 52.52, "lng": 13.4
+    })
+    pin_id = r.json()["id"]
+
+    # uid2는 DB에 없지만 auth 미들웨어만 테스트 — uid2로 시도
+    uid2_client = TestClient(_make_app("uid2"))
+    r2 = uid2_client.put(f"/api/pins/{pin_id}", json={"note": "타인 수정"})
+    assert r2.status_code == 404
+
+
+def test_put_pin_nonexistent_id_returns_404():
+    """존재하지 않는 pin_id로 PUT 시 404를 반환한다."""
+    client = TestClient(_make_app("uid1"))
+    r = client.put("/api/pins/999999", json={"note": "없는 핀"})
+    assert r.status_code == 404
+
+
+# ── DELETE /api/pins/{pin_id} ─────────────────────────────────
+
+def test_delete_pin_returns_ok():
+    """자신의 핀을 삭제하면 200 {"ok": true}를 반환한다."""
+    client = TestClient(_make_app("uid1"))
+    r = client.post("/api/pins", json={
+        "city": "싱가포르", "display": "Singapore", "note": "삭제 예정",
+        "lat": 1.35, "lng": 103.82
+    })
+    pin_id = r.json()["id"]
+
+    r2 = client.delete(f"/api/pins/{pin_id}")
+    assert r2.status_code == 200
+    assert r2.json() == {"ok": True}
+
+
+def test_delete_pin_actually_removes_from_list():
+    """삭제 후 GET /api/pins에서 해당 핀이 조회되지 않는다."""
+    client = TestClient(_make_app("uid1"))
+    r = client.post("/api/pins", json={
+        "city": "암스테르담", "display": "Amsterdam, Netherlands", "note": "y",
+        "lat": 52.37, "lng": 4.89
+    })
+    pin_id = r.json()["id"]
+    client.delete(f"/api/pins/{pin_id}")
+
+    pins = client.get("/api/pins").json()
+    assert not any(p.get("city") == "암스테르담" for p in pins)
+
+
+def test_delete_pin_requires_auth():
+    """미로그인 상태에서 DELETE 시 401을 반환한다."""
+    uid1_client = TestClient(_make_app("uid1"))
+    r = uid1_client.post("/api/pins", json={
+        "city": "프라하", "display": "Prague, Czech", "note": "z",
+        "lat": 50.07, "lng": 14.43
+    })
+    pin_id = r.json()["id"]
+
+    anon_client = TestClient(_make_app(None))
+    r2 = anon_client.delete(f"/api/pins/{pin_id}")
+    assert r2.status_code == 401
+
+
+def test_delete_pin_other_user_returns_404():
+    """다른 유저의 핀을 삭제하려 하면 404를 반환한다."""
+    uid1_client = TestClient(_make_app("uid1"))
+    r = uid1_client.post("/api/pins", json={
+        "city": "마드리드", "display": "Madrid, Spain", "note": "w",
+        "lat": 40.41, "lng": -3.7
+    })
+    pin_id = r.json()["id"]
+
+    uid2_client = TestClient(_make_app("uid2"))
+    r2 = uid2_client.delete(f"/api/pins/{pin_id}")
+    assert r2.status_code == 404
+
+
+def test_delete_pin_nonexistent_id_returns_404():
+    """존재하지 않는 pin_id로 DELETE 시 404를 반환한다."""
+    client = TestClient(_make_app("uid1"))
+    r = client.delete("/api/pins/999999")
+    assert r.status_code == 404
+
+
+# ── 엣지케이스 ────────────────────────────────────────────────
+
+def test_post_pin_missing_required_field_returns_422():
+    """필수 필드(city) 없이 POST 시 422를 반환한다."""
+    client = TestClient(_make_app("uid1"))
+    r = client.post("/api/pins", json={
+        "display": "Unknown", "note": "x", "lat": 0, "lng": 0
+    })
+    assert r.status_code == 422
+
+
+def test_get_pins_unauthenticated_returns_empty_list():
+    """미로그인 상태에서 GET /api/pins는 빈 배열을 반환한다 (401 아님)."""
+    client = TestClient(_make_app(None))
+    r = client.get("/api/pins")
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+def test_community_pins_has_cnt_field():
+    """community 핀 응답에 cnt 집계 필드가 포함된다."""
+    client = TestClient(_make_app("uid1"))
+    client.post("/api/pins", json={
+        "city": "교토", "display": "Kyoto, Japan", "note": "k",
+        "lat": 35.01, "lng": 135.76
+    })
+    r = client.get("/api/pins/community")
+    assert r.status_code == 200
+    data = r.json()
+    kyoto = next((p for p in data if p["city"] == "교토"), None)
+    assert kyoto is not None
+    assert "cnt" in kyoto
+    assert int(kyoto["cnt"]) >= 1

@@ -58,6 +58,46 @@ def add_pin(request: Request, pin: PinIn):
     return {"id": new_id, "city": pin.city, "created_at": now}
 
 
+class PinUpdate(BaseModel):
+    note: str
+
+
+@router.put("/pins/{pin_id}")
+def update_pin(pin_id: int, request: Request, body: PinUpdate):
+    uid = _user_id(request)
+    if not uid:
+        raise HTTPException(401, "로그인이 필요합니다")
+    conn = get_conn()
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE pins SET note=%s WHERE id=%s AND user_id=%s RETURNING id",
+            (body.note, pin_id, uid)
+        )
+        row = cur.fetchone()
+    if not row:
+        raise HTTPException(404, "핀을 찾을 수 없습니다")
+    conn.commit()
+    return {"id": row[0], "note": body.note}
+
+
+@router.delete("/pins/{pin_id}")
+def delete_pin(pin_id: int, request: Request):
+    uid = _user_id(request)
+    if not uid:
+        raise HTTPException(401, "로그인이 필요합니다")
+    conn = get_conn()
+    with conn.cursor() as cur:
+        cur.execute(
+            "DELETE FROM pins WHERE id=%s AND user_id=%s RETURNING id",
+            (pin_id, uid)
+        )
+        row = cur.fetchone()
+    if not row:
+        raise HTTPException(404, "핀을 찾을 수 없습니다")
+    conn.commit()
+    return {"ok": True}
+
+
 @router.get("/pins/community")
 def community_pins():
     """전체 사용자 핀을 도시별로 집계."""
