@@ -477,7 +477,7 @@ const res = await fetch(`${API_BASE}/api/recommend`, {
 ### 쿠키 정책
 - 쿠키명: `nnai_session`
 - `HttpOnly` — JS에서 직접 접근 불가 (보안)
-- `SameSite=Lax` — 크로스사이트 폼 제출 차단
+- `SameSite=None; Secure` — 프론트(nnai.app)·백엔드(api.nnai.app) 크로스 도메인 전달 필수
 - `Max-Age=86400` — 24시간 유효
 
 ---

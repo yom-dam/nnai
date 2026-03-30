@@ -17,6 +17,7 @@ _REDIRECT_URI  = os.environ.get(
     "http://localhost:7860/auth/google/callback"
 )
 _SECRET_KEY    = os.environ.get("SECRET_KEY", "dev-secret-change-me")
+_FRONTEND_URL  = os.environ.get("FRONTEND_URL", "http://localhost:3000")
 _SIGNER        = URLSafeTimedSerializer(_SECRET_KEY)
 _COOKIE_NAME   = "nnai_session"
 _SCOPES        = "openid email profile"
@@ -66,8 +67,11 @@ async def google_callback(request: Request, code: str = "", error: str = ""):
 
     # 서명 쿠키 발급
     token_str = _SIGNER.dumps({"uid": uid, "name": info.get("name"), "picture": info.get("picture")})
-    resp = RedirectResponse("/")
-    resp.set_cookie(_COOKIE_NAME, token_str, httponly=True, samesite="lax", max_age=86400)
+    resp = RedirectResponse(_FRONTEND_URL)
+    resp.set_cookie(
+        _COOKIE_NAME, token_str,
+        httponly=True, samesite="none", secure=True, max_age=86400,
+    )
     return resp
 
 
@@ -85,8 +89,8 @@ def me(request: Request):
 
 @router.get("/auth/logout")
 def logout():
-    resp = RedirectResponse("/")
-    resp.delete_cookie(_COOKIE_NAME)
+    resp = RedirectResponse(_FRONTEND_URL)
+    resp.delete_cookie(_COOKIE_NAME, samesite="none", secure=True)
     return resp
 
 
