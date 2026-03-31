@@ -1,0 +1,155 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "startAnalysis": "Start Analysis"
+  },
+  "quiz": {
+    "questions": [
+      {
+        "question": "What's the biggest reason you're considering the nomad lifestyle?",
+        "options": [
+          "I want to freely travel across multiple countries",
+          "I want to stay in one place and experience it deeply",
+          "I want to reduce living costs and improve quality of life",
+          "I want to escape my current environment and rest"
+        ]
+      },
+      {
+        "question": "What's your ideal length of stay?",
+        "options": [
+          "Move frequently, 1-2 months per city",
+          "Settle in one city for 3-6 months",
+          "Stay deeply for 6+ months",
+          "Cost matters more than duration"
+        ]
+      },
+      {
+        "question": "What's the most important factor for you?",
+        "options": [
+          "Visa flexibility and ease of travel",
+          "Local community and cultural access",
+          "Monthly cost of living reduction",
+          "Natural environment and slow pace of life"
+        ]
+      },
+      {
+        "question": "Where do you focus best when working?",
+        "options": [
+          "At cafes or coworking spaces with others",
+          "Alone in a quiet accommodation",
+          "Anywhere cost-effective",
+          "Somewhere with a view of nature"
+        ]
+      },
+      {
+        "question": "What worries you most about nomad life?",
+        "options": [
+          "Managing visa periods and stay calculations",
+          "Loneliness and lack of community",
+          "Budget overruns and cost management",
+          "Health and mental stability"
+        ]
+      },
+      {
+        "question": "Do you have plans to stay in Europe?",
+        "options": [
+          "Yes, I'm planning a Schengen 90-day route",
+          "I want to settle long-term in Europe",
+          "I prefer Southeast Asia or Latin America over Europe",
+          "No specific plans yet"
+        ]
+      },
+      {
+        "question": "What does your ideal life look like in 5 years?",
+        "options": [
+          "Freely moving between bases in multiple countries",
+          "Obtaining permanent residency in a city I love",
+          "Achieving financial freedom and living wherever I want",
+          "Maintaining a healthy lifestyle without burnout"
+        ]
+      }
+    ]
+  },
+  "persona": {
+    "yourType": "Your Nomad Type",
+    "findCountry": "Find countries that match me",
+    "share": "Share results (coming soon)",
+    "analyzingAs": "Analyzing as {label}",
+    "types": {
+      "schengen_loop": {
+        "label": "Schengen Looper",
+        "description": "A route-optimizing nomad who freely roams across Europe",
+        "traits": ["Comfortable with 90-day stay patterns", "Enjoys movement itself", "Europe-centered lifestyle"]
+      },
+      "slow_nomad": {
+        "label": "Base Settler",
+        "description": "A long-term nomad who deeply immerses in one city",
+        "traits": ["Stays 6+ months in one place", "Values local community", "Prefers long-term visas"]
+      },
+      "fire_optimizer": {
+        "label": "Cost Optimizer",
+        "description": "A nomad designing high quality of life at low cost",
+        "traits": ["Targets under $1,500/month", "Prioritizes value for money", "FIRE-oriented"]
+      },
+      "burnout_escape": {
+        "label": "Burnout Escapee",
+        "description": "A nomad seeking recovery through nature and slow pace",
+        "traits": ["Nature-first priority", "Recovery is the goal", "Slow daily routine"]
+      },
+      "expat_freedom": {
+        "label": "Freedom Seeker",
+        "description": "A nomad designing a new life through permanent residency",
+        "traits": ["Exploring PR pathways", "Prefers long-stay cities", "Building a base outside home country"]
+      }
+    }
+  },
+  "form": {
+    "stepLabels": ["Basic Info", "Stay Intent", "Lifestyle", "Companions", "Finances", "Final Touches"],
+    "stepTitles": [
+      "Tell us about yourself",
+      "What kind of stay are you thinking about?",
+      "What's your preferred lifestyle?",
+      "Who are you traveling with?",
+      "Tell us about your finances",
+      "Just a few more things!"
+    ],
+    "labels": {
+      "nationality": "Nationality",
+      "dualNationality": "Dual Nationality",
+      "dualYes": "Yes, I have dual nationality",
+      "dualNo": "No",
+      "languages": "Languages (select multiple)",
+      "purpose": "Purpose of Stay",
+      "timeline": "Duration",
+      "lifestyle": "Lifestyle (up to 3)",
+      "travelType": "Travel Companions",
+      "childrenAges": "Children's ages (comma-separated)",
+      "childrenPlaceholder": "e.g., 5, 8",
+      "spouseIncome": "Spouse Income",
+      "spouseIncomeAmount": "Spouse monthly income (KRW 10K)",
+      "incomeType": "Income Type",
+      "incomeFreelancer": "Average monthly income (KRW 10K)",
+      "incomeRetired": "Monthly available budget (KRW 10K)",
+      "incomeDefault": "Monthly income (KRW 10K)",
+      "preferredRegion": "Preferred region (optional)",
+      "readiness": "Current readiness stage"
+    },
+    "options": {
+      "nationality": ["Korean", "Japanese", "American", "Other"],
+      "languages": ["Native English", "Business English", "Basic English", "Spanish", "Portuguese", "Japanese"],
+      "purpose": ["Remote Work", "Freelancing", "Starting a Business", "Long-term Travel", "Retirement"],
+      "timeline": ["1-3 months trial", "6 months mid-term", "1 year long-term", "Permanent residency / immigration"],
+      "lifestyle": ["Beach", "Mountains/Nature", "City", "Cafe Culture", "English-speaking", "Coworking Spaces", "Low Cost", "Safety"],
+      "travelType": ["Solo", "With Spouse/Partner", "With Children (no spouse)", "Whole Family"],
+      "incomeType": ["Freelancer", "Overseas Company Employee", "Domestic Remote Worker", "No Income / Retired"],
+      "preferredRegion": ["Asia", "Europe", "Latin America", "Middle East/Africa", "North America"],
+      "readiness": ["Still gathering information", "Actively preparing", "Departing within 3 months", "Already living abroad"],
+      "spouseIncome": ["None", "Yes"]
+    }
+  },
+  "result": {
+    "placeholder": "Recommendation results will be displayed here",
+    "detailPlaceholder": "Detailed country guide will be displayed here"
+  }
+}
