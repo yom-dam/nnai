@@ -12,6 +12,12 @@ import gradio as gr
 
 from pydantic import BaseModel
 from api.auth import router as auth_router, extract_user_id
+from api.mobile_auth import router as mobile_auth_router
+from api.mobile_discover import router as mobile_discover_router
+from api.mobile_feed import router as mobile_feed_router
+from api.mobile_plans import router as mobile_plans_router
+from api.mobile_profile import router as mobile_profile_router
+from api.mobile_recommend import router as mobile_recommend_router
 from api.pins import router as pins_router
 from api.visits import router as visits_router
 from utils.db import init_db
@@ -115,6 +121,12 @@ app.add_middleware(AuthMiddleware)
 app.include_router(auth_router)
 app.include_router(pins_router, prefix="/api")
 app.include_router(visits_router, prefix="/api")
+app.include_router(mobile_auth_router)
+app.include_router(mobile_feed_router)
+app.include_router(mobile_discover_router)
+app.include_router(mobile_plans_router)
+app.include_router(mobile_profile_router)
+app.include_router(mobile_recommend_router)
 
 
 # ── Frontend API Endpoints ─────────────────────────────────────
