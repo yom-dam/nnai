@@ -3,7 +3,7 @@
 > 프론트엔드 개발자용 백엔드 API 레퍼런스
 > Base URL (로컬): `http://localhost:7860`
 > Base URL (프로덕션): `https://api.nnai.app`
-> 최종 업데이트: 2026-03-30
+> 최종 업데이트: 2026-04-01
 
 ---
 
@@ -47,8 +47,8 @@ Google OAuth 콜백 (프론트엔드에서 직접 호출 불필요 — Google이
 
 ```
 GET /auth/google/callback?code={code}
-→ 302 Redirect → / (홈)
-  Set-Cookie: nnai_session=...; HttpOnly; SameSite=Lax; Max-Age=86400
+→ 302 Redirect → {FRONTEND_URL}  (예: https://nnai.app)
+  Set-Cookie: nnai_session=...; HttpOnly; SameSite=None; Secure; Max-Age=86400
 ```
 
 에러 시: `/?auth_error=1` 로 리다이렉트
@@ -96,8 +96,8 @@ if (user.logged_in) { /* 로그인 상태 처리 */ }
 
 ```
 GET /auth/logout
-→ 302 Redirect → /
-  Set-Cookie: nnai_session=; Max-Age=0  (쿠키 삭제)
+→ 302 Redirect → {FRONTEND_URL}  (예: https://nnai.app)
+  Set-Cookie: nnai_session=; SameSite=None; Secure; Max-Age=0  (쿠키 삭제)
 ```
 
 **프론트엔드 사용 예시:**
