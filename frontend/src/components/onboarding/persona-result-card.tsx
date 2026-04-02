@@ -1,40 +1,47 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import type { PersonaType } from "@/data/personas";
+import { PERSONAS, type PersonaType } from "@/data/personas";
 
 interface PersonaResultCardProps {
   personaType: PersonaType;
 }
 
 export function PersonaResultCard({ personaType }: PersonaResultCardProps) {
-  const t = useTranslations("persona");
+  const persona = PERSONAS[personaType];
 
-  const label = t(`types.${personaType}.label`);
-  const description = t(`types.${personaType}.description`);
-  const traits = t.raw(`types.${personaType}.traits`) as string[];
+  const sections = [
+    { label: "이런 도시가 어울려요", content: persona.city },
+    { label: "이렇게 일해요", content: persona.work },
+    { label: "당신에게 중요한 건", content: persona.value },
+    { label: "이런 순간이 행복해요", content: persona.moment },
+  ].filter((s) => s.content && s.content !== "TBD");
 
   return (
     <div className="flex flex-col items-center gap-8 text-center">
       <div className="space-y-3">
         <p className="text-sm text-[var(--onboarding-text-secondary)]">
-          {t("yourType")}
+          당신은
         </p>
         <h1 className="font-serif text-3xl font-semibold text-[var(--onboarding-accent)]">
-          {label}
+          {persona.label}
         </h1>
-        <p className="font-serif text-base text-[var(--onboarding-text-primary)]">
-          {description}
+        <p className="font-serif text-sm text-[var(--onboarding-text-secondary)] leading-relaxed">
+          {persona.description}
         </p>
       </div>
 
       <div className="w-full space-y-3">
-        {traits.map((trait, i) => (
+        {sections.map((section) => (
           <div
-            key={i}
-            className="rounded-lg border border-[var(--onboarding-card-border)] bg-[var(--onboarding-card-bg)] px-4 py-3 text-center font-serif text-sm text-[var(--onboarding-text-primary)]"
+            key={section.label}
+            className="rounded-lg border border-[var(--onboarding-card-border)] bg-[var(--onboarding-card-bg)] px-4 py-4 text-left"
           >
-            {trait}
+            <p className="text-xs text-[var(--onboarding-accent)] mb-2">
+              {section.label}
+            </p>
+            <p className="font-serif text-sm text-[var(--onboarding-text-primary)] leading-relaxed">
+              {section.content}
+            </p>
           </div>
         ))}
       </div>
