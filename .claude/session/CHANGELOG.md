@@ -1,5 +1,30 @@
 # CHANGELOG
 
+## [2026-04-03 KST] — 디자인 시스템 전면 교체 + 퀴즈/결과 페이지 리디자인
+
+### 변경 파일
+- `app/layout.tsx` : 폰트 Instrument_Serif 단일 교체, dark 클래스 제거
+- `app/globals.css` : CSS 변수 전면 교체 (oklch 색상, shadow, tracking)
+- `app/[locale]/onboarding/quiz/page.tsx` : 레이아웃 리디자인 (max-w-sm, 수직 중앙, 이전 버튼)
+- `app/[locale]/onboarding/quiz/result/page.tsx` : 처음부터 다시하기 버튼, i18n 제거, 스타일 통일
+- `components/onboarding/quiz-card.tsx` : 선택지 스타일 통일 (text-foreground, font-medium)
+- `components/onboarding/persona-result-card.tsx` : 결과 카드 sm:grid-cols-2, 디자인 변수 교체
+- `components/onboarding/progress-bar.tsx` : 디자인 변수 교체
+- `data/quiz-questions.ts` : 퀴즈 텍스트 수정 (줄바꿈, 문구 변경)
+
+### 작업 요약
+- 무엇을: shadcn 테마 기반 디자인 시스템 전면 교체 + 퀴즈/결과 페이지 레이아웃 리디자인
+- 왜: v21 테마 적용 + 모바일 중심 UX 개선 + Instrument Serif 폰트 통일
+- 영향 범위: 프론트엔드 전체 스타일링, 온보딩 퀴즈/결과 페이지
+
+### 다음 세션 참고사항
+- 다음 작업: /onboarding/form → 백엔드 API 연결
+- 페르소나 결과 공유 기능 미구현 (자리만 잡혀 있음)
+- 로컬 테스트는 production 빌드로 해야 함 (dev 서버는 네트워크 접속 시 hydration 실패)
+- 기존 온보딩 CSS 변수(--onboarding-*) 완전 삭제됨, 참조하는 곳 없는지 확인 필요
+
+---
+
 ## [2026-04-03 KST] — Framer Motion 인터랙션 추가 (퀴즈 전환 + 결과 등장)
 
 ### 변경 파일

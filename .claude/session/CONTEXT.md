@@ -1,5 +1,5 @@
 # CONTEXT.md
-_Last updated: 2026-04-03 (KST)_
+_Last updated: 2026-04-03 22:00 (KST)_
 
 ## 프로젝트 개요
 - 서비스명: NomadNavigator AI (NNAI)
@@ -13,12 +13,13 @@ _Last updated: 2026-04-03 (KST)_
 - Infra: Vercel (frontend, nnai.app) + Railway (backend, api.nnai.app) + Cloudflare DNS
 
 ## 현재 상태
-백엔드 API 완성 및 운영 중. 프론트엔드는 온보딩 플로우 골격 + 스타일링 + 페르소나 콘텐츠 + Framer Motion 인터랙션까지 완료. API 연결은 미착수.
+백엔드 API 완성 및 운영 중. 프론트엔드는 디자인 시스템 전면 교체 완료 (Instrument Serif, oklch 색상, 라이트 모드 기본). 온보딩 퀴즈/결과 페이지 리디자인 + Framer Motion 인터랙션 완료. API 연결은 미착수.
 
 ## 최근 변경
-- Framer Motion 퀴즈 카드 페이드 전환 (아웃 0.25s / 인 0.35s)
-- 결과 카드 순차 등장 애니메이션 (0.3s 간격 stagger, fadeUp)
-- 페르소나 5종 4개 축 콘텐츠 확정 + persona-result-card 구조 변경
+- 디자인 시스템 전면 교체 (Instrument Serif 단일 폰트, oklch 색상, 라이트 모드 기본)
+- 퀴즈/결과 페이지 레이아웃 리디자인 (max-w-sm, 이전 버튼, 처음부터 다시하기)
+- 선택지 스타일 통일 (text-foreground, font-medium)
+- 기존 --onboarding-* CSS 변수 완전 삭제
 
 ## 진행 중인 작업
 - [x] 프론트엔드 온보딩 플로우 골격 + 스타일링
