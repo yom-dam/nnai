@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [2026-04-03 KST] — Framer Motion 인터랙션 추가 (퀴즈 전환 + 결과 등장)
+
+### 변경 파일
+- `app/[locale]/onboarding/quiz/page.tsx` : AnimatePresence + motion.div 퀴즈 카드 페이드 전환
+- `components/onboarding/persona-result-card.tsx` : 타이틀 + 4개 축 카드 stagger 등장 애니메이션
+
+### 작업 요약
+- 무엇을: 퀴즈 문항 전환 페이드 (아웃 0.25s / 인 0.35s) + 결과 카드 순차 등장 (0.3s 간격 stagger, fadeUp)
+- 왜: 온보딩 UX 인터랙션 완성
+- 영향 범위: 퀴즈 페이지, 결과 페이지
+
+### 다음 세션 참고사항
+- 다음 작업: /onboarding/form → 백엔드 API 연결
+- 페르소나 결과 공유 기능 미구현 (자리만 잡혀 있음)
+- 로컬 테스트는 production 빌드로 해야 함 (dev 서버는 네트워크 접속 시 hydration 실패)
+
+---
+
 ## [2026-04-03 KST] — 페르소나 결과 페이지 콘텐츠 + 퀴즈 데이터 업데이트
 
 ### 변경 파일

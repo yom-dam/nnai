@@ -13,17 +13,17 @@ _Last updated: 2026-04-03 (KST)_
 - Infra: Vercel (frontend, nnai.app) + Railway (backend, api.nnai.app) + Cloudflare DNS
 
 ## 현재 상태
-백엔드 API 완성 및 운영 중. 프론트엔드는 온보딩 플로우 골격 + 스타일링 + 페르소나 결과 페이지 콘텐츠까지 완료. Framer Motion 인터랙션 및 API 연결은 미착수.
+백엔드 API 완성 및 운영 중. 프론트엔드는 온보딩 플로우 골격 + 스타일링 + 페르소나 콘텐츠 + Framer Motion 인터랙션까지 완료. API 연결은 미착수.
 
 ## 최근 변경
-- 페르소나 5종 4개 축 콘텐츠 확정 (도시/일/가치/순간)
-- 퀴즈 7문항 재설계 + 페르소나 매핑 순서 섞기 적용
-- persona-result-card 구조 변경
+- Framer Motion 퀴즈 카드 페이드 전환 (아웃 0.25s / 인 0.35s)
+- 결과 카드 순차 등장 애니메이션 (0.3s 간격 stagger, fadeUp)
+- 페르소나 5종 4개 축 콘텐츠 확정 + persona-result-card 구조 변경
 
 ## 진행 중인 작업
 - [x] 프론트엔드 온보딩 플로우 골격 + 스타일링
 - [x] 페르소나 결과 페이지 콘텐츠
-- [ ] Framer Motion 인터랙션
+- [x] Framer Motion 인터랙션
 - [ ] 백엔드 API 연결
 - [ ] 페르소나 결과 공유 기능
 - [ ] Google OAuth 프론트엔드 연동
