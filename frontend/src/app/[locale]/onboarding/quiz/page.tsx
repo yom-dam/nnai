@@ -28,26 +28,40 @@ export default function QuizPage() {
     }
   }
 
+  function handleBack() {
+    if (currentIndex > 0) {
+      setAnswers(answers.slice(0, -1));
+      setCurrentIndex(currentIndex - 1);
+    }
+  }
+
   return (
-    <div className="flex min-h-dvh flex-col px-5 py-8">
-      <ProgressBar current={currentIndex + 1} total={QUIZ_QUESTIONS.length} />
-      <div className="flex flex-1 items-center">
-        <div className="w-full">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentIndex}
-              initial={currentIndex === 0 ? false : { opacity: 0 }}
-              animate={{ opacity: 1, transition: { duration: 0.35 } }}
-              exit={{ opacity: 0, transition: { duration: 0.25 } }}
-            >
-              <QuizCard
-                question={currentQuestion.question}
-                options={currentQuestion.options.map((o) => o.label)}
-                onSelect={handleSelect}
-              />
-            </motion.div>
-          </AnimatePresence>
-        </div>
+    <div className="mx-auto flex min-h-screen max-w-sm w-full flex-col">
+      <div className="flex items-center gap-3 pt-6 px-4">
+        <button
+          type="button"
+          onClick={handleBack}
+          className={`shrink-0 text-sm text-muted-foreground transition-colors hover:text-foreground ${currentIndex === 0 ? "invisible" : ""}`}
+        >
+          이전
+        </button>
+        <ProgressBar current={currentIndex + 1} total={QUIZ_QUESTIONS.length} />
+      </div>
+      <div className="flex flex-1 flex-col justify-center px-4">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentIndex}
+            initial={currentIndex === 0 ? false : { opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.35 } }}
+            exit={{ opacity: 0, transition: { duration: 0.25 } }}
+          >
+            <QuizCard
+              question={currentQuestion.question}
+              options={currentQuestion.options.map((o) => o.label)}
+              onSelect={handleSelect}
+            />
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

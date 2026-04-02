@@ -1,26 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Playfair_Display } from "next/font/google";
+import { Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const fontSerif = Instrument_Serif({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: "400",
+  variable: "--font-serif",
 });
 
 export const metadata: Metadata = {
-  title: "NomadNavigator AI",
+  title: "NomadNavigator AI — 나에게 맞는 도시를 찾아드립니다",
   description: "AI 기반 디지털 노마드 이민 설계 서비스",
 };
 
@@ -30,10 +19,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} dark h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-[#0f0f0f]">{children}</body>
+    <html lang="ko">
+      <body className={`${fontSerif.variable} antialiased`}>{children}</body>
     </html>
   );
 }

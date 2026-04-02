@@ -25,28 +25,28 @@ export function PersonaResultCard({ personaType }: PersonaResultCardProps) {
   return (
     <div className="flex flex-col items-center gap-8 text-center">
       <motion.div className="space-y-3" {...fadeUp(0)}>
-        <p className="text-sm text-[var(--onboarding-text-secondary)]">
+        <p className="text-sm text-muted-foreground">
           당신은
         </p>
-        <h1 className="font-serif text-3xl font-semibold text-[var(--onboarding-accent)]">
+        <h1 className="font-serif text-3xl font-semibold text-primary">
           {persona.label}
         </h1>
-        <p className="font-serif text-sm text-[var(--onboarding-text-secondary)] leading-relaxed">
+        <p className="font-serif text-sm text-muted-foreground leading-relaxed">
           {persona.description}
         </p>
       </motion.div>
 
-      <div className="w-full space-y-3">
+      <div className="w-full grid gap-3 sm:grid-cols-2">
         {sections.map((section, i) => (
           <motion.div
             key={section.label}
             {...fadeUp(0.3 + i * 0.3)}
-            className="rounded-lg border border-[var(--onboarding-card-border)] bg-[var(--onboarding-card-bg)] px-4 py-4 text-left"
+            className="rounded-lg border border-border bg-card px-4 py-4 text-left"
           >
-            <p className="text-xs text-[var(--onboarding-accent)] mb-2">
+            <p className="text-sm font-medium text-primary mb-2">
               {section.label}
             </p>
-            <p className="font-serif text-sm text-[var(--onboarding-text-primary)] leading-relaxed">
+            <p className="whitespace-pre-line font-serif text-sm text-foreground leading-relaxed">
               {section.content}
             </p>
           </motion.div>

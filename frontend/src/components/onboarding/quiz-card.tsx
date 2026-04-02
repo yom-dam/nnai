@@ -8,8 +8,8 @@ interface QuizCardProps {
 
 export function QuizCard({ question, options, onSelect }: QuizCardProps) {
   return (
-    <div className="flex flex-col gap-6">
-      <h2 className="font-serif text-xl font-medium leading-relaxed text-[var(--onboarding-text-primary)]">
+    <div className="flex flex-col">
+      <h2 className="whitespace-pre-line text-xl font-medium leading-relaxed text-foreground mb-8">
         {question}
       </h2>
       <div className="grid gap-3">
@@ -18,7 +18,7 @@ export function QuizCard({ question, options, onSelect }: QuizCardProps) {
             key={i}
             type="button"
             onClick={() => onSelect(i)}
-            className="w-full rounded-lg border border-[var(--onboarding-card-border)] bg-[var(--onboarding-card-bg)] px-4 py-3.5 text-left font-serif text-sm text-[var(--onboarding-text-secondary)] transition-colors hover:border-[var(--onboarding-card-border-active)] hover:bg-[var(--onboarding-card-bg-active)] hover:text-[var(--onboarding-text-primary)]"
+            className="w-full rounded-lg bg-muted px-4 py-4 text-left text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             {option}
           </button>
