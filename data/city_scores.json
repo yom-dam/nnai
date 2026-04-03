@@ -264,7 +264,7 @@
       "id": "BCN",
       "city": "Barcelona",
       "city_kr": "바르셀로나",
-      "country": "Spain",
+      "country": "Spain (Canary Islands)",
       "country_id": "ES",
       "monthly_cost_usd": 2400,
       "internet_mbps": 200,
@@ -293,7 +293,7 @@
       "id": "MAD",
       "city": "Madrid",
       "city_kr": "마드리드",
-      "country": "Spain",
+      "country": "Spain (Canary Islands)",
       "country_id": "ES",
       "monthly_cost_usd": 2700,
       "internet_mbps": 250,
@@ -322,7 +322,7 @@
       "id": "DPS",
       "city": "Bali (Canggu)",
       "city_kr": "발리 (짱구)",
-      "country": "Indonesia",
+      "country": "Indonesia (Bali)",
       "country_id": "ID",
       "monthly_cost_usd": 1400,
       "internet_mbps": 50,
@@ -509,7 +509,7 @@
         "official_visa_portals",
         "internal_editorial_scoring"
       ],
-      "data_verified_date": "2026-04-01"
+      "data_verified_date": "2026-04-03"
     },
     {
       "id": "HER",
@@ -538,7 +538,7 @@
         "official_visa_portals",
         "internal_editorial_scoring"
       ],
-      "data_verified_date": "2026-04-01"
+      "data_verified_date": "2026-04-03"
     },
     {
       "id": "MNL",
@@ -679,7 +679,7 @@
       "id": "VLC",
       "city": "Valencia",
       "city_kr": "발렌시아",
-      "country": "Spain",
+      "country": "Spain (Canary Islands)",
       "country_id": "ES",
       "monthly_cost_usd": 2200,
       "internet_mbps": 200,
@@ -789,7 +789,7 @@
         "official_visa_portals",
         "internal_editorial_scoring"
       ],
-      "data_verified_date": "2026-04-01"
+      "data_verified_date": "2026-04-03"
     },
     {
       "id": "VIE",
@@ -1166,7 +1166,7 @@
         "official_visa_portals",
         "internal_editorial_scoring"
       ],
-      "data_verified_date": "2026-04-01"
+      "data_verified_date": "2026-04-03"
     },
     {
       "id": "TYO",
@@ -1195,7 +1195,7 @@
         "official_visa_portals",
         "internal_editorial_scoring"
       ],
-      "data_verified_date": "2026-04-01"
+      "data_verified_date": "2026-04-03"
     },
     {
       "id": "FUK",
@@ -1224,7 +1224,7 @@
         "official_visa_portals",
         "internal_editorial_scoring"
       ],
-      "data_verified_date": "2026-04-01"
+      "data_verified_date": "2026-04-03"
     },
     {
       "id": "MEX",
@@ -1346,7 +1346,7 @@
       "id": "MDE",
       "city": "Medellin",
       "city_kr": "메데진",
-      "country": "Colombia",
+      "country": "Colombia (Medellín)",
       "country_id": "CO",
       "monthly_cost_usd": 1400,
       "internet_mbps": 80,
@@ -1433,7 +1433,7 @@
       "id": "DXB",
       "city": "Dubai",
       "city_kr": "두바이",
-      "country": "UAE",
+      "country": "UAE (Dubai)",
       "country_id": "AE",
       "monthly_cost_usd": 4500,
       "internet_mbps": 300,
@@ -1456,7 +1456,7 @@
         "official_visa_portals",
         "internal_editorial_scoring"
       ],
-      "data_verified_date": "2026-04-01"
+      "data_verified_date": "2026-04-03"
     },
     {
       "id": "DAD",
@@ -1464,11 +1464,11 @@
       "city_kr": "다낭",
       "country": "Vietnam",
       "country_id": "VN",
-      "monthly_cost_usd": 900,
+      "monthly_cost_usd": 1100,
       "internet_mbps": 80,
       "safety_score": 8,
       "english_score": 5,
-      "nomad_score": 7,
+      "nomad_score": 8,
       "climate": "tropical",
       "cowork_usd_month": 70,
       "coworking_score": 6,
@@ -1486,12 +1486,11 @@
         "work_disclosure_risk": "입국심사 시 원격근무 언급 시 취업 비자 필요로 오해받을 수 있음. 관광 목적으로만 답변 권장"
       },
       "source_refs": [
+        "nomads_fastest_growing_2026",
         "numbeo_cost_index",
-        "ookla_speedtest_global",
-        "official_visa_portals",
         "internal_editorial_scoring"
       ],
-      "data_verified_date": "2026-04-01"
+      "data_verified_date": "2026-04-03"
     },
     {
       "id": "TPE",
@@ -1520,7 +1519,7 @@
         "official_visa_portals",
         "internal_editorial_scoring"
       ],
-      "data_verified_date": "2026-04-01"
+      "data_verified_date": "2026-04-03"
     },
     {
       "id": "HKT",

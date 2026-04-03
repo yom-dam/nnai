@@ -6,7 +6,7 @@
       "publisher": "Numbeo",
       "url": "https://www.numbeo.com/cost-of-living/",
       "metric_scope": ["monthly_cost_usd", "mid_term_rent_usd", "meal/living benchmarks"],
-      "last_checked": "2026-04-01"
+      "last_checked": "2026-04-03"
     },
     {
       "id": "ookla_speedtest_global",
@@ -14,7 +14,7 @@
       "publisher": "Ookla",
       "url": "https://www.speedtest.net/global-index",
       "metric_scope": ["internet_mbps"],
-      "last_checked": "2026-04-01"
+      "last_checked": "2026-04-03"
     },
     {
       "id": "official_visa_portals",
@@ -22,7 +22,7 @@
       "publisher": "Government Agencies",
       "url": "./visa_urls.json",
       "metric_scope": ["entry_tips", "visa practicality context"],
-      "last_checked": "2026-04-01"
+      "last_checked": "2026-04-03"
     },
     {
       "id": "internal_editorial_scoring",
@@ -30,7 +30,15 @@
       "publisher": "NNAI Data Team",
       "url": "N/A",
       "metric_scope": ["safety_score", "english_score", "nomad_score", "coworking_score", "community_size"],
-      "last_checked": "2026-04-01"
+      "last_checked": "2026-04-03"
+    },
+    {
+      "id": "nomads_fastest_growing_2026",
+      "name": "Nomads.com Fastest-Growing Destinations 2026",
+      "publisher": "Nomads.com",
+      "url": "https://nomads.com",
+      "metric_scope": ["community trend context"],
+      "last_checked": "2026-04-03"
     }
   ]
 }
