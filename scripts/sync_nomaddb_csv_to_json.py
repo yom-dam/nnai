@@ -25,6 +25,7 @@ ISO3_TO_ISO2 = {
     "PHL": "PH", "HRV": "HR", "DEU": "DE", "NLD": "NL", "CRI": "CR", "PAN": "PA",
     "ROU": "RO", "BGR": "BG", "ARG": "AR", "URY": "UY", "MAR": "MA", "ARE": "AE",
     "CPV": "CV", "SVN": "SI", "ALB": "AL", "KEN": "KE",
+    "GRC": "GR", "JPN": "JP", "TWN": "TW", "PRY": "PY", "QAT": "QA",
 }
 
 SCHENGEN_IDS = {"PT", "ES", "DE", "EE", "GR", "HR", "CZ", "HU", "SI", "MT", "CY", "RO", "BG", "NL"}
@@ -193,6 +194,11 @@ def merge_nomaddb_into_visa_db(
             last_verified = (visa.get("last_verified") or "").strip()
             if last_verified:
                 c["data_verified_date"] = last_verified
+
+            official_source = (visa.get("official_source_url") or "").strip()
+            if official_source.startswith("http"):
+                c["source"] = official_source
+                visa_urls[cid] = official_source
 
         if not c.get("source"):
             c["source"] = visa_urls.get(cid, c.get("source", ""))
