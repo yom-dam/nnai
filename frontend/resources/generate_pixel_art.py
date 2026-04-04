@@ -200,20 +200,22 @@ def draw_local(p, f=0):
 
 
 # =====================================================================
-# PLANNER — 영리한 설계자: 안경 + 노트북
+# PLANNER — 영리한 설계자: 대비형 스타일 + 우산
 # =====================================================================
 def draw_planner(p, f=0):
     im = new_img()
     arm_dy = draw_base(im, p, f)
 
-    # Neat hair (overwrites default)
-    px(im, 5, 4, p["hair"]); px(im, 5, 5, p["hair"])
+    # Neat hair with an open corner.
+    px(im, 5, 4, p["hair"]); px(im, 5, 5, p["hair"]); px(im, 5, 3, (0, 0, 0, 0))
     for x in range(6, 10): px(im, x, 3, p["hair"])
+    px(im, 10, 3, p["hair"])
+    # Raised front hair (2px) to read like styled-up hair.
+    px(im, 9, 2, p["hair"]); px(im, 10, 2, p["hair"])
 
-    # Glasses (side view)
-    px(im, 8, 5, p["sec"]); px(im, 9, 5, p["sec"]); px(im, 10, 5, p["sec"])
-    px(im, 9, 5, p["eye"])  # eye behind lens
-    px(im, 7, 5, p["sec_d"])  # arm of glasses
+    # Face detail: keep only the eye (no glasses/accent on face).
+    px(im, 9, 5, p["eye"])
+    px(im, 6, 4, p["hair"])  # replace cheek shadow pixel with hair tone
 
     # Mouth
     px(im, 10, 6, (200, 150, 130))
@@ -228,10 +230,34 @@ def draw_planner(p, f=0):
     # Front arm keeps the same walk swing as wanderer.
     px(im, 10, 7 + arm_dy, p["pri"]); px(im, 10, 8 + arm_dy, p["skin"])
 
-    # Laptop screen (side view)
-    px(im, 11, 7 + arm_dy, (60, 60, 70)); px(im, 11, 8 + arm_dy, (60, 60, 70))
-    colors = [(100, 200, 255), (130, 255, 130), (255, 200, 100)]
-    px(im, 11, 7 + arm_dy, colors[f % 3])  # screen glow
+    # Front-hand briefcase, lowered under the hand.
+    bag = (55, 45, 38)
+    bag_d = (38, 30, 26)
+    clasp = (210, 175, 95)
+    px(im, 12, 8 + arm_dy, bag_d)      # handle
+    px(im, 11, 9 + arm_dy, bag)
+    px(im, 12, 9 + arm_dy, bag)
+    px(im, 13, 9 + arm_dy, bag)
+    px(im, 11, 10 + arm_dy, bag_d)
+    px(im, 12, 10 + arm_dy, bag_d)
+    px(im, 13, 10 + arm_dy, bag_d)
+    px(im, 12, 10 + arm_dy, clasp)     # lock
+    px(im, 11, 11 + arm_dy, bag_d)
+    px(im, 12, 11 + arm_dy, bag_d)
+    px(im, 13, 11 + arm_dy, bag_d)
+
+    # Tiny clock icon raised by 2px; gray border without 4 corners.
+    clock = (255, 255, 255)
+    rim = (160, 170, 180)
+    navy = (34, 49, 86)
+    # white face (2x2)
+    px(im, 2, 0, clock); px(im, 3, 0, clock)
+    px(im, 2, 1, clock); px(im, 3, 1, clock)
+    # rim: sides only; top 2px stays white.
+    px(im, 1, 1, rim); px(im, 4, 1, rim)
+    px(im, 2, 2, rim); px(im, 3, 2, rim)
+    hand = [(2, 0), (3, 0), (3, 1), (2, 1)][f % 4]
+    px(im, hand[0], hand[1], navy)
 
     return im
 
