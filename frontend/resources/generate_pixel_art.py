@@ -1,8 +1,8 @@
 """
 Generate pixel art characters for 5 digital nomad persona types.
 All characters face RIGHT (side profile view).
-All share the same base body proportions (wanderer standard).
-Style: 16x16 pixel art → 512x512 (x32) + 64x64 (x4).
+All share the same wanderer silhouette, footing, and walk timing.
+Style: 16x16 pixel art -> 512x512 (x32) + 64x64 (x4).
 """
 from PIL import Image
 import os
@@ -60,6 +60,7 @@ PALETTES = {
         "boot": (70, 50, 40), "eye": (30, 25, 20),
     },
 }
+WANDERER_EYE = PALETTES["wanderer"]["eye"]
 
 
 def new_img():
@@ -166,18 +167,15 @@ def draw_wanderer(p, f=0):
 
 
 # =====================================================================
-# LOCAL — 어디서든 현지인: 커피 + 손 흔들기
+# LOCAL — 어디서든 현지인: 커피 + 가벼운 워킹 스윙
 # =====================================================================
 def draw_local(p, f=0):
     im = new_img()
     arm_dy = draw_base(im, p, f)
 
-    wave = [0, -1, -2, -1][f % 4]
-
-    # Longer back hair (overwrites default)
+    # Keep the same head footprint as wanderer; only extend hair slightly behind.
     px(im, 5, 4, p["hair"]); px(im, 5, 5, p["hair"]); px(im, 5, 6, p["hair"])
     for x in range(6, 10): px(im, x, 3, p["hair"])
-    px(im, 10, 3, p["hair"])  # front fringe
 
     # Warm smile
     px(im, 10, 6, (180, 110, 90))
@@ -192,12 +190,11 @@ def draw_local(p, f=0):
     if f % 2 == 0:
         px(im, 4, 6, (220, 220, 220, 160))  # steam
 
-    # Front arm (waving)
-    px(im, 10, 7, p["pri"])
-    px(im, 11, 6 + wave, p["skin"])
-    px(im, 11, 5 + wave, p["skin"])
+    # Front arm uses the same wanderer swing timing.
+    px(im, 10, 7 + arm_dy, p["pri"])
+    px(im, 10, 8 + arm_dy, p["skin"])
     if f in (0, 2):
-        px(im, 12, 5 + wave, p["skin"])  # hand open
+        px(im, 11, 8 + arm_dy, p["skin"])
 
     return im
 
@@ -207,7 +204,7 @@ def draw_local(p, f=0):
 # =====================================================================
 def draw_planner(p, f=0):
     im = new_img()
-    draw_base(im, p, f)
+    arm_dy = draw_base(im, p, f)
 
     # Neat hair (overwrites default)
     px(im, 5, 4, p["hair"]); px(im, 5, 5, p["hair"])
@@ -228,64 +225,84 @@ def draw_planner(p, f=0):
     # Back arm
     px(im, 5, 7, p["pri"]); px(im, 5, 8, p["skin"])
 
-    # Front arm holding laptop
-    px(im, 10, 7, p["pri"]); px(im, 10, 8, p["skin"])
+    # Front arm keeps the same walk swing as wanderer.
+    px(im, 10, 7 + arm_dy, p["pri"]); px(im, 10, 8 + arm_dy, p["skin"])
 
     # Laptop screen (side view)
-    px(im, 11, 7, (60, 60, 70)); px(im, 11, 8, (60, 60, 70))
+    px(im, 11, 7 + arm_dy, (60, 60, 70)); px(im, 11, 8 + arm_dy, (60, 60, 70))
     colors = [(100, 200, 255), (130, 255, 130), (255, 200, 100)]
-    px(im, 11, 7, colors[f % 3])  # screen glow
+    px(im, 11, 7 + arm_dy, colors[f % 3])  # screen glow
 
     return im
 
 
 # =====================================================================
-# FREE SPIRIT — 자유로운 영혼: 긴 머리 + 꽃 + 걷기
+# FREE SPIRIT — 자유로운 영혼: 기본형 (소품 없음)
 # =====================================================================
 def draw_free_spirit(p, f=0):
     im = new_img()
     arm_dy = draw_base(im, p, f)
 
-    # Long flowing hair (overwrites default)
-    px(im, 4, 4, p["hair"]); px(im, 4, 5, p["hair"])
-    px(im, 4, 6, p["hair"]); px(im, 4, 7, p["hair"])
-    px(im, 5, 3, p["hair"]); px(im, 5, 4, p["hair"]); px(im, 5, 5, p["hair"])
-    for x in range(6, 10): px(im, x, 3, p["hair"])
-    # Hair tip sways
+    # Pippi-like pigtails: high contrast and playful silhouette.
+    for x in range(6, 10):
+        px(im, x, 3, p["hair"])
+    px(im, 5, 4, p["hair"]); px(im, 5, 5, p["hair"])
+    px(im, 10, 3, p["hair"]); px(im, 11, 3, p["hair"])
+    px(im, 4, 3, p["hair"]); px(im, 3, 3, p["hair"])
+    px(im, 2, 2, p["hair"]); px(im, 2, 3, p["hair"])
+    px(im, 12, 2, p["hair"]); px(im, 12, 3, p["hair"])
     if f in (0, 2):
-        px(im, 3, 8, p["hair"])
+        px(im, 1, 2, p["hair"]); px(im, 13, 2, p["hair"])
     else:
-        px(im, 4, 8, p["hair"])
+        px(im, 2, 1, p["hair"]); px(im, 12, 1, p["hair"])
 
-    # Flower in hair 🌸
-    flower = (255, 160, 200); flower_c = (255, 220, 100)
-    px(im, 10, 3, flower)
-    px(im, 11, 3, flower)
-    px(im, 10, 4, flower)
-    px(im, 11, 4, flower_c)  # center
-
-    # Closed eye (peaceful)
-    px(im, 9, 5, p["acc"])  # overwrite eye to closed line
+    # Closed eye (peaceful) with wanderer's eye tone for consistency.
+    px(im, 9, 5, WANDERER_EYE)
 
     # Serene smile
     px(im, 10, 6, (200, 140, 120))
 
-    # Robe/dress slightly wider
-    px(im, 5, 8, p["pri"]); px(im, 5, 9, p["pri"])
+    # Flowy dress + skirt hem with a gentle swing.
+    px(im, 7, 7, p["sec"])
+    px(im, 8, 7, p["sec"])
+    px(im, 7, 8, p["sec_d"])
+    px(im, 8, 8, p["sec"])
+    px(im, 9, 8, p["sec_d"])
+    px(im, 6, 9, p["sec"])
+    px(im, 7, 9, p["sec"])
+    px(im, 8, 9, p["sec"])
+    px(im, 9, 9, p["sec"])
     px(im, 10, 9, p["sec"])
-
+    if f in (0, 2):
+        px(im, 5, 9, p["sec_d"])
+    else:
+        px(im, 11, 9, p["sec_d"])
+    # Slightly raised skirt hem for a cleaner leg reveal.
+    px(im, 7, 9, p["sec_d"])
+    px(im, 8, 9, p["sec"])
+    px(im, 9, 9, p["sec_d"])
     # Back arm relaxed
     px(im, 5, 7, p["pri_d"])
 
-    # Front arm swinging gently
+    # Front arm follows the shared walk swing with no handheld prop.
     px(im, 10, 7 + arm_dy, p["pri"])
     px(im, 10, 8 + arm_dy, p["skin"])
 
-    # Sparkles
-    sparkles = [(2, 5), (12, 7), (3, 10), (13, 3), (1, 8)]
-    for i, (sx, sy) in enumerate(sparkles):
-        if (i + f) % 3 == 0:
-            px(im, sx, sy, (255, 255, 200, 180))
+    # Bare legs for a lighter, carefree look (top is hidden under skirt hem).
+    leg_x = (6, 9) if f in (0, 2) else (7, 8)
+    for lx in leg_x:
+        px(im, lx, 11, p["skin"])
+        px(im, lx, 12, p["skin_s"])
+
+    # Pigtail hair-ties instead of floating hearts.
+    tie = (255, 150, 210)
+    tie_h = (255, 210, 240)
+    if f in (0, 2):
+        px(im, 3, 3, tie); px(im, 11, 3, tie)
+        px(im, 3, 4, tie_h); px(im, 11, 4, tie_h)
+    else:
+        px(im, 3, 2, tie); px(im, 11, 2, tie)
+        px(im, 3, 3, tie_h); px(im, 11, 3, tie_h)
 
     return im
 
@@ -317,7 +334,7 @@ def draw_pioneer(p, f=0):
     # Back arm holding flag pole
     px(im, 5, 7, p["pri"]); px(im, 5, 8, p["skin"])
     # Pole
-    for y in range(1, 8): px(im, 4, y, (140, 100, 60))
+    for y in range(2, 8): px(im, 4, y, (140, 100, 60))
     # Flag (waving left)
     fw = f % 4
     for row in range(3):
@@ -325,9 +342,9 @@ def draw_pioneer(p, f=0):
         if fw == 1 and row == 1: off = -1
         elif fw == 3 and row == 0: off = -1
         c = p["pri"] if row < 2 else p["sec"]
-        px(im, 2 + off, 1 + row, c)
-        px(im, 3 + off, 1 + row, c)
-    px(im, 1, 1, p["acc"])
+        px(im, 2 + off, 2 + row, c)
+        px(im, 3 + off, 2 + row, c)
+    px(im, 1, 2, p["acc"])
 
     # Front arm + compass
     px(im, 10, 7 + arm_dy, p["pri"])
@@ -349,6 +366,9 @@ DRAW_FUNCS = {
 
 NUM_FRAMES = 4
 FRAME_DURATION = 300
+FOOT_BASELINE_Y = 14
+GLOBAL_OFFSET_X = 0
+GLOBAL_OFFSET_Y = 1
 
 
 def get_bbox(im):
@@ -357,27 +377,28 @@ def get_bbox(im):
 
 
 def center_frames(raw_frames):
-    min_x, min_y = CANVAS, CANVAS
+    min_x = CANVAS
     max_x, max_y = 0, 0
     for fr in raw_frames:
         b = get_bbox(fr)
-        min_x, min_y = min(min_x, b[0]), min(min_y, b[1])
+        min_x = min(min_x, b[0])
         max_x, max_y = max(max_x, b[2]), max(max_y, b[3])
 
-    dx = (CANVAS - (max_x - min_x)) // 2 - min_x
-    dy = (CANVAS - (max_y - min_y)) // 2 - min_y
+    dx = (CANVAS - (max_x - min_x)) // 2 - min_x + GLOBAL_OFFSET_X
+    # Keep all feet on the same line as wanderer while preserving horizontal centering.
+    dy = FOOT_BASELINE_Y - max_y + GLOBAL_OFFSET_Y
 
     out = []
     for fr in raw_frames:
-        c = Image.new("RGBA", (CANVAS, CANVAS), (0, 0, 0, 0))
+        centered = Image.new("RGBA", (CANVAS, CANVAS), (0, 0, 0, 0))
         for x in range(CANVAS):
             for y in range(CANVAS):
                 sx, sy = x - dx, y - dy
                 if 0 <= sx < CANVAS and 0 <= sy < CANVAS:
                     p = fr.getpixel((sx, sy))
                     if p[3] > 0:
-                        c.putpixel((x, y), p)
-        out.append(c)
+                        centered.putpixel((x, y), p)
+        out.append(centered)
     return out
 
 
@@ -395,8 +416,8 @@ def generate_all():
     for key, pal in PALETTES.items():
         folder = os.path.join(BASE_DIR, key)
         os.makedirs(folder, exist_ok=True)
-        raw = [DRAW_FUNCS[key](pal, f) for f in range(NUM_FRAMES)]
-        frames = center_frames(raw)
+        raw_frames = [DRAW_FUNCS[key](pal, f) for f in range(NUM_FRAMES)]
+        frames = center_frames(raw_frames)
 
         p512, _ = save_set(frames, folder, key, SCALE_BIG)
         print(f"  512: {p512}")
