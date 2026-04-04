@@ -11,6 +11,21 @@
 | `cowork/backend/api-reference.md` | 엔드포인트 추가/수정/삭제, 요청·응답 스키마 변경, 인증 로직 변경 |
 | `cowork/backend/db-schema.md` | 테이블 추가/삭제, 컬럼 추가/수정/삭제, 외래키 변경 (`utils/db.py` DDL 변경) |
 
+### rawdata → JSON/DB 동기화
+
+`data/rawdata/` 폴더에 팀원이 최신 정보를 CSV로 지속 업데이트한다.
+세션 시작 시 rawdata에 변경이 있는지 확인하고, 변경이 있으면 대응하는 JSON 파일을 재생성한다.
+
+| rawdata CSV | 대응 JSON | 동기화 스크립트 |
+|-------------|----------|----------------|
+| `data/rawdata/city_scores.csv` | `data/city_scores.json` | `scripts/sync_nomaddb_csv_to_json.py` |
+| `data/rawdata/nomad_countries_metadata.csv` | `data/visa_db.json` | `scripts/sync_nomaddb_csv_to_json.py` |
+| `data/rawdata/nomad_visa_relations.csv` | `data/visa_db.json` | `scripts/sync_nomaddb_csv_to_json.py` |
+
+JSON 재생성 후 프론트엔드 enrichment용 복사본도 갱신해야 한다:
+- `frontend/src/data/city_scores.json`
+- `frontend/src/data/visa_db.json`
+
 ### GitHub Actions 테스트
 
 새 테스트 파일을 추가할 때마다 `.github/workflows/main-tests.yml`의 테스트 목록에 함께 등록한다.

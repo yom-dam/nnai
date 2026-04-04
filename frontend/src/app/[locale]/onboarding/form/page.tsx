@@ -116,6 +116,14 @@ const STEP_TITLES = [
   "마지막으로 몇 가지만 더!",
 ];
 
+const personaGif: Record<string, string> = {
+  schengen_loop: "/wanderer.gif",
+  slow_nomad: "/local.gif",
+  fire_optimizer: "/planner.gif",
+  burnout_escape: "/free_spirit.gif",
+  expat_freedom: "/pioneer.gif",
+};
+
 // ── Helpers ──────────────────────────────────────────────────────
 
 function hasChildren(travelType: string) {
@@ -235,6 +243,28 @@ export default function FormPage() {
 
       {/* 콘텐츠 */}
       <div className="flex flex-1 flex-col justify-start pt-24 px-4">
+        {/* 스텝 캐릭터 — 배지 바로 위, 여백 0 */}
+        <div className="grid grid-cols-4 h-12">
+          {[1, 2, 3, 4].map((step) => (
+            <div key={step} className="flex items-end justify-center">
+              {currentStep === step && (
+                <motion.img
+                  src={personaType ? personaGif[personaType] ?? "/earth_64.gif" : "/earth_64.gif"}
+                  alt=""
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                  style={{ imageRendering: "pixelated" }}
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  key={`persona-${step}`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+
         {/* 페르소나 배지 */}
         {personaType && (
           <div className="mb-6 border border-primary/20 bg-primary/5 px-3 py-2 text-center text-xs text-primary flex items-center justify-center gap-2">

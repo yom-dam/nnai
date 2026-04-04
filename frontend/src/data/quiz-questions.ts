@@ -40,7 +40,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     question: "노마드 시작 첫 날이야.\n오늘 아침에 뭘 하고 싶어?",
     options: [
       { label: "느긋하게 브런치 먹으러 갈거야.", value: "A", persona: "burnout_escape" },
-      { label: "미라클 모닝. 일어나서 운동부터 해야지.", value: "B", persona: "expat_freedom" },
+      { label: "일어나서 운동부터 해야지.", value: "B", persona: "expat_freedom" },
       { label: "미리 찾아둔 장소에 가볼거야.", value: "C", persona: "schengen_loop" },
       { label: "짐 정리하고 밀린 일을 먼저 해치울래.", value: "D", persona: "fire_optimizer" },
       { label: "골목 골목 동네를 둘러볼래.", value: "E", persona: "slow_nomad" },
@@ -52,7 +52,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     options: [
       { label: "바닥이 보이는 통장 잔고.", value: "A", persona: "fire_optimizer" },
       { label: "내일이 비자 만료 하루 전날.", value: "B", persona: "schengen_loop" },
-      { label: "현지에서 당하는 인종차별.", value: "C", persona: "slow_nomad" },
+      { label: "믿었던 친구의 배신.", value: "C", persona: "slow_nomad" },
       { label: "이룬 것 없이 한국으로 가야할 때.", value: "D", persona: "expat_freedom" },
       { label: "번아웃이 와버린 나 자신.", value: "E", persona: "burnout_escape" },
     ],
@@ -85,7 +85,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     options: [
       { label: "자유", value: "A", persona: "schengen_loop" },
       { label: "우정", value: "B", persona: "slow_nomad" },
-      { label: "안정", value: "C", persona: "fire_optimizer" },
+      { label: "성공", value: "C", persona: "fire_optimizer" },
       { label: "행복", value: "D", persona: "burnout_escape" },
       { label: "의지", value: "E", persona: "expat_freedom" },
     ],
