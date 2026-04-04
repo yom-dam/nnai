@@ -1,5 +1,5 @@
 # CONTEXT.md
-_Last updated: 2026-04-03 (KST)_
+_Last updated: 2026-04-04 21:30 (KST)_
 
 ## 프로젝트 개요
 - 서비스명: NomadNavigator AI (NNAI)
@@ -13,22 +13,28 @@ _Last updated: 2026-04-03 (KST)_
 - Infra: Vercel (frontend, nnai.app) + Railway (backend, api.nnai.app) + Cloudflare DNS
 
 ## 현재 상태
-백엔드 API 연결 완료. 퀴즈 → 페르소나 결과 → 폼 → 도시 추천 결과까지 전체 플로우 동작 중. 테마는 라이트 모드(세계之外) + Noto Serif KR로 확정. result 페이지 도시 카드 3개 + 비교표 구현 완료.
+백엔드 API 완성 및 운영 중. 랜딩 페이지 진입점 2개 분리 완료
+(퀴즈 진입 / 도시 추천 직접 진입). 페르소나 localStorage 저장 전환 완료.
+더 알아보기(Step 2)는 타로카드 UX로 재설계 예정, 현재 "준비 중" 상태 유지.
 
 ## 최근 변경
-- Noto Serif KR 단일 폰트 확정, 라이트 모드 전환
-- Next.js API Route 프록시로 CORS 해결
-- 퀴즈 이전 버튼 + 레이아웃 수정
-- 결과 페이지 카드 위계 재설계 (도시→일→순간→가치)
-- result 페이지 도시 카드 + 비교표 구현
+- 랜딩 페이지 진입점 분리 (퀴즈 / 직접 진입)
+- 페르소나 sessionStorage → localStorage 전환
+- 폼 페이지 "다시 하기" 링크 추가
+- Step 2 API 연결 시도 후 롤백 (타로카드 UX 재설계 필요 판단)
 
 ## 진행 중인 작업
 - [x] 프론트엔드 온보딩 플로우 골격 + 스타일링
 - [x] 페르소나 결과 페이지 콘텐츠
 - [x] Framer Motion 인터랙션
+- [x] 디자인 시스템 Amber Mono 2.0 전환
 - [x] 백엔드 API 연결
-- [ ] 퀴즈 페이지 수직 정렬 마무리
-- [ ] 폼 페이지 UX 디테일
+- [x] 온보딩 폼 UX 재설계
+- [x] result 페이지 UX 재설계
+- [x] 랜딩 진입점 분리
+- [x] 페르소나 localStorage 임시 저장
+- [ ] 더 알아보기 → 타로카드 UX 재설계
+- [ ] LLM 재도입 시점 + 페르소나 백엔드 연동 방식 검토
 - [ ] 페르소나 결과 공유 기능
 - [ ] Google OAuth 프론트엔드 연동
 

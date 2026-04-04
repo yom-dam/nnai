@@ -1,5 +1,110 @@
 # CHANGELOG
 
+## [2026-04-04 21:30 KST] — 진입점 분리 + 로컬스토리지 전환 + Step2 롤백
+
+### 변경 파일
+- `app/[locale]/page.tsx` : 랜딩 페이지 전면 재작성 (진입점 2개 분리)
+- `app/[locale]/onboarding/quiz/page.tsx` : sessionStorage → localStorage 전환
+- `app/[locale]/onboarding/form/page.tsx` : sessionStorage → localStorage 전환 + "다시 하기" 링크 추가
+- `app/[locale]/result/page.tsx` : Step 2 API 연결 시도 후 롤백 → alert 원복
+
+### 작업 요약
+- 무엇을: 랜딩 진입점 분리, 페르소나 저장 방식 전환, Step 2 API 롤백
+- 왜: 퀴즈/직접진입 분기 UX 구현 + 재방문 시 페르소나 유지 + Step 2는 원래 기획(타로카드 UX)으로 재설계 필요 판단
+- 영향 범위: 랜딩, 온보딩 퀴즈/폼, result 페이지
+
+### 주요 결정사항
+- 페르소나는 LLM 미연동 상태로 UX 경험 역할만 유지 (옵션 B 확정)
+- LLM 재도입 시점 + 페르소나 백엔드 연동 방식은 별도 세션에서 논의
+- 더 알아보기(Step 2)는 현재 구현 폐기. 타로카드 UX 기획으로 재설계 예정
+- Google OAuth 연동은 로컬스토리지 브리지 완료 후 다음 우선순위
+
+### 다음 세션 참고사항
+- 더 알아보기 → 타로카드 UX 재설계 (별도 세션)
+- LLM 재도입 시점 논의 (별도 세션)
+- Google OAuth 프론트엔드 연동
+- 페르소나 결과 공유 기능
+
+---
+
+## [2026-04-04 20:10 KST] — result 페이지 전면 재설계
+
+### 변경 파일
+- `backend/recommender.py` : city_scores.json + visa_db.json 필드 top_cities에 병합
+- `backend/data/city_descriptions.json` : 50개 도시 한국어 소개 텍스트 생성
+- `app/[locale]/result/page.tsx` : result 페이지 카드 구조 전면 재설계
+
+### 작업 요약
+- 무엇을: result 페이지 정보 레이어 + 서술 레이어 분리 재설계
+- 왜: 팩트 나열에서 "노마드 선배의 조언" 구조로 전환, 신뢰+영감 동시 제공
+- 영향 범위: result 페이지 전체, 백엔드 API 응답 구조
+
+### 주요 변경사항
+- 추천 점수(score) 제거
+- 백엔드 city_scores/visa_db 필드 API 응답에 병합
+  (internet_mbps, safety_score, english_score, stay_months, renewable 등)
+- 50개 도시 소개 텍스트 city_descriptions.json으로 관리
+- 카드 구조: 인사이트 → 정보 블록 → 서술 블록(도시소개+조언) → 링크
+- 한화 환산 예산 표시 (약 {n}만원)
+- 소득 대비 생활비 비율 조언 (소득의 약 n%)
+- 인사이트/조언 중복 방지 로직
+- 더 알아보기 → 버튼 추가 (Step 2 API 연결 미착수)
+- 데이터 출처 표시 (Numbeo, NomadList)
+
+### 다음 세션 참고사항
+- 더 알아보기 → Step 2 API(/api/detail) 연결 미착수
+- 페르소나 결과 공유 기능 미구현
+- Google OAuth 프론트엔드 연동 미착수
+
+---
+
+## [2026-04-04 00:10 KST] — 폼 UX 전면 재설계
+
+### 변경 파일
+- `app/[locale]/onboarding/form/page.tsx` : 폼 6스텝 → 4스텝 재설계 전면 교체
+
+### 작업 요약
+- 무엇을: 폼 스텝 구조 재설계 + 불필요 필드 제거 + 소득 구간 버튼화
+- 왜: 백엔드 API 스펙 분석 결과 실질 영향 없는 필드 정리, 월 소득 타이핑 제거
+- 영향 범위: 온보딩 폼 전체 UX, API 전송 데이터 구조
+
+### 주요 변경사항
+- Step 1 "기본 정보" 제거 (nationality/languages/dual_nationality 고정값 처리)
+- readiness_stage, income_type 제거
+- 월 소득 숫자 입력 → 6개 구간 버튼 2×3 그리드로 교체
+- 비공개 선택 시 추천 제한 안내 문구 노출
+- 동행 조건 조건부 필드 추가 (children_ages, has_spouse_income, spouse_income_krw)
+- 텍스트 전면 수정 (노마드 톤으로 통일)
+- 퀴즈 버튼과 동일한 레이아웃/스타일 적용
+
+### 다음 세션 참고사항
+- 전체 플로우 end-to-end 테스트 필요 (폼 → API → result 페이지)
+- result 페이지 UX 디테일 검토 필요
+- 페르소나 결과 공유 기능 미구현
+- Google OAuth 프론트엔드 연동 미착수
+
+---
+
+## [2026-04-03 23:00 KST] — 디자인 시스템 Amber Mono 2.0 전환 + 퀴즈/결과 페이지 디테일
+
+### 변경 파일
+- `app/globals.css` : Amber Mono 2.0 CSS 변수 전면 교체, accent hover primary hue 조정
+- `app/layout.tsx` : Geist Mono(영문) + Noto Serif KR(한글) 폰트 조합 적용
+- `components/onboarding/quiz-card.tsx` : hover/on-click 버튼 상태 정의
+- `components/onboarding/persona-result-card.tsx` : 카드 border-l-4 accent line, 서브텍스트 수정
+
+### 작업 요약
+- 무엇을: MX-Brutalist → Amber Mono 2.0 컬러 시스템 전환 + 폰트 조합 확정
+- 왜: 한글 폰트 호환성 + 아날로그 메모장 감성 + 브루탈리스트 무게감 조정
+- 영향 범위: 프론트엔드 전체 스타일링
+
+### 다음 세션 참고사항
+- 다음 작업: /onboarding/form → 백엔드 API 연결
+- 퀴즈 선택지 버튼 hover(accent)/on-click(primary) 상태 확정됨
+- 결과 페이지 카드 border-l-4 primary accent line 적용됨
+
+---
+
 ## [2026-04-03 KST] — UI 리디자인 + API 연결 완료
 
 ### 변경 파일
