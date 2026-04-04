@@ -172,29 +172,73 @@ def draw_wanderer(p, f=0):
 def draw_local(p, f=0):
     im = new_img()
     arm_dy = draw_base(im, p, f)
+    hair_h = (110, 72, 46)
+    hair_l = (68, 42, 24)
 
-    # Keep the same head footprint as wanderer; only extend hair slightly behind.
-    px(im, 5, 4, p["hair"]); px(im, 5, 5, p["hair"]); px(im, 5, 6, p["hair"])
+    # Side-swept long hair to read as feminine even in profile.
+    px(im, 5, 3, p["hair"]); px(im, 5, 4, p["hair"]); px(im, 5, 5, p["hair"]); px(im, 5, 6, p["hair"])
+    px(im, 4, 5, p["hair"]); px(im, 4, 6, p["hair"])
     for x in range(6, 10): px(im, x, 3, p["hair"])
+    px(im, 10, 3, p["hair"])
 
-    # Warm smile
-    px(im, 10, 6, (180, 110, 90))
+    # Cover the left face plane with hair for a stronger side-swept read.
+    px(im, 6, 4, p["hair"]); px(im, 6, 5, hair_h)
 
-    # Apron detail
-    px(im, 7, 9, p["sec"]); px(im, 8, 9, p["sec"]); px(im, 9, 9, p["sec"])
+    # Subtle tone variation near the tied-back hair mass.
+    px(im, 4, 5, hair_h); px(im, 4, 6, hair_l)
 
-    # Back arm + coffee cup
-    px(im, 5, 7, p["pri"]); px(im, 5, 8, p["skin"])
-    px(im, 4, 7, (180, 140, 100)); px(im, 4, 8, (180, 140, 100))
-    px(im, 3, 8, (160, 120, 80))  # handle
+    # Chatty expression: mouth opens on alternating frames.
     if f % 2 == 0:
-        px(im, 4, 6, (220, 220, 220, 160))  # steam
+        px(im, 10, 6, (186, 92, 112))
+    else:
+        px(im, 10, 6, (160, 80, 95))
+        px(im, 9, 6, (200, 125, 140))
 
-    # Front arm uses the same wanderer swing timing.
+    # Cropped jacket + long skirt silhouette.
+    px(im, 6, 7, p["pri_d"]); px(im, 7, 7, p["pri"]); px(im, 8, 7, p["pri"]); px(im, 9, 7, p["pri_d"])
+    px(im, 6, 8, p["sec_d"]); px(im, 7, 8, p["sec"]); px(im, 8, 8, p["sec"]); px(im, 9, 8, p["sec_d"])
+    for y in (9, 10):
+        px(im, 6, y, p["sec_d"]); px(im, 7, y, p["sec"]); px(im, 8, y, p["sec"]); px(im, 9, y, p["sec_d"])
+    # Hem accent only on the left side.
+    px(im, 5, 10, p["sec_d"])
+    # Legs and shoes peek out with a simple walk cycle.
+    leg_x = (6, 9) if f in (0, 2) else (7, 8)
+    for lx in leg_x:
+        px(im, lx, 11, p["skin"])
+        px(im, lx, 12, p["boot"])
+
+    # Back arm + clear ponytail silhouette.
+    px(im, 5, 7, p["pri"]); px(im, 5, 8, p["skin"])
+    px(im, 4, 6, p["hair"]); px(im, 4, 7, p["hair"])
+    px(im, 3, 7, p["hair"]); px(im, 3, 8, p["hair"])
+    px(im, 2, 8, hair_h)
+    # Single orange hair tie near the face.
+    px(im, 5, 6, (232, 132, 52))
+    px(im, 4, 5, (232, 132, 52))
+    px(im, 3, 5, (232, 132, 52))
+    px(im, 4, 4, (232, 132, 52))
+    if f in (1, 3):
+        px(im, 2, 9, p["hair"])
+
+    # Front arm swing with cocktail glass.
     px(im, 10, 7 + arm_dy, p["pri"])
     px(im, 10, 8 + arm_dy, p["skin"])
+    # Mug silhouette: body + handle.
+    mug = (235, 225, 205)
+    mug_d = (195, 180, 160)
+    px(im, 11, 8 + arm_dy, mug)
+    px(im, 12, 8 + arm_dy, mug)
+    px(im, 11, 9 + arm_dy, mug)
+    px(im, 12, 9 + arm_dy, mug_d)
+
+    # Tiny chat bubble dots + club sparkle pulse.
     if f in (0, 2):
-        px(im, 11, 8 + arm_dy, p["skin"])
+        px(im, 12, 4, (255, 245, 190))
+        px(im, 13, 4, (255, 245, 190))
+        px(im, 12, 5, (255, 245, 190))
+    else:
+        px(im, 12, 4, (255, 225, 150))
+        px(im, 13, 3, (255, 225, 150))
 
     return im
 
