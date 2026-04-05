@@ -473,7 +473,9 @@ GET /api/visits?path=/dev
 - Plans: `GET/POST/PATCH/DELETE /api/mobile/moves`, `PATCH /api/mobile/moves/{id}/items/{item_id}`
 - Profile: `GET /api/mobile/profile`
 - Recommend: `POST /api/mobile/recommend`, `POST /api/mobile/detail`
-- Upload: `POST /api/mobile/uploads/image` (multipart form-data, field: `file`)
+- Upload:
+  - `POST /api/mobile/uploads/image` (multipart form-data, field: `file`) -> `{ url, image_url }`
+  - `GET /api/mobile/uploads/{filename}` (업로드 이미지 파일 조회)
 
 ### Type Actions
 
@@ -512,6 +514,8 @@ GET /api/visits?path=/dev
   - `id, city, country, arrived_at, left_at, visa_expires_at, budget_total, budget_remaining, created_at, updated_at`
 - `GET /api/mobile/posts`
   - `author_persona_type` 포함
+- `POST /api/mobile/uploads/image`
+  - 응답 `url`/`image_url`는 그대로 `<Image uri>`에 사용할 수 있는 경로(`/api/mobile/uploads/{filename}`)
 - `GET/POST /api/mobile/type-actions/planner/*`
   - Board: `id, country, city, title, created_at, updated_at`
   - Task: `id, board_id, text, is_done, due_date, sort_order`

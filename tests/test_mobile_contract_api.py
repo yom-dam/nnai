@@ -317,3 +317,9 @@ def test_mobile_posts_persists_uploaded_image_url():
     assert upload.status_code == 200
     payload = upload.json()
     assert "url" in payload or "image_url" in payload
+    uploaded_url = payload.get("url") or payload.get("image_url")
+    assert isinstance(uploaded_url, str) and uploaded_url.startswith("/api/mobile/uploads/")
+
+    fetched = client.get(uploaded_url, headers=headers)
+    assert fetched.status_code == 200
+    assert fetched.content == b"png-bytes"

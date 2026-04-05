@@ -6,6 +6,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 
 from utils.mobile_auth import require_mobile_auth
 
@@ -35,3 +36,15 @@ def upload_image(
 
     url = f"/api/mobile/uploads/{saved_name}"
     return {"url": url, "image_url": url}
+
+
+@router.get("/uploads/{filename}")
+def get_uploaded_image(filename: str):
+    if not filename or "/" in filename or "\\" in filename:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    path = _UPLOAD_DIR / filename
+    if not path.exists() or not path.is_file():
+        raise HTTPException(status_code=404, detail="File not found")
+
+    return FileResponse(path)

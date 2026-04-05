@@ -133,6 +133,7 @@ CREATE TABLE IF NOT EXISTS posts (
     body        TEXT NOT NULL,
     tags        JSONB NOT NULL DEFAULT '[]',
     city        TEXT,
+    image_url   TEXT,
     likes_count INTEGER NOT NULL DEFAULT 0,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -151,6 +152,9 @@ CREATE TABLE IF NOT EXISTS post_comments (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
+
+`posts.image_url`는 모바일 업로드 API(`POST /api/mobile/uploads/image`)에서 받은 경로를 저장합니다.
+피드 응답(`GET /api/mobile/posts`)은 `COALESCE(posts.image_url, users.picture)`를 사용해 이미지 URL을 반환합니다.
 
 ---
 
