@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from utils.db import get_conn
 from utils.mobile_auth import require_mobile_auth
+from utils.persona import resolve_character
 
 router = APIRouter(prefix="/api/mobile", tags=["mobile-profile"])
 
@@ -36,6 +37,7 @@ def get_profile(user_id: str = Depends(require_mobile_auth)):
         "picture": user[2],
         "email": user[3],
         "persona_type": user[4],
+        "character": resolve_character(user[4]),
         "badges": badges,
         "stats": {
             "pins": pin_count,

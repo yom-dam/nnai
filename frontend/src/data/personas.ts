@@ -1,9 +1,9 @@
 export type PersonaType =
-  | "schengen_loop"
-  | "slow_nomad"
-  | "fire_optimizer"
-  | "burnout_escape"
-  | "expat_freedom";
+  | "wanderer"
+  | "local"
+  | "planner"
+  | "free_spirit"
+  | "pioneer";
 
 export const PERSONAS: Record<PersonaType, {
   label: string;
@@ -14,7 +14,7 @@ export const PERSONAS: Record<PersonaType, {
   value: string[];
   moment: string[];
 }> = {
-  schengen_loop: {
+  wanderer: {
     label: "거침없는 나그네",
     labelEn: "The Boundless Wanderer",
     description: [
@@ -45,7 +45,7 @@ export const PERSONAS: Record<PersonaType, {
       "기대감으로 느껴지는 사람이에요.",
     ],
   },
-  slow_nomad: {
+  local: {
     label: "어디서든 현지인",
     labelEn: "The Everywhere Local",
     description: [
@@ -73,7 +73,7 @@ export const PERSONAS: Record<PersonaType, {
       "그 순간 여기가 우리 동네가 돼요.",
     ],
   },
-  fire_optimizer: {
+  planner: {
     label: "영리한 설계자",
     labelEn: "The Clever Architect",
     description: [
@@ -102,7 +102,7 @@ export const PERSONAS: Record<PersonaType, {
       "당신의 판단력은 이번에도 맞았어요.",
     ],
   },
-  burnout_escape: {
+  free_spirit: {
     label: "자유로운 영혼",
     labelEn: "The Free Spirit",
     description: [
@@ -132,7 +132,7 @@ export const PERSONAS: Record<PersonaType, {
       "그것만으로 충분하다는 걸 아는 사람이에요.",
     ],
   },
-  expat_freedom: {
+  pioneer: {
     label: "용감한 개척자",
     labelEn: "The Bold Pioneer",
     description: [

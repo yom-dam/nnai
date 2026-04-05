@@ -131,7 +131,7 @@ Content-Type: application/json
 | `timeline` | string | ✅ | — | 체류 기간 (예: `"1년 장기 체류"`) |
 | `preferred_countries` | string[] | ❌ | `[]` | 선호 국가/지역 (예: `["유럽"]`) |
 | `preferred_language` | string | ❌ | `"한국어"` | 응답 언어 (`"한국어"` / `"English"`) |
-| `persona_type` | string \| null | ❌ | `null` | 페르소나 유형 (`schengen_loop|slow_nomad|fire_optimizer|burnout_escape|expat_freedom`) |
+| `persona_type` | string \| null | ❌ | `null` | 페르소나 유형 (`wanderer|local|planner|free_spirit|pioneer`) |
 | `income_type` | string | ❌ | `""` | 소득 유형 (예: `"프리랜서"`) |
 | `travel_type` | string | ❌ | `"혼자 (솔로)"` | 여행 타입 |
 | `children_ages` | string[] \| null | ❌ | `null` | 자녀 나이 목록 |
@@ -454,7 +454,7 @@ GET /api/visits?path=/dev
 ### 모바일 Auth
 
 - `POST /auth/mobile/token` → `{ token, user }`
-- `GET /auth/mobile/me` → `User(uid, name, picture, email, persona_type)`
+- `GET /auth/mobile/me` → `User(uid, name, picture, email, persona_type, character)`
 
 ### Core Mobile
 
@@ -499,7 +499,8 @@ GET /api/visits?path=/dev
 
 - `GET /api/mobile/profile`
   - `uid`, `name`, `picture`, `email`
-  - `persona_type` (`schengen_loop|slow_nomad|fire_optimizer|burnout_escape|expat_freedom|null`)
+  - `persona_type` (`wanderer|local|planner|free_spirit|pioneer|null`)
+  - `character` (`persona_type`가 없으면 `rocky`)
   - `badges: string[]`
   - `stats: { pins, posts, circles }`
 - `GET/POST/PATCH /api/mobile/type-actions/wanderer/hops*`

@@ -11,11 +11,11 @@
 
 ## nnai 표준 타입(Enum)
 
-- `schengen_loop`
-- `slow_nomad`
-- `fire_optimizer`
-- `burnout_escape`
-- `expat_freedom`
+- `wanderer`
+- `local`
+- `planner`
+- `free_spirit`
+- `pioneer`
 - `null` (아직 퀴즈/추천으로 타입이 저장되지 않은 유저)
 
 ## 백엔드 반영 사항
@@ -58,7 +58,8 @@
   "name": "홍길동",
   "picture": "https://...",
   "email": "user@example.com",
-  "persona_type": "slow_nomad",
+  "persona_type": "local",
+  "character": "local",
   "badges": ["host"],
   "stats": {
     "pins": 3,
@@ -80,7 +81,7 @@
   "lifestyle": ["저물가"],
   "languages": ["영어 업무 수준"],
   "timeline": "1년 장기 체류",
-  "persona_type": "slow_nomad"
+  "persona_type": "local"
 }
 ```
 
@@ -103,3 +104,4 @@
 
 - 모바일은 `nomad_type` fallback을 두지 마세요.
 - 백엔드/모바일 모두 `persona_type`만 표준으로 사용합니다.
+- `persona_type`이 `null`/누락인 경우 기본 캐릭터는 `rocky`를 사용합니다. (DB에는 별도 저장하지 않음)

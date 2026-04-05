@@ -245,7 +245,7 @@ nnai/
 - `validate_user_profile(user_profile)` → `dict` — `{"valid", "warnings", "hard_block"}`
 
 ### `utils/persona.py`
-- 5가지 페르소나: `schengen_loop`, `slow_nomad`, `fire_optimizer`, `burnout_escape`, `expat_freedom`
+- 5가지 페르소나: `wanderer`, `local`, `planner`, `free_spirit`, `pioneer`
 - `diagnose_persona(...)` → `str`, `get_persona_hint(persona_type)` → `str`
 
 ### `utils/db.py`

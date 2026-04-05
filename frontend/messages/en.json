@@ -77,27 +77,27 @@
     "share": "Share results (coming soon)",
     "analyzingAs": "Analyzing as {label}",
     "types": {
-      "schengen_loop": {
+      "wanderer": {
         "label": "Schengen Looper",
         "description": "A route-optimizing nomad who freely roams across Europe",
         "traits": ["Comfortable with 90-day stay patterns", "Enjoys movement itself", "Europe-centered lifestyle"]
       },
-      "slow_nomad": {
+      "local": {
         "label": "Base Settler",
         "description": "A long-term nomad who deeply immerses in one city",
         "traits": ["Stays 6+ months in one place", "Values local community", "Prefers long-term visas"]
       },
-      "fire_optimizer": {
+      "planner": {
         "label": "Cost Optimizer",
         "description": "A nomad designing high quality of life at low cost",
         "traits": ["Targets under $1,500/month", "Prioritizes value for money", "FIRE-oriented"]
       },
-      "burnout_escape": {
+      "free_spirit": {
         "label": "Burnout Escapee",
         "description": "A nomad seeking recovery through nature and slow pace",
         "traits": ["Nature-first priority", "Recovery is the goal", "Slow daily routine"]
       },
-      "expat_freedom": {
+      "pioneer": {
         "label": "Freedom Seeker",
         "description": "A nomad designing a new life through permanent residency",
         "traits": ["Exploring PR pathways", "Prefers long-stay cities", "Building a base outside home country"]

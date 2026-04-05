@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from utils.db import get_conn
 from utils.mobile_auth import create_jwt, require_mobile_auth
+from utils.persona import resolve_character
 
 router = APIRouter(prefix="/auth/mobile", tags=["mobile-auth"])
 
@@ -138,6 +139,7 @@ async def mobile_token(body: TokenRequest):
             "picture": info.get("picture"),
             "email": info.get("email"),
             "persona_type": None,
+            "character": resolve_character(None),
         },
     }
 
@@ -153,4 +155,5 @@ def mobile_me(user_id: str = Depends(require_mobile_auth)):
         "picture": user["picture"],
         "email": user["email"],
         "persona_type": user["persona_type"],
+        "character": resolve_character(user["persona_type"]),
     }

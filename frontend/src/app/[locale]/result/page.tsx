@@ -64,11 +64,11 @@ interface RecommendResult {
 // -- Persona Labels --
 
 const personaLabel: Record<string, string> = {
-  schengen_loop: "자유로운 유목민",
-  slow_nomad: "따뜻한 현지인",
-  fire_optimizer: "전략적 개척자",
-  burnout_escape: "자유로운 영혼",
-  expat_freedom: "용감한 개척자",
+  wanderer: "자유로운 유목민",
+  local: "따뜻한 현지인",
+  planner: "전략적 개척자",
+  free_spirit: "자유로운 영혼",
+  pioneer: "용감한 개척자",
 };
 
 // -- Currency Utils --
@@ -159,15 +159,15 @@ function getAdvice(city: CityData, profile: UserProfile, used: Set<string>): str
   if (lifestyle.includes("코워킹 스페이스") && (city.cowork_usd_month ?? 9999) <= 200)
     extras.push(`코워킹 월 ${toKRW(city.cowork_usd_month ?? 0)}로 인프라가 잘 갖춰져 있어요.`);
   // 페르소나
-  if (persona === "schengen_loop" && (city.stay_months ?? 99) <= 3)
+  if (persona === "wanderer" && (city.stay_months ?? 99) <= 3)
     extras.push("짧게 머물고 이동하는 스타일에 맞는 비자 구조예요.");
-  if (persona === "slow_nomad" && city.korean_community_size === "large")
+  if (persona === "local" && city.korean_community_size === "large")
     extras.push("한국인 커뮤니티가 있어 천천히 정착하기 수월해요.");
-  if (persona === "fire_optimizer" && (city.cowork_usd_month ?? 9999) <= 200)
+  if (persona === "planner" && (city.cowork_usd_month ?? 9999) <= 200)
     extras.push("지출을 최소화하면서 일하기 좋은 환경이에요.");
-  if (persona === "burnout_escape" && (city.safety_score ?? 0) >= 8)
+  if (persona === "free_spirit" && (city.safety_score ?? 0) >= 8)
     extras.push("조용하고 안전한 환경에서 충분히 쉴 수 있어요.");
-  if (persona === "expat_freedom" && city.renewable === true)
+  if (persona === "pioneer" && city.renewable === true)
     extras.push("갱신 가능한 비자로 장기 루트를 설계할 수 있어요.");
   // 체류 기간
   if (timeline === "영주권/이민 목표" && city.renewable === true)

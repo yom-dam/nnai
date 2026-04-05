@@ -74,7 +74,7 @@ _Last updated: 2026-04-05_
     "top_cities": ["...동일 구조..."],
     "overall_warning": "...",
     "_user_profile": {
-      "persona_type": "slow_nomad"
+      "persona_type": "local"
     }
   }
 }

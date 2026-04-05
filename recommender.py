@@ -77,19 +77,19 @@ _BEACH_CLIMATES: set[str] = {"tropical", "subtropical", "mediterranean"}
 
 # Persona type → attribute weights for Block C scoring
 _PERSONA_WEIGHTS: dict[str, dict[str, float]] = {
-    "schengen_loop": {   # wanderer — 이동 자유 중시
+    "wanderer": {   # wanderer — 이동 자유 중시
         "nomad_score": 3.0, "korean_community_size": 0.3, "coworking_score": 2.0,
     },
-    "slow_nomad": {      # local — 현지 정착 중시
+    "local": {      # local — 현지 정착 중시
         "korean_community_size": 3.5, "english_score": 0.5, "safety_score": 2.0,
     },
-    "fire_optimizer": {  # planner — 안정·제도 중시
+    "planner": {  # planner — 안정·제도 중시
         "safety_score": 2.5, "tax_residency_days_inv": 2.0, "renewable_bonus": 3.0,
     },
-    "burnout_escape": {  # free_spirit — 작업 환경·커뮤니티 중시
+    "free_spirit": {  # free_spirit — 작업 환경·커뮤니티 중시
         "coworking_score": 3.0, "nomad_score": 2.5, "korean_community_size": 0.2,
     },
-    "expat_freedom": {   # pioneer — 비용 효율·개척 중시
+    "pioneer": {   # pioneer — 비용 효율·개척 중시
         "cost_score": 3.5, "nomad_score": 0.5, "coworking_score": 1.5,
     },
 }

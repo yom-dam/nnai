@@ -73,6 +73,7 @@ def test_profile_includes_required_persona_type_field():
     assert body["uid"] == uid
     assert "persona_type" in body
     assert body["persona_type"] is None
+    assert body["character"] == "rocky"
     assert "stats" in body and {"pins", "posts", "circles"}.issubset(set(body["stats"].keys()))
 
 
@@ -95,7 +96,7 @@ def test_mobile_recommend_persists_persona_type_for_user():
             "lifestyle": ["저물가"],
             "languages": ["영어 업무 수준"],
             "timeline": "1년 장기 체류",
-            "persona_type": "slow_nomad",
+            "persona_type": "local",
         }
 
         r = client.post("/api/mobile/recommend", json=payload, headers=headers)
@@ -103,7 +104,8 @@ def test_mobile_recommend_persists_persona_type_for_user():
 
         profile = client.get("/api/mobile/profile", headers=headers)
         assert profile.status_code == 200
-        assert profile.json()["persona_type"] == "slow_nomad"
+        assert profile.json()["persona_type"] == "local"
+        assert profile.json()["character"] == "local"
     finally:
         if original_app is None:
             sys.modules.pop("app", None)

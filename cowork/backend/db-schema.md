@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS users (
 | `email` | TEXT | 구글 계정 이메일 |
 | `name` | TEXT | 구글 계정 이름 |
 | `picture` | TEXT | 구글 프로필 이미지 URL |
-| `persona_type` | TEXT | `schengen_loop|slow_nomad|fire_optimizer|burnout_escape|expat_freedom` |
+| `persona_type` | TEXT | `wanderer|local|planner|free_spirit|pioneer` |
 | `created_at` | TEXT | 최초 로그인 시각 (ISO 8601 UTC) |
 
 **참고:** `ON CONFLICT(id) DO UPDATE` — 재로그인 시 email/name/picture 갱신.

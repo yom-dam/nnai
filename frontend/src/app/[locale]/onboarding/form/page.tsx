@@ -121,11 +121,11 @@ const STEP_TITLES = [
 ];
 
 const personaGif: Record<string, string> = {
-  schengen_loop: "/wanderer.gif",
-  slow_nomad: "/local.gif",
-  fire_optimizer: "/planner.gif",
-  burnout_escape: "/free_spirit.gif",
-  expat_freedom: "/pioneer.gif",
+  wanderer: "/wanderer.gif",
+  local: "/local.gif",
+  planner: "/planner.gif",
+  free_spirit: "/free_spirit.gif",
+  pioneer: "/pioneer.gif",
 };
 
 // ── Helpers ──────────────────────────────────────────────────────

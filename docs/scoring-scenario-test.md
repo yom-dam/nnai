@@ -19,7 +19,7 @@ _테스트 환경: 로컬 recommender.py 직접 호출 (income_usd=2857, 약 400
 
 | 항목 | 값 |
 |------|-----|
-| persona_type | burnout_escape (자유로운 영혼) |
+| persona_type | free_spirit (자유로운 영혼) |
 | travel_type | 혼자 (솔로) |
 | timeline | 6개월 중기 체류 |
 | stay_style | 정착형 |
@@ -34,7 +34,7 @@ _테스트 환경: 로컬 recommender.py 직접 호출 (income_usd=2857, 약 400
 | #2 | 쿠알라룸푸르 | MY | 7.3 | $1,500 | DE Rantau |
 | #3 | 암스테르담 | NL | 6.7 | $2,400 | 자영업 비자 |
 
-**특징:** coworking_score + nomad_score 가중치가 높은 burnout_escape 성향 반영. 암스테르담이 3위 — 코워킹 인프라 최상위.
+**특징:** coworking_score + nomad_score 가중치가 높은 free_spirit 성향 반영. 암스테르담이 3위 — 코워킹 인프라 최상위.
 
 ---
 
@@ -42,7 +42,7 @@ _테스트 환경: 로컬 recommender.py 직접 호출 (income_usd=2857, 약 400
 
 | 항목 | 값 |
 |------|-----|
-| persona_type | fire_optimizer (영리한 설계자) |
+| persona_type | planner (영리한 설계자) |
 | travel_type | 가족 전체 동반 |
 | timeline | 1년 장기 체류 |
 | stay_style | 정착형 |
@@ -57,7 +57,7 @@ _테스트 환경: 로컬 recommender.py 직접 호출 (income_usd=2857, 약 400
 | #2 | 트빌리시 | GE | 7.2 | $1,000 | Remotely from Georgia |
 | #3 | 페낭 | MY | 7.1 | $1,000 | DE Rantau |
 
-**특징:** fire_optimizer의 safety + renewable + tax 가중치 반영. 트빌리시가 2위 — renewable True, 저비용, tax_residency_days 높음. 가족 동반이라 safety 가중치가 companion_score에 반영됨. 시나리오 A의 암스테르담/KL 대신 트빌리시/페낭으로 교체.
+**특징:** planner의 safety + renewable + tax 가중치 반영. 트빌리시가 2위 — renewable True, 저비용, tax_residency_days 높음. 가족 동반이라 safety 가중치가 companion_score에 반영됨. 시나리오 A의 암스테르담/KL 대신 트빌리시/페낭으로 교체.
 
 ---
 
@@ -65,7 +65,7 @@ _테스트 환경: 로컬 recommender.py 직접 호출 (income_usd=2857, 약 400
 
 | 항목 | 값 |
 |------|-----|
-| persona_type | expat_freedom (용감한 개척자) |
+| persona_type | pioneer (용감한 개척자) |
 | travel_type | 혼자 (솔로) |
 | timeline | 영주권/이민 목표 |
 | stay_style | 이동형 |
@@ -80,7 +80,7 @@ _테스트 환경: 로컬 recommender.py 직접 호출 (income_usd=2857, 약 400
 | #2 | 쿠알라룸푸르 | MY | 6.6 | $1,500 | DE Rantau |
 | #3 | 트빌리시 | GE | 6.5 | $1,000 | Remotely from Georgia |
 
-**특징:** expat_freedom의 cost_score 가중치 최대. 이동형 stay_style로 nomad_visa 보유 도시에 visa_score ×1.5 적용. "영어로 생활 가능" 라벨이 english_score 배율에 반영. 트빌리시 경고: 이중과세협약 미체결(tax_treaty=False) + 세금 거주지 리스크.
+**특징:** pioneer의 cost_score 가중치 최대. 이동형 stay_style로 nomad_visa 보유 도시에 visa_score ×1.5 적용. "영어로 생활 가능" 라벨이 english_score 배율에 반영. 트빌리시 경고: 이중과세협약 미체결(tax_treaty=False) + 세금 거주지 리스크.
 
 ---
 
