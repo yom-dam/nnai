@@ -70,7 +70,7 @@ _LIFESTYLE_MATCH: dict[str, Any] = {
 }
 
 # korean_community_size → numeric score
-_COMMUNITY_SCORE: dict[str, float] = {"large": 10, "medium": 5, "small": 2}
+_COMMUNITY_SCORE: dict[str, float] = {"large": 10, "medium": 6, "small": 4}
 
 # Beach-friendly climate keywords
 _BEACH_CLIMATES: set[str] = {"tropical", "subtropical", "mediterranean"}
@@ -101,11 +101,12 @@ _PERSONA_WEIGHTS: dict[str, dict[str, float]] = {
 _visa_db: list[dict] | None = None
 _city_db: list[dict] | None = None
 _city_descriptions: dict[str, str] | None = None
+_score_ranges: dict[str, tuple[float, float]] | None = None
 
 
 def _load_data() -> tuple[list[dict], list[dict]]:
     """Load and cache visa_db and city_scores on first call."""
-    global _visa_db, _city_db
+    global _visa_db, _city_db, _score_ranges
     if _visa_db is None:
         path = resolve_data_path("visa_db.json")
         with open(path, encoding="utf-8") as f:
@@ -114,6 +115,13 @@ def _load_data() -> tuple[list[dict], list[dict]]:
         path = resolve_data_path("city_scores.json")
         with open(path, encoding="utf-8") as f:
             _city_db = json.load(f)["cities"]
+    if _score_ranges is None:
+        # Calculate min/max for key scoring fields
+        _fields = ["safety_score", "nomad_score", "coworking_score", "english_score", "internet_mbps"]
+        _score_ranges = {}
+        for field in _fields:
+            vals = [c[field] for c in _city_db if field in c and c[field] is not None]
+            _score_ranges[field] = (min(vals), max(vals)) if vals else (0.0, 10.0)
     return _visa_db, _city_db
 
 
@@ -142,6 +150,13 @@ def _get_city_description(country_id: str, city_name: str) -> str | None:
 # Scoring — 4-Block System
 # ---------------------------------------------------------------------------
 
+def _normalize(val: float, min_val: float, max_val: float) -> float:
+    """Min-Max normalize val to 0–10 range."""
+    if max_val == min_val:
+        return 5.0
+    return (val - min_val) / (max_val - min_val) * 10.0
+
+
 def _normalize_lifestyle(lifestyle: list[str]) -> list[str]:
     """Frontend lifestyle labels → internal keys (pass-through if already internal)."""
     return [_LIFESTYLE_ALIASES.get(pref, pref) for pref in lifestyle]
@@ -162,10 +177,12 @@ def _cost_score(city: dict, income_usd: float) -> float:
 # ── Block A: 기본 적합도 (30%) ──────────────────────────────────
 
 def _block_a(city: dict, lifestyle: list[str]) -> float:
-    """Base city fitness — nomad, safety, coworking + lifestyle bonuses."""
-    nomad = city.get("nomad_score", 5)
-    safety = city.get("safety_score", 5)
-    cowork = city.get("coworking_score", 5)
+    """Base city fitness — nomad, safety, coworking, internet + lifestyle bonuses."""
+    ranges = _score_ranges or {}
+    nomad    = _normalize(city.get("nomad_score", 5),      *ranges.get("nomad_score",     (5, 9)))
+    safety   = _normalize(city.get("safety_score", 5),     *ranges.get("safety_score",    (4, 9)))
+    cowork   = _normalize(city.get("coworking_score", 5),  *ranges.get("coworking_score", (4, 9)))
+    internet = _normalize(city.get("internet_mbps", 100),  *ranges.get("internet_mbps",  (50, 300)))
 
     # Lifestyle bonuses — multipliers
     safety_mul = 1.5 if "안전 중시" in lifestyle else 1.0
@@ -182,9 +199,10 @@ def _block_a(city: dict, lifestyle: list[str]) -> float:
             nomad_mul += 0.15
 
     raw = (
-        nomad * nomad_mul * 0.5
-        + safety * safety_mul * 0.3
-        + cowork * cowork_mul * 0.2
+        nomad  * nomad_mul * 0.40
+        + safety * safety_mul * 0.25
+        + cowork * cowork_mul * 0.20
+        + internet * 0.15
         + climate_bonus
     )
     return min(10.0, raw) * 0.30
@@ -218,12 +236,14 @@ def _block_b(city: dict, country: dict, income_usd: float, lifestyle: list[str],
 
 def _block_c(city: dict, country: dict, persona_type: str, income_usd: float) -> float:
     """Persona-driven scoring — different personas value different attributes."""
+    ranges = _score_ranges or {}
+
     if not persona_type or persona_type not in _PERSONA_WEIGHTS:
         # No persona: uniform average of key attributes
         base = (
-            city.get("nomad_score", 5)
-            + city.get("safety_score", 5)
-            + city.get("coworking_score", 5)
+            _normalize(city.get("nomad_score", 5),     *ranges.get("nomad_score",     (5, 9)))
+            + _normalize(city.get("safety_score", 5),    *ranges.get("safety_score",    (4, 9)))
+            + _normalize(city.get("coworking_score", 5), *ranges.get("coworking_score", (4, 9)))
         ) / 3.0
         return base * 0.25
 
@@ -233,13 +253,13 @@ def _block_c(city: dict, country: dict, persona_type: str, income_usd: float) ->
 
     for attr, w in weights.items():
         if attr == "nomad_score":
-            score += city.get("nomad_score", 5) * w
+            score += _normalize(city.get("nomad_score", 5), *ranges.get("nomad_score", (5, 9))) * w
         elif attr == "safety_score":
-            score += city.get("safety_score", 5) * w
+            score += _normalize(city.get("safety_score", 5), *ranges.get("safety_score", (4, 9))) * w
         elif attr == "coworking_score":
-            score += city.get("coworking_score", 5) * w
+            score += _normalize(city.get("coworking_score", 5), *ranges.get("coworking_score", (4, 9))) * w
         elif attr == "english_score":
-            score += city.get("english_score", 5) * w
+            score += _normalize(city.get("english_score", 5), *ranges.get("english_score", (4, 10))) * w
         elif attr == "korean_community_size":
             ks = _COMMUNITY_SCORE.get(city.get("korean_community_size", ""), 0)
             score += ks * w
@@ -263,6 +283,8 @@ def _block_d(
     children_ages: list[str] | None = None,
 ) -> float:
     """Practical conditions — visa access, language, companion needs."""
+    ranges = _score_ranges or {}
+
     # Visa accessibility (0–10)
     visa_type = country.get("visa_type", "")
     has_nomad_visa = bool(visa_type) and "없음" not in visa_type
@@ -282,7 +304,7 @@ def _block_d(
         visa_score = min(10.0, visa_score * 1.5)   # visa flexibility 가중치 +50%
 
     # Language environment (0–10)
-    english = city.get("english_score", 5)
+    english = _normalize(city.get("english_score", 5), *ranges.get("english_score", (4, 10)))
     english_mul = 1.5 if "영어권 선호" in lifestyle else 1.0
     lang_score = min(10.0, english * english_mul)
 
@@ -296,7 +318,7 @@ def _block_d(
     if "자녀" in travel_type or ("가족" in travel_type and ages):
         safety = city.get("safety_score", 5)
         cost_eff = max(0.0, (1.0 - _cost_ratio(city, income_usd)) * 10)
-        english = city.get("english_score", 5)
+        english = _normalize(city.get("english_score", 5), *ranges.get("english_score", (4, 10)))
         community = _COMMUNITY_SCORE.get(city.get("korean_community_size", ""), 0)
 
         # 연령대별 가중치 합산
