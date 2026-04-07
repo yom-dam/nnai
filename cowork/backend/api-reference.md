@@ -206,6 +206,16 @@ Content-Type: application/json
 }
 ```
 
+**Step 1 추천 로직:**
+- **스코어링 모델:** 규칙 기반 DB Recommender (LLM 개입 없음)
+- **4-Block 점수 계산 (0~10):**
+  1. **Block A (30%)** — 기본 적합도: nomad_score + safety_score + coworking_score + lifestyle bonuses
+  2. **Block B (25%)** — 재정 적합도: cost efficiency + tax treaty benefits
+  3. **Block C (25%)** — 페르소나 적합도: persona_type 기반 attribute weights
+  4. **Block D (20%)** — 실용 조건: visa accessibility + language environment + 동행자 조건
+- **Hard Filters:** 최소 소득, 체류기간, 선호 지역, 솅겐 장기체류 소득 제한
+- **결과 선정:** 점수 내림차순 정렬 + 국가당 최고점 도시 1개 + 상위 N개(기본 3개)
+
 > **주의:** `parsed` 객체 전체를 Step 2 요청 시 `parsed_data`로 그대로 전달해야 합니다.
 
 ---

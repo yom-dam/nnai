@@ -5,15 +5,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import utils.currency
-from api.hf_client      import query_model, query_model_cached
-from api.cache_manager  import get_or_create_cache, invalidate
-from api.parser         import parse_response, format_result_markdown, format_step1_markdown, format_step2_markdown, _inject_visa_urls
+from api.hf_client      import query_model
+from api.parser         import parse_response, format_step1_markdown, format_step2_markdown, _inject_visa_urls
 from recommender        import recommend_from_db
-from prompts.builder    import build_prompt, build_detail_prompt, build_step1_user_message, validate_user_profile
-from prompts.system     import SYSTEM_PROMPT
-from prompts.system_en  import SYSTEM_PROMPT_EN
-from prompts.data_context import DATA_CONTEXT
-from prompts.few_shots  import FEW_SHOT_EXAMPLES
+from prompts.builder    import build_detail_prompt, validate_user_profile
 from ui.layout          import create_layout
 from utils.data_paths   import resolve_data_path
 
@@ -116,56 +111,12 @@ def nomad_advisor(
             {},
         )
 
-    if os.getenv("USE_DB_RECOMMENDER", "1") == "1":
-        # DB 기반 추천 경로 (LLM 호출 없음)
-        parsed = recommend_from_db(user_profile, debug_mode=_is_debug_mode_enabled())
-        _inject_visa_urls(parsed)
-    else:
-        # 기존 LLM 경로 (롤백용, 삭제 금지)
-        # --- 서버사이드 Context Caching 시도 ---
-        # SYSTEM_PROMPT + DATA_CONTEXT + FEW_SHOTS를 Gemini 서버에 캐싱.
-        # 캐시 히트 시 정적 컨텍스트(~7,500 tokens) 재전송 비용/지연 절감.
-        # 캐시 실패(API키 없음·오류) 시 기존 OpenAI-compat 경로로 자동 폴백.
-        cache_key     = f"step1_{'en' if preferred_language == 'English' else 'ko'}"
-        system_prompt = SYSTEM_PROMPT_EN if preferred_language == "English" else SYSTEM_PROMPT
+    # Step 1 TOP3는 항상 규칙 기반 DB 추천 엔진으로 계산 (LLM 미개입).
+    parsed = recommend_from_db(user_profile, debug_mode=_is_debug_mode_enabled())
+    _inject_visa_urls(parsed)
 
-        cache = get_or_create_cache(
-            system_prompt=system_prompt,
-            data_context=DATA_CONTEXT,
-            few_shot_messages=FEW_SHOT_EXAMPLES,
-            cache_key=cache_key,
-        )
-
-        if cache:
-            user_msg = build_step1_user_message(user_profile)
-            raw = query_model_cached(user_msg, cache, max_tokens=8192)
-            if raw.startswith("ERROR"):
-                # 캐시 무효화 후 폴백
-                logger.warning("[app] Cached query failed — invalidating cache, falling back")
-                invalidate(cache_key)
-                messages = build_prompt(user_profile)
-                raw = query_model(messages, max_tokens=8192)
-        else:
-            messages = build_prompt(user_profile)
-            raw      = query_model(messages, max_tokens=8192)
-
-        if raw.startswith("ERROR"):
-            return (
-                (f"⚠️ API error: {raw}" if preferred_language == "English" else f"⚠️ API 오류: {raw}"),
-                [],
-                {},
-            )
-
-        parsed = parse_response(raw)
-
-    # 두 경로 공통: _user_profile 주입
+    # _user_profile 주입
     parsed["_user_profile"] = user_profile
-    if _is_debug_mode_enabled() and "debug_logs" not in parsed:
-        parsed["debug_logs"] = {
-            "score_model": "llm",
-            "selected": [],
-            "selection_rule": "LLM 경로에서는 블록 점수 로그를 제공하지 않습니다.",
-        }
 
     markdown = format_step1_markdown(parsed)
     cities   = parsed.get("top_cities", [])
