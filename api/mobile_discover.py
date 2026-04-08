@@ -1,13 +1,27 @@
 """모바일 앱 전용 Discover 라우터."""
 from __future__ import annotations
 
+import json
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from utils.data_paths import resolve_data_path
 from utils.db import get_conn
 from utils.mobile_auth import require_mobile_auth
 
 router = APIRouter(prefix="/api/mobile", tags=["mobile-discover"])
+
+_city_rows_cache: list[dict] | None = None
+
+
+def _load_city_rows() -> list[dict]:
+    global _city_rows_cache
+    if _city_rows_cache is None:
+        path = resolve_data_path("city_scores.json")
+        with open(path, encoding="utf-8") as f:
+            _city_rows_cache = json.load(f).get("cities", [])
+    return _city_rows_cache
 
 
 class PinCreate(BaseModel):
@@ -58,32 +72,24 @@ def _serialize_city_stay(row: tuple) -> dict:
 @router.get("/cities")
 def get_cities(user_id: str = Depends(require_mobile_auth)):
     del user_id  # 인증 목적만 사용
-    conn = get_conn()
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            SELECT city_id, city, city_kr, country, country_id,
-                   monthly_cost_usd, internet_mbps, safety_score, english_score, nomad_score
-            FROM verified_cities
-            WHERE is_verified = TRUE
-            ORDER BY nomad_score DESC NULLS LAST
-            LIMIT 50
-            """
-        )
-        rows = cur.fetchall()
+    rows = sorted(
+        _load_city_rows(),
+        key=lambda c: (c.get("nomad_score") or 0),
+        reverse=True,
+    )[:50]
 
     return [
         {
-            "city_id": r[0],
-            "city": r[1],
-            "city_kr": r[2],
-            "country": r[3],
-            "country_id": r[4],
-            "monthly_cost_usd": r[5],
-            "internet_mbps": r[6],
-            "safety_score": r[7],
-            "english_score": r[8],
-            "nomad_score": r[9],
+            "city_id": r.get("id"),
+            "city": r.get("city"),
+            "city_kr": r.get("city_kr"),
+            "country": r.get("country"),
+            "country_id": r.get("country_id"),
+            "monthly_cost_usd": r.get("monthly_cost_usd"),
+            "internet_mbps": r.get("internet_mbps"),
+            "safety_score": r.get("safety_score"),
+            "english_score": r.get("english_score"),
+            "nomad_score": r.get("nomad_score"),
         }
         for r in rows
     ]
@@ -92,36 +98,24 @@ def get_cities(user_id: str = Depends(require_mobile_auth)):
 @router.get("/cities/{city_id}")
 def get_city(city_id: str, user_id: str = Depends(require_mobile_auth)):
     del user_id  # 인증 목적만 사용
-    conn = get_conn()
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            SELECT city_id, city, city_kr, country, country_id,
-                   monthly_cost_usd, internet_mbps, safety_score,
-                   english_score, nomad_score, tax_residency_days, data_verified_date
-            FROM verified_cities
-            WHERE city_id = %s
-            """,
-            (city_id,),
-        )
-        row = cur.fetchone()
+    row = next((c for c in _load_city_rows() if str(c.get("id", "")).upper() == city_id.upper()), None)
 
     if not row:
         raise HTTPException(status_code=404, detail="City not found")
 
     return {
-        "city_id": row[0],
-        "city": row[1],
-        "city_kr": row[2],
-        "country": row[3],
-        "country_id": row[4],
-        "monthly_cost_usd": row[5],
-        "internet_mbps": row[6],
-        "safety_score": row[7],
-        "english_score": row[8],
-        "nomad_score": row[9],
-        "tax_residency_days": row[10],
-        "data_verified_date": row[11],
+        "city_id": row.get("id"),
+        "city": row.get("city"),
+        "city_kr": row.get("city_kr"),
+        "country": row.get("country"),
+        "country_id": row.get("country_id"),
+        "monthly_cost_usd": row.get("monthly_cost_usd"),
+        "internet_mbps": row.get("internet_mbps"),
+        "safety_score": row.get("safety_score"),
+        "english_score": row.get("english_score"),
+        "nomad_score": row.get("nomad_score"),
+        "tax_residency_days": row.get("tax_residency_days"),
+        "data_verified_date": row.get("data_verified_date"),
     }
 
 
