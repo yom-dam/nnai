@@ -72,10 +72,16 @@ def nomad_advisor(
         usd_rate = 0.000714
 
     income_usd = round(income_krw * 10000 * usd_rate)
+    spouse_income_usd = 0
+    if has_spouse_income == "있음" and spouse_income_krw > 0:
+        spouse_income_usd = round(spouse_income_krw * 10000 * usd_rate)
+    effective_income_usd = income_usd + spouse_income_usd
 
     user_profile = {
         "nationality":        nationality,
         "income_usd":         income_usd,
+        "spouse_income_usd":  spouse_income_usd,
+        "effective_income_usd": effective_income_usd,
         "income_krw":         income_krw,  # 만원 단위
         "purpose":            immigration_purpose,
         "lifestyle":          lifestyle if isinstance(lifestyle, list) else [lifestyle],

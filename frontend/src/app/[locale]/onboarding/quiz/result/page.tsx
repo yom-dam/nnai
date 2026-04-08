@@ -7,16 +7,16 @@ import { PersonaResultCard } from "@/components/onboarding/persona-result-card";
 
 export default function QuizResultPage() {
   const router = useRouter();
-  const [personaType, setPersonaType] = useState<PersonaType | null>(null);
+  const [personaType] = useState<PersonaType | null>(() => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("persona_type") as PersonaType | null;
+  });
 
   useEffect(() => {
-    const stored = localStorage.getItem("persona_type") as PersonaType | null;
-    if (!stored) {
+    if (!personaType) {
       router.replace("/onboarding/quiz");
-      return;
     }
-    setPersonaType(stored);
-  }, [router]);
+  }, [personaType, router]);
 
   if (!personaType) return null;
 

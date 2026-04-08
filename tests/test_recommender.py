@@ -181,3 +181,43 @@ def test_debug_logs_include_top3_score_breakdown_when_enabled():
         blocks = row["blocks"]
         assert set(blocks.keys()) == {"block_a", "block_b", "block_c", "block_d"}
         assert all(v >= 0 for v in blocks.values())
+        wellbeing = row.get("wellbeing")
+        assert isinstance(wellbeing, dict)
+        assert set(wellbeing.keys()) == {
+            "total", "safety", "affordability", "community", "nomad_fit", "english_env", "stale_penalty"
+        }
+        assert 0.0 <= wellbeing["total"] <= 10.0
+
+
+def test_wellbeing_proxy_penalizes_overbudget_city():
+    from recommender import _wellbeing_proxy_score
+
+    cheap = {
+        "monthly_cost_usd": 1000,
+        "safety_score": 8.0,
+        "korean_community_size": "medium",
+        "nomad_score": 8.0,
+        "english_score": 7.0,
+        "climate": "tropical",
+    }
+    expensive = {
+        **cheap,
+        "monthly_cost_usd": 2600,
+    }
+    country = {"data_verified_date": "2026-04-03"}
+
+    s_cheap = _wellbeing_proxy_score(
+        city=cheap,
+        country=country,
+        income_usd=3000,
+        lifestyle=[],
+        travel_type="혼자 (솔로)",
+    )
+    s_expensive = _wellbeing_proxy_score(
+        city=expensive,
+        country=country,
+        income_usd=3000,
+        lifestyle=[],
+        travel_type="혼자 (솔로)",
+    )
+    assert s_cheap > s_expensive

@@ -73,6 +73,15 @@ interface RecommendResult {
           block_c: number;
           block_d: number;
         };
+        wellbeing?: {
+          total: number;
+          safety: number;
+          affordability: number;
+          community: number;
+          nomad_fit: number;
+          english_env: number;
+          stale_penalty: number;
+        };
       }>;
       inputs?: Record<string, unknown>;
       selection_rule?: string;
@@ -229,20 +238,22 @@ const fadeUp = (delay: number) => ({
 
 export default function ResultPage() {
   const router = useRouter();
-  const [result, setResult] = useState<RecommendResult | null>(null);
+  const [result] = useState<RecommendResult | null>(() => {
+    if (typeof window === "undefined") return null;
+    const stored = sessionStorage.getItem("nnai_result");
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored) as RecommendResult;
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("nnai_result");
-    if (!stored) {
-      router.replace("/onboarding/quiz");
-      return;
-    }
-    try {
-      setResult(JSON.parse(stored));
-    } catch {
+    if (!result) {
       router.replace("/onboarding/quiz");
     }
-  }, [router]);
+  }, [result, router]);
 
   if (!result) return null;
 
@@ -306,6 +317,11 @@ export default function ResultPage() {
                       <p className="text-white/75">
                         A:{row.blocks.block_a.toFixed(2)} / B:{row.blocks.block_b.toFixed(2)} / C:{row.blocks.block_c.toFixed(2)} / D:{row.blocks.block_d.toFixed(2)}
                       </p>
+                      {row.wellbeing && (
+                        <p className="text-white/70">
+                          W:{row.wellbeing.total.toFixed(2)} (S:{row.wellbeing.safety.toFixed(1)} A:{row.wellbeing.affordability.toFixed(1)} C:{row.wellbeing.community.toFixed(1)} N:{row.wellbeing.nomad_fit.toFixed(1)} E:{row.wellbeing.english_env.toFixed(1)} P:-{row.wellbeing.stale_penalty.toFixed(1)})
+                        </p>
+                      )}
                     </div>
                   ))}
                   {debugLogs.selection_rule && (

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from datetime import date, datetime
 from typing import Any
 
 from utils.data_paths import resolve_data_path
@@ -102,6 +103,7 @@ _visa_db: list[dict] | None = None
 _city_db: list[dict] | None = None
 _city_descriptions: dict[str, str] | None = None
 _score_ranges: dict[str, tuple[float, float]] | None = None
+_source_catalog: dict[str, dict] | None = None
 
 
 def _load_data() -> tuple[list[dict], list[dict]]:
@@ -138,12 +140,125 @@ def _load_city_descriptions() -> dict[str, str]:
     return _city_descriptions
 
 
+def _load_source_catalog() -> dict[str, dict]:
+    """Load source_catalog.json as {source_id: source_obj}."""
+    global _source_catalog
+    if _source_catalog is None:
+        path = resolve_data_path("source_catalog.json")
+        try:
+            with open(path, encoding="utf-8") as f:
+                rows = json.load(f).get("sources", [])
+                _source_catalog = {str(r.get("id", "")): r for r in rows if r.get("id")}
+        except Exception:
+            _source_catalog = {}
+    return _source_catalog
+
+
 def _get_city_description(country_id: str, city_name: str) -> str | None:
     """Lookup city description by country_id + city slug."""
     descs = _load_city_descriptions()
     slug = city_name.upper().replace(" ", "_").replace("(", "").replace(")", "")
     key = f"{country_id}_{slug}"
     return descs.get(key)
+
+
+def _parse_date_lenient(raw: str | None) -> date | None:
+    if not raw or not isinstance(raw, str):
+        return None
+    raw = raw.strip()
+    for fmt in ("%Y-%m-%d", "%Y-%m"):
+        try:
+            dt = datetime.strptime(raw, fmt)
+            return date(dt.year, dt.month, 1) if fmt == "%Y-%m" else dt.date()
+        except ValueError:
+            continue
+    return None
+
+
+def _source_is_stale(raw: str | None, threshold_days: int = 180) -> bool:
+    d = _parse_date_lenient(raw)
+    if d is None:
+        return True
+    return (date.today() - d).days > threshold_days
+
+
+def _country_income_floor_monthly_usd(country: dict) -> float:
+    """Best-effort country-level monthly income floor extracted from visa metadata."""
+    values: list[float] = []
+    min_income_usd = country.get("min_income_usd")
+    if isinstance(min_income_usd, (int, float)) and min_income_usd > 0:
+        values.append(float(min_income_usd))
+
+    for tier in country.get("income_tiers") or []:
+        m = tier.get("min_income_monthly_usd")
+        if isinstance(m, (int, float)) and m > 0:
+            values.append(float(m))
+        a = tier.get("min_income_annual_usd")
+        if isinstance(a, (int, float)) and a > 0:
+            values.append(float(a) / 12.0)
+
+    if not values:
+        return 0.0
+    return min(values)
+
+
+def _build_references(city: dict, country: dict) -> list[dict[str, str]]:
+    refs: list[dict[str, str]] = []
+    seen: set[str] = set()
+
+    country_source = str(country.get("source") or "").strip()
+    if country_source.startswith("http"):
+        refs.append({"title": "Official visa source", "url": country_source})
+        seen.add(country_source)
+
+    source_catalog = _load_source_catalog()
+    for rid in city.get("source_refs") or []:
+        src = source_catalog.get(str(rid))
+        if not src:
+            continue
+        url = str(src.get("url") or "").strip()
+        if not url.startswith("http") or url in seen:
+            continue
+        refs.append({"title": str(src.get("name") or rid), "url": url})
+        seen.add(url)
+        if len(refs) >= 3:
+            break
+
+    return refs
+
+
+def _build_reasons_and_warnings(
+    city: dict,
+    country: dict,
+    breakdown: dict[str, float],
+    income_usd: float,
+    timeline: str,
+    lifestyle: list[str],
+) -> tuple[list[dict[str, str]], list[str]]:
+    reasons: list[dict[str, str]] = []
+    warnings: list[str] = []
+
+    if breakdown.get("block_a", 0) >= 2.1:
+        reasons.append({"point": "도시 인프라·안전·인터넷 기본 적합도가 높습니다."})
+    if breakdown.get("block_b", 0) >= 1.8:
+        reasons.append({"point": "예산 대비 생활비 효율이 양호합니다."})
+    if country.get("renewable"):
+        reasons.append({"point": "비자 갱신 가능 국가라 장기 체류 전략 수립이 수월합니다."})
+    if "영어권 선호" in lifestyle and (city.get("english_score") or 0) >= 7:
+        reasons.append({"point": "영어 사용 환경이 비교적 안정적입니다."})
+
+    monthly_cost = float(city.get("monthly_cost_usd") or 0)
+    if income_usd > 0 and monthly_cost > income_usd * 0.75:
+        warnings.append("월 예상 생활비가 월소득의 75%를 초과할 수 있어 저축 여력이 낮아질 수 있습니다.")
+    if timeline in _LONG_STAY_TIMELINES and not country.get("double_tax_treaty_with_kr"):
+        warnings.append("한국과 이중과세협약 부재 가능성이 있어 세무 자문 사전 검토가 필요합니다.")
+    if _source_is_stale(country.get("data_verified_date")):
+        warnings.append("비자 데이터 검증일이 오래되어 최신 요건 재확인이 필요합니다.")
+
+    if not reasons:
+        reasons.append({"point": "현재 입력 조건에서 종합 점수가 상대적으로 가장 높습니다."})
+
+    return reasons[:3], warnings[:3]
 
 
 # ---------------------------------------------------------------------------
@@ -371,8 +486,104 @@ def _block_d(
             renew = 5.0 if renewable else 0.0
             companion_score = renew * 0.5 + safety * 0.5
 
-    raw = visa_score * 0.4 + lang_score * 0.3 + companion_score * 0.3
+    wellbeing = _wellbeing_proxy_breakdown(
+        city=city,
+        country=country,
+        income_usd=income_usd,
+        lifestyle=lifestyle,
+        travel_type=travel_type,
+    )
+    wellbeing_score = wellbeing["total"]
+
+    # Add wellbeing proxy for "실제 생활 만족도" approximation while preserving total block weight.
+    raw = (
+        visa_score * 0.30
+        + lang_score * 0.20
+        + companion_score * 0.25
+        + wellbeing_score * 0.25
+    )
     return raw * 0.20
+
+
+def _wellbeing_proxy_breakdown(
+    city: dict,
+    country: dict,
+    income_usd: float,
+    lifestyle: list[str],
+    travel_type: str,
+) -> dict[str, float]:
+    """0–10 wellbeing proxy with component breakdown."""
+    ranges = _score_ranges or {}
+
+    safety = _normalize(city.get("safety_score", 5), *ranges.get("safety_score", (4, 9)))
+    affordability = _cost_score(city, income_usd)
+    community = _COMMUNITY_SCORE.get(city.get("korean_community_size", ""), 0)
+    nomad = _normalize(city.get("nomad_score", 5), *ranges.get("nomad_score", (5, 9)))
+    english = _normalize(city.get("english_score", 5), *ranges.get("english_score", (4, 10)))
+
+    # Baseline (solo / general)
+    w_safety = 0.30
+    w_aff = 0.35
+    w_comm = 0.10
+    w_nomad = 0.25
+    w_english = 0.0
+
+    # Family-oriented wellbeing puts more emphasis on safety and support environment.
+    if "자녀" in travel_type or "가족" in travel_type:
+        w_safety = 0.45
+        w_aff = 0.30
+        w_comm = 0.15
+        w_nomad = 0.0
+        w_english = 0.10
+
+    # If user explicitly prefers English environment, reflect acculturation stress reduction.
+    if "영어권 선호" in lifestyle:
+        w_english = max(w_english, 0.10)
+        w_nomad = max(0.0, w_nomad - 0.10)
+
+    total_w = w_safety + w_aff + w_comm + w_nomad + w_english
+    if total_w <= 0:
+        total_w = 1.0
+
+    score = (
+        safety * w_safety
+        + affordability * w_aff
+        + community * w_comm
+        + nomad * w_nomad
+        + english * w_english
+    ) / total_w
+
+    # Lifestyle climate bump for beach seekers.
+    if "해변" in lifestyle:
+        climate = (city.get("climate") or "").lower()
+        if climate in _BEACH_CLIMATES:
+            score = min(10.0, score + 0.8)
+
+    # Lightweight penalty for stale visa metadata; uncertainty harms practical wellbeing.
+    stale_penalty = 0.5 if _source_is_stale(country.get("data_verified_date")) else 0.0
+    score = max(0.0, score - stale_penalty)
+
+    total = min(10.0, max(0.0, score))
+    return {
+        "total": round(total, 3),
+        "safety": round(safety, 3),
+        "affordability": round(affordability, 3),
+        "community": round(community, 3),
+        "nomad_fit": round(nomad, 3),
+        "english_env": round(english, 3),
+        "stale_penalty": round(stale_penalty, 3),
+    }
+
+
+def _wellbeing_proxy_score(
+    city: dict,
+    country: dict,
+    income_usd: float,
+    lifestyle: list[str],
+    travel_type: str,
+) -> float:
+    """Backward-compatible scalar wellbeing score."""
+    return _wellbeing_proxy_breakdown(city, country, income_usd, lifestyle, travel_type)["total"]
 
 
 # ── Final composite score ───────────────────────────────────────
@@ -468,7 +679,9 @@ def _passes_schengen_long_stay_filter(
         return True
     if not country.get("schengen", False):
         return True
-    return income_usd >= _SCHENGEN_LONG_STAY_INCOME_THRESHOLD
+    country_floor = _country_income_floor_monthly_usd(country)
+    effective_threshold = max(_SCHENGEN_LONG_STAY_INCOME_THRESHOLD, country_floor)
+    return income_usd >= effective_threshold
 
 
 # ---------------------------------------------------------------------------
@@ -480,6 +693,7 @@ def recommend_from_db(user_profile: dict, top_n: int = 3, debug_mode: bool = Fal
     countries_list, cities_list = _load_data()
 
     income_usd = float(user_profile.get("income_usd") or 0)
+    effective_income_usd = float(user_profile.get("effective_income_usd") or income_usd)
     timeline_raw = user_profile.get("timeline", "")
     timeline   = _TIMELINE_ALIASES.get(timeline_raw, timeline_raw)
     lifestyle  = user_profile.get("lifestyle") or []
@@ -508,19 +722,19 @@ def recommend_from_db(user_profile: dict, top_n: int = 3, debug_mode: bool = Fal
             continue
 
         # Hard filters
-        if not _passes_income_filter(country, income_usd):
+        if not _passes_income_filter(country, effective_income_usd):
             continue
         if not _passes_timeline_filter(country, timeline):
             continue
         if not _passes_continent_filter(cid, preferred):
             continue
-        if not _passes_schengen_long_stay_filter(country, timeline, income_usd):
+        if not _passes_schengen_long_stay_filter(country, timeline, effective_income_usd):
             continue
 
         breakdown = _compute_score_breakdown(
             city=city,
             country=country,
-            income_usd=income_usd,
+            income_usd=effective_income_usd,
             lifestyle=lifestyle,
             persona_type=persona_type,
             travel_type=travel_type,
@@ -554,6 +768,22 @@ def recommend_from_db(user_profile: dict, top_n: int = 3, debug_mode: bool = Fal
     for idx, (score, city, country, breakdown) in enumerate(top_cities_raw, start=1):
         cid = city.get("country_id", "")
         is_schengen = cid in _SCHENGEN_IDS
+        normalized_lifestyle = _normalize_lifestyle(lifestyle)
+        wellbeing_debug = _wellbeing_proxy_breakdown(
+            city=city,
+            country=country,
+            income_usd=effective_income_usd,
+            lifestyle=normalized_lifestyle,
+            travel_type=travel_type,
+        )
+        reasons, city_warnings = _build_reasons_and_warnings(
+            city=city,
+            country=country,
+            breakdown=breakdown,
+            income_usd=effective_income_usd,
+            timeline=timeline,
+            lifestyle=normalized_lifestyle,
+        )
         top_cities.append({
             "city":               city.get("city", ""),
             "city_kr":            city.get("city_kr", ""),
@@ -563,10 +793,10 @@ def recommend_from_db(user_profile: dict, top_n: int = 3, debug_mode: bool = Fal
             "visa_url":           "",   # app.py will fill via _inject_visa_urls()
             "monthly_cost_usd":   city.get("monthly_cost_usd", 0),
             "score":              score,
-            "reasons":            [],
-            "realistic_warnings": [],
+            "reasons":            reasons,
+            "realistic_warnings": city_warnings,
             "plan_b_trigger":     is_schengen,
-            "references":         [],
+            "references":         _build_references(city, country),
             # city_scores.json fields
             "internet_mbps":          city.get("internet_mbps"),
             "safety_score":           city.get("safety_score"),
@@ -604,6 +834,7 @@ def recommend_from_db(user_profile: dict, top_n: int = 3, debug_mode: bool = Fal
                     "block_c": breakdown["block_c"],
                     "block_d": breakdown["block_d"],
                 },
+                "wellbeing": wellbeing_debug,
             })
 
     # Build overall_warning
@@ -657,6 +888,7 @@ def recommend_from_db(user_profile: dict, top_n: int = 3, debug_mode: bool = Fal
             "selected": debug_selected,
             "inputs": {
                 "income_usd": income_usd,
+                "effective_income_usd": effective_income_usd,
                 "timeline": timeline,
                 "persona_type": persona_type,
                 "travel_type": travel_type,

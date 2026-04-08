@@ -438,7 +438,7 @@ def validate_user_profile(user_profile: dict) -> dict:
     Returns:
         {"valid": bool, "warnings": list[str], "hard_block": bool}
     """
-    income_usd          = user_profile.get("income_usd", 0)
+    income_usd          = user_profile.get("effective_income_usd", user_profile.get("income_usd", 0))
     preferred_countries = user_profile.get("preferred_countries", []) or []
     travel_type         = user_profile.get("travel_type", "")
     timeline_raw        = user_profile.get("timeline", "")
