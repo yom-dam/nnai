@@ -359,6 +359,9 @@ def _city_dominance_penalty(city: dict, lifestyle: list[str], income_usd: float 
     """
     Generic anti-dominance penalty.
     Applies to any city that is simultaneously very cheap and very high on nomad/work metrics.
+
+    When lifestyle is empty (user hasn't specified preferences), we apply an extra boost
+    to discourage niche/dominant cities and favor more balanced options.
     """
     monthly_cost = float(city.get("monthly_cost_usd") or 0)
     nomad = float(city.get("nomad_score") or 0)
@@ -382,6 +385,12 @@ def _city_dominance_penalty(city: dict, lifestyle: list[str], income_usd: float 
     if monthly_cost <= 1500 and nomad >= 8.5 and cowork >= 8.5:
         penalty += 0.90
 
+    # If lifestyle is empty (user has not specified preferences), amplify penalty
+    # to avoid recommending niche cities that might not suit generic users.
+    # This is especially important for ultra-dominant cities with high synergy penalty.
+    if not lifestyle and penalty >= 2.0:
+        penalty *= 1.30  # 30% amplification for already-high penalty cities
+
     # If user explicitly wants low-cost/community, relax related components.
     if "저비용 생활" in lifestyle:
         penalty -= 0.35
@@ -392,7 +401,7 @@ def _city_dominance_penalty(city: dict, lifestyle: list[str], income_usd: float 
     if income_usd > 0 and income_usd < 2200:
         penalty *= 0.70
 
-    return max(0.0, min(2.5, penalty))
+    return max(0.0, min(3.5, penalty))
 
 
 def _block_a(city: dict, country: dict, lifestyle: list[str], income_usd: float = 0.0) -> float:
@@ -470,7 +479,8 @@ def _block_c(
 ) -> float:
     """Persona-driven scoring — different personas value different attributes."""
     ranges = _score_ranges or {}
-    ls = lifestyle or []
+    # lifestyle is expected to be pre-normalized by caller (_normalize_lifestyle)
+    ls = lifestyle if lifestyle is not None else []
 
     if not persona_type or persona_type not in _PERSONA_WEIGHTS:
         # No persona: uniform average of key attributes
