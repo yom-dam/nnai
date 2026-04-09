@@ -120,6 +120,22 @@ _BLOCK_C_PENALTY_SCALE: dict[str, float] = {
 }
 _BLOCK_C_PENALTY_SCALE_DEFAULT = 1.5  # no persona: amplified to suppress generic dominance of cheap+high-nomad cities
 
+# Timeline-based block weight sets
+_SHORT_STAY_TIMELINES: set[str] = {"90일 단기 체험"}
+_MID_STAY_TIMELINES: set[str] = {"6개월 단기 체험", "1년 단기 체험"}
+# _LONG_STAY_TIMELINES already defined at line 35
+
+
+def _get_block_weights(timeline: str) -> tuple[float, float, float, float]:
+    """Return (w_a, w_b, w_c, w_d) based on resolved timeline."""
+    resolved = _TIMELINE_ALIASES.get(timeline, timeline)
+    if resolved in _SHORT_STAY_TIMELINES:
+        return (0.40, 0.10, 0.40, 0.10)
+    if resolved in _MID_STAY_TIMELINES:
+        return (0.30, 0.25, 0.30, 0.15)
+    return (0.30, 0.25, 0.25, 0.20)
+
+
 # ---------------------------------------------------------------------------
 # Module-level lazy cache
 # ---------------------------------------------------------------------------
@@ -429,7 +445,7 @@ def _block_a(city: dict, country: dict, lifestyle: list[str], income_usd: float 
     )
     raw -= _lifestyle_miss_penalty(city, country, lifestyle)
     raw -= _city_dominance_penalty(city, lifestyle, income_usd)
-    return min(10.0, raw) * 0.30
+    return min(10.0, max(0.0, raw))
 
 
 # ── Block B: 재정 적합도 (25%) ──────────────────────────────────
@@ -459,7 +475,7 @@ def _block_b(city: dict, country: dict, income_usd: float, lifestyle: list[str],
     raw = cost_adjusted * 0.5 + tax_adjusted * 0.5
     raw -= _high_income_low_cost_penalty(city, income_usd)
     raw = max(0.0, raw)
-    return raw * 0.25
+    return min(10.0, raw)
 
 
 # ── Block C: 페르소나 적합도 (25%) ──────────────────────────────
@@ -485,7 +501,7 @@ def _block_c(
         ) / 3.0
         penalty = _city_dominance_penalty(city, ls, income_usd)
         normalized = max(0.0, normalized - penalty * _BLOCK_C_PENALTY_SCALE_DEFAULT)
-        return min(10.0, normalized) * 0.25
+        return min(10.0, normalized)
 
     weights = _PERSONA_WEIGHTS[persona_type]
     total_weight = sum(weights.values())
@@ -515,7 +531,7 @@ def _block_c(
     scale = _BLOCK_C_PENALTY_SCALE.get(persona_type, _BLOCK_C_PENALTY_SCALE_DEFAULT)
     penalty = _city_dominance_penalty(city, ls, income_usd)
     normalized = max(0.0, normalized - penalty * scale)
-    return min(10.0, normalized) * 0.25
+    return min(10.0, normalized)
 
 
 # ── Block D: 실용 조건 적합도 (20%) ─────────────────────────────
@@ -626,7 +642,7 @@ def _block_d(
         + companion_score * 0.25
         + wellbeing_score * 0.25
     )
-    return raw * 0.20
+    return min(10.0, max(0.0, raw))
 
 
 def _wellbeing_proxy_breakdown(
@@ -762,12 +778,14 @@ def _compute_score_breakdown(
     b = _block_b(city, country, income_usd, ls, tax_sensitivity, timeline)
     c = _block_c(city, country, persona_type, income_usd, ls)
     d = _block_d(city, country, income_usd, travel_type, ls, stay_style, children_ages, timeline)
-    total = round(min(10.0, max(0.0, a + b + c + d)), 1)
+
+    w_a, w_b, w_c, w_d = _get_block_weights(timeline)
+    total = round(min(10.0, max(0.0, a * w_a + b * w_b + c * w_c + d * w_d)), 1)
     return {
-        "block_a": round(a, 3),
-        "block_b": round(b, 3),
-        "block_c": round(c, 3),
-        "block_d": round(d, 3),
+        "block_a": round(a * w_a, 3),
+        "block_b": round(b * w_b, 3),
+        "block_c": round(c * w_c, 3),
+        "block_d": round(d * w_d, 3),
         "total": total,
     }
 
