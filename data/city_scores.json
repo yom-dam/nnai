@@ -1817,6 +1817,62 @@
       "safety_method": "0.6*numbeo_city_safety_0_10 + 0.4*gpi_country_rank_4_10",
       "safety_source_numbeo_index": 60.49,
       "safety_source_city_score": 6.05
+    },
+    {
+      "id": "ASU",
+      "city": "Asuncion",
+      "city_kr": "아순시온",
+      "country": "Paraguay",
+      "country_id": "PY",
+      "monthly_cost_usd": 1300,
+      "internet_mbps": null,
+      "safety_score": 6,
+      "english_score": 3,
+      "nomad_score": 7,
+      "climate": "subtropical",
+      "cowork_usd_month": 120,
+      "coworking_score": 6,
+      "community_size": "small",
+      "mid_term_rent_usd": 550,
+      "tax_residency_days": 183,
+      "flatio_search_url": "https://www.flatio.com/s?destination=asuncion",
+      "anyplace_search_url": "https://anyplace.com/rent/asuncion",
+      "nomad_meetup_url": null,
+      "korean_community_size": "small",
+      "entry_tips": "입국심사 시 원격근무 목적 언급은 보수적으로 대응 권장",
+      "source_refs": [
+        "nomads_fastest_growing_2026",
+        "travel_blog_checks_2026Q1"
+      ],
+      "data_verified_date": "2026-04-03"
+    },
+    {
+      "id": "DOH",
+      "city": "Doha",
+      "city_kr": "도하",
+      "country": "Qatar",
+      "country_id": "QA",
+      "monthly_cost_usd": 3200,
+      "internet_mbps": 11,
+      "safety_score": 9,
+      "english_score": 8,
+      "nomad_score": 6,
+      "climate": "desert",
+      "cowork_usd_month": 250,
+      "coworking_score": 6,
+      "community_size": "small",
+      "mid_term_rent_usd": 1800,
+      "tax_residency_days": 183,
+      "flatio_search_url": "https://www.flatio.com/s?destination=doha",
+      "anyplace_search_url": "https://anyplace.com/rent/doha",
+      "nomad_meetup_url": null,
+      "korean_community_size": "small",
+      "entry_tips": "원격근무/사업 활동 관련 입국 목적 설명은 신중 권장",
+      "source_refs": [
+        "nomads_fastest_growing_2026",
+        "travel_blog_checks_2026Q1"
+      ],
+      "data_verified_date": "2026-04-03"
     }
   ]
 }
