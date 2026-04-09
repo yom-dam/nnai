@@ -118,7 +118,7 @@ _BLOCK_C_PENALTY_SCALE: dict[str, float] = {
     "wanderer":    0.60,
     "free_spirit": 0.60,
 }
-_BLOCK_C_PENALTY_SCALE_DEFAULT = 1.5  # no persona
+_BLOCK_C_PENALTY_SCALE_DEFAULT = 1.5  # no persona: amplified to suppress generic dominance of cheap+high-nomad cities
 
 # ---------------------------------------------------------------------------
 # Module-level lazy cache
