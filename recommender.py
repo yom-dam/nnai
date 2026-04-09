@@ -118,7 +118,7 @@ _BLOCK_C_PENALTY_SCALE: dict[str, float] = {
     "wanderer":    0.60,
     "free_spirit": 0.60,
 }
-_BLOCK_C_PENALTY_SCALE_DEFAULT = 0.60  # no persona
+_BLOCK_C_PENALTY_SCALE_DEFAULT = 1.5  # no persona
 
 # ---------------------------------------------------------------------------
 # Module-level lazy cache
@@ -385,12 +385,6 @@ def _city_dominance_penalty(city: dict, lifestyle: list[str], income_usd: float 
     if monthly_cost <= 1500 and nomad >= 8.5 and cowork >= 8.5:
         penalty += 0.90
 
-    # If lifestyle is empty (user has not specified preferences), amplify penalty
-    # to avoid recommending niche cities that might not suit generic users.
-    # This is especially important for ultra-dominant cities with high synergy penalty.
-    if not lifestyle and penalty >= 2.0:
-        penalty *= 1.30  # 30% amplification for already-high penalty cities
-
     # If user explicitly wants low-cost/community, relax related components.
     if "저비용 생활" in lifestyle:
         penalty -= 0.35
@@ -401,7 +395,7 @@ def _city_dominance_penalty(city: dict, lifestyle: list[str], income_usd: float 
     if income_usd > 0 and income_usd < 2200:
         penalty *= 0.70
 
-    return max(0.0, min(3.5, penalty))
+    return max(0.0, min(2.5, penalty))
 
 
 def _block_a(city: dict, country: dict, lifestyle: list[str], income_usd: float = 0.0) -> float:
