@@ -254,3 +254,44 @@ def test_high_income_coworking_profile_unaffected():
     assert "Chiang Mai" not in top3_cities, (
         f"고소득/코워킹 프로필에서도 치앙마이 등장: {top3_cities}"
     )
+
+
+def test_block_weights_sum_to_1():
+    """Block 가중치 합은 항상 1.0이어야 한다."""
+    from recommender import _get_block_weights
+    for tl in ["90일 단기 체험", "6개월 단기 체험", "1년 단기 체험", "3년 장기 체류", "5년 이상 초장기 체류", ""]:
+        w = _get_block_weights(tl)
+        assert abs(sum(w) - 1.0) < 1e-9, f"timeline={tl!r}: weights sum={sum(w)}"
+
+
+def test_short_stay_weights():
+    """단기 체류 가중치: A=0.40, B=0.10, C=0.40, D=0.10"""
+    from recommender import _get_block_weights
+    assert _get_block_weights("90일 단기 체험") == (0.40, 0.10, 0.40, 0.10)
+
+
+def test_mid_stay_weights():
+    """중기 체류 가중치: A=0.30, B=0.25, C=0.30, D=0.15"""
+    from recommender import _get_block_weights
+    assert _get_block_weights("6개월 단기 체험") == (0.30, 0.25, 0.30, 0.15)
+    assert _get_block_weights("1년 단기 체험") == (0.30, 0.25, 0.30, 0.15)
+
+
+def test_long_stay_weights():
+    """장기 체류 가중치: A=0.30, B=0.25, C=0.25, D=0.20 (현행)"""
+    from recommender import _get_block_weights
+    assert _get_block_weights("3년 장기 체류") == (0.30, 0.25, 0.25, 0.20)
+
+
+def test_alias_timeline_resolves_weights():
+    """프론트엔드 timeline 문자열도 올바른 가중치를 반환한다."""
+    from recommender import _get_block_weights
+    assert _get_block_weights("1~3개월 단기 체류") == (0.40, 0.10, 0.40, 0.10)
+    assert _get_block_weights("6개월 중기 체류") == (0.30, 0.25, 0.30, 0.15)
+    assert _get_block_weights("영주권/이민 목표") == (0.30, 0.25, 0.25, 0.20)
+
+
+def test_short_stay_block_d_visa_zero():
+    """단기 체류 시 Block D의 visa_score는 0이어야 한다."""
+    result = recommend_from_db(_profile(timeline="90일 단기 체험", income_usd=3000))
+    assert len(result["top_cities"]) > 0
