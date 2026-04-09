@@ -554,9 +554,8 @@ def _block_d(
     stay = country.get("stay_months") or 0
 
     if is_short_stay:
-        # 90일 단기: 노마드 비자·갱신 여부 불필요 — 무비자 체류 기간(stay_months)만 평가
-        # 3개월 이상이면 만점, 미만이면 비례 감점
-        visa_score = min(10.0, stay / 3.0 * 10.0)
+        # 단기 체류: 비자 조건이 사실상 무의미 — Block 가중치(D=0.10)로 이미 억제됨
+        visa_score = 0.0
     else:
         visa_score = 0.0
         if has_nomad_visa:
