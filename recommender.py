@@ -109,6 +109,17 @@ _PERSONA_WEIGHTS: dict[str, dict[str, float]] = {
     },
 }
 
+# Block C penalty scale per persona — lower = gentler penalty on cheap+high-nomad cities
+# pioneer explicitly weights cost_score, so penalty is already partially baked in.
+_BLOCK_C_PENALTY_SCALE: dict[str, float] = {
+    "pioneer":     0.25,
+    "local":       0.40,
+    "planner":     0.40,
+    "wanderer":    0.60,
+    "free_spirit": 0.60,
+}
+_BLOCK_C_PENALTY_SCALE_DEFAULT = 0.60  # no persona
+
 # ---------------------------------------------------------------------------
 # Module-level lazy cache
 # ---------------------------------------------------------------------------
@@ -450,18 +461,27 @@ def _block_b(city: dict, country: dict, income_usd: float, lifestyle: list[str],
 
 # ── Block C: 페르소나 적합도 (25%) ──────────────────────────────
 
-def _block_c(city: dict, country: dict, persona_type: str, income_usd: float) -> float:
+def _block_c(
+    city: dict,
+    country: dict,
+    persona_type: str,
+    income_usd: float,
+    lifestyle: list[str] | None = None,
+) -> float:
     """Persona-driven scoring — different personas value different attributes."""
     ranges = _score_ranges or {}
+    ls = lifestyle or []
 
     if not persona_type or persona_type not in _PERSONA_WEIGHTS:
         # No persona: uniform average of key attributes
-        base = (
+        normalized = (
             _normalize(city.get("nomad_score", 5),     *ranges.get("nomad_score",     (5, 9)))
             + _normalize(city.get("safety_score", 5),    *ranges.get("safety_score",    (4, 9)))
             + _normalize(city.get("coworking_score", 5), *ranges.get("coworking_score", (4, 9)))
         ) / 3.0
-        return base * 0.25
+        penalty = _city_dominance_penalty(city, ls, income_usd)
+        normalized = max(0.0, normalized - penalty * _BLOCK_C_PENALTY_SCALE_DEFAULT)
+        return min(10.0, normalized) * 0.25
 
     weights = _PERSONA_WEIGHTS[persona_type]
     total_weight = sum(weights.values())
@@ -488,6 +508,9 @@ def _block_c(city: dict, country: dict, persona_type: str, income_usd: float) ->
             score += _cost_score(city, income_usd) * w
 
     normalized = score / total_weight  # normalize to 0–10
+    scale = _BLOCK_C_PENALTY_SCALE.get(persona_type, _BLOCK_C_PENALTY_SCALE_DEFAULT)
+    penalty = _city_dominance_penalty(city, ls, income_usd)
+    normalized = max(0.0, normalized - penalty * scale)
     return min(10.0, normalized) * 0.25
 
 
@@ -733,7 +756,7 @@ def _compute_score_breakdown(
     ls = _normalize_lifestyle(lifestyle)
     a = _block_a(city, country, ls, income_usd)
     b = _block_b(city, country, income_usd, ls, tax_sensitivity, timeline)
-    c = _block_c(city, country, persona_type, income_usd)
+    c = _block_c(city, country, persona_type, income_usd, ls)
     d = _block_d(city, country, income_usd, travel_type, ls, stay_style, children_ages, timeline)
     total = round(min(10.0, max(0.0, a + b + c + d)), 1)
     return {
