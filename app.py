@@ -54,6 +54,7 @@ def nomad_advisor(
     spouse_income_krw: int = 0,
     stay_style: str | None = None,
     tax_sensitivity: str | None = None,
+    total_budget_krw: int | None = None,
 ) -> tuple[str, list, dict]:
     """
     Step 1 파이프라인: RAG → 프롬프트 → LLM → 파싱 → 마크다운 + 도시 리스트
@@ -71,7 +72,13 @@ def nomad_advisor(
     except Exception:
         usd_rate = 0.000714
 
-    income_usd = round(income_krw * 10000 * usd_rate)
+    # 단기 체류 + total_budget_krw가 있으면 월 환산 예산으로 대체
+    resolved_tl = {"1~3개월 단기 체류": "90일 단기 체험"}.get(timeline, timeline)
+    if resolved_tl == "90일 단기 체험" and total_budget_krw and total_budget_krw > 0:
+        monthly_budget_krw = total_budget_krw / 2  # 1~3개월 중간값
+        income_usd = round(monthly_budget_krw * 10000 * usd_rate)
+    else:
+        income_usd = round(income_krw * 10000 * usd_rate)
     spouse_income_usd = 0
     if has_spouse_income == "있음" and spouse_income_krw > 0:
         spouse_income_usd = round(spouse_income_krw * 10000 * usd_rate)
