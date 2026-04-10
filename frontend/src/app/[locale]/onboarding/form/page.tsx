@@ -250,6 +250,63 @@ export default function FormPage() {
     }
   }
 
+  function shouldAutoAdvance(): boolean {
+    switch (currentStep) {
+      case 1:
+        return form.immigration_purpose !== "";
+      case 2:
+        if (form.timeline === "") return false;
+        if (form.timeline === "1~3개월 단기 체류") return true; // no conditional
+        return form.stay_style !== ""; // conditional filled
+      case 3:
+        if (form.timeline === "1~3개월 단기 체류") return form.total_budget !== "";
+        if (form.income_range === "") return false;
+        return form.tax_sensitivity !== ""; // conditional filled
+      case 4: {
+        if (form.travel_type === "") return false;
+        const solo = form.travel_type === "혼자 (솔로)";
+        if (solo) return true;
+        const spouse = hasSpouse(form.travel_type);
+        const children = hasChildren(form.travel_type);
+        if (children) return false; // multi-select → needs button
+        if (spouse) {
+          if (!isShortStay) {
+            if (form.has_spouse_income === "없음") return true;
+            if (form.has_spouse_income === "있음") return form.spouse_income_krw > 0;
+            return false;
+          }
+          return true; // short stay, no spouse income conditional
+        }
+        return false;
+      }
+      default:
+        return false;
+    }
+  }
+
+  useEffect(() => {
+    if (currentStep >= 5) return; // Step 5 never auto-advances
+    if (!shouldAutoAdvance()) return;
+
+    const timer = setTimeout(() => {
+      handleNext();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    currentStep,
+    form.immigration_purpose,
+    form.timeline,
+    form.stay_style,
+    form.income_range,
+    form.total_budget,
+    form.tax_sensitivity,
+    form.travel_type,
+    form.has_spouse_income,
+    form.spouse_income_krw,
+  ]);
+
   function handleBack() {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   }
@@ -526,28 +583,38 @@ export default function FormPage() {
             )}
 
             {/* CTA 버튼 */}
-            <div className="mt-10 space-y-3">
-              {error && (
-                <p className="mb-3 text-center text-sm text-destructive">{error}</p>
-              )}
-              <button
-                type="button"
-                onClick={handleNext}
-                disabled={!canProceed() || isLoading}
-                className="w-full bg-primary py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                {isLoading ? "당신에게 맞는 도시를 찾는 중이에요..." : currentStep === TOTAL_STEPS ? "도시 추천 받기" : "다음"}
-              </button>
-              {currentStep === 5 && !isLoading && (
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  className="w-full py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  건너뛰기
-                </button>
-              )}
-            </div>
+            {(() => {
+              const showNextButton = (() => {
+                if (currentStep === 5) return true; // always show submit
+                if (currentStep === 4 && hasChildren(form.travel_type)) return true; // multi-select
+                return false; // auto-advance handles it
+              })();
+
+              return showNextButton ? (
+                <div className="mt-10 space-y-3">
+                  {error && (
+                    <p className="mb-3 text-center text-sm text-destructive">{error}</p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={!canProceed() || isLoading}
+                    className="w-full bg-primary py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? "당신에게 맞는 도시를 찾는 중이에요..." : currentStep === TOTAL_STEPS ? "도시 추천 받기" : "다음"}
+                  </button>
+                  {currentStep === 5 && !isLoading && (
+                    <button
+                      type="button"
+                      onClick={handleSubmit}
+                      className="w-full py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      건너뛰기
+                    </button>
+                  )}
+                </div>
+              ) : null;
+            })()}
           </motion.div>
         </AnimatePresence>
       </div>
