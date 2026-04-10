@@ -393,7 +393,7 @@ export default function FormPage() {
           >
             <h2 className="whitespace-pre-line text-xl font-medium leading-relaxed text-foreground mb-8">
               {currentStep === 3 && isShortStay
-                ? "이번 여정의\n예산은 얼마예요?"
+                ? "어울리는 도시 추천을 위해,\n이번 여정의 예산을 알려주세요."
                 : STEP_TITLES[currentStep - 1]}
             </h2>
 
