@@ -837,6 +837,79 @@ def _compute_score(
     )["total"]
 
 
+def _derive_priority(
+    income_usd: float,
+    travel_type: str,
+    stay_style: str,
+    lifestyle: list[str],
+    purpose: str,
+) -> dict[str, float]:
+    """Derive implicit priority multipliers from existing user inputs.
+
+    Returns multipliers for each block's raw score (default 1.0).
+    Cross-block influence: e.g., low income boosts cost priority,
+    family travel boosts safety even in cost-focused blocks.
+    """
+    # Base priorities
+    p_a = 1.0   # base fitness (safety/infra)
+    p_b = 1.0   # financial fitness (cost)
+    p_c = 1.0   # persona fit
+    p_d = 1.0   # practical (visa/language/companion)
+
+    # ── Income → cost priority ──
+    if income_usd > 0:
+        if income_usd < 1500:
+            p_b += 0.4    # 저소득: 비용 매우 중요
+            p_a -= 0.1    # 기본 적합도 약간 양보
+        elif income_usd < 2500:
+            p_b += 0.2    # 중저소득: 비용 중요
+        elif income_usd > 5000:
+            p_b -= 0.2    # 고소득: 비용 덜 중요
+            p_a += 0.15   # 기본 적합도(안전/인프라) 더 중요
+
+    # ── Travel type → safety priority ──
+    has_children = "자녀" in travel_type or "가족" in travel_type
+    has_family = has_children or "배우자" in travel_type or "파트너" in travel_type
+    if has_children:
+        p_a += 0.3    # 자녀 동반: 안전+인프라 최우선
+        p_d += 0.2    # 실용 조건(companion) 중요
+        p_b -= 0.1    # 비용보다 안전
+    elif has_family:
+        p_a += 0.15   # 배우자 동반: 안전 약간 상향
+        p_d += 0.1
+
+    # ── Stay style → community/visa priority ──
+    if stay_style == "정착형":
+        p_d += 0.15   # visa 갱신/커뮤니티 중요
+    elif stay_style == "이동형":
+        p_d += 0.1    # visa 자유도 중요
+
+    # ── Lifestyle tags → fine-tuning ──
+    if "한인 커뮤니티 활성화" in lifestyle:
+        p_d += 0.15   # community 중요
+    if "저렴한 물가와 생활비" in lifestyle:
+        p_b += 0.2    # 명시적 비용 중시
+    if "일하기 좋은 인프라" in lifestyle:
+        p_a += 0.15   # 인프라 중시
+
+    # ── Purpose cross-effects ──
+    if purpose == "은퇴 후 거주":
+        p_a += 0.2    # 안전 + 인프라 (Block A에 이미 safety 45%로 설정됨)
+        p_b += 0.1    # 비용도 중요
+        p_d += 0.1    # 장기 비자 중요
+    elif purpose == "장기 여행":
+        p_b += 0.15   # 비용 중요
+        p_a += 0.1    # 안전
+
+    # Clamp to reasonable range [0.5, 2.0]
+    p_a = max(0.5, min(2.0, p_a))
+    p_b = max(0.5, min(2.0, p_b))
+    p_c = max(0.5, min(2.0, p_c))
+    p_d = max(0.5, min(2.0, p_d))
+
+    return {"a": p_a, "b": p_b, "c": p_c, "d": p_d}
+
+
 def _compute_score_breakdown(
     city: dict,
     country: dict,
@@ -857,6 +930,19 @@ def _compute_score_breakdown(
     b = _block_b(city, country, income_usd, ls, tax_sensitivity, timeline)
     c = _block_c(city, country, persona_type, income_usd, ls, persona_vector=persona_vector)
     d = _block_d(city, country, income_usd, travel_type, ls, stay_style, children_ages, timeline)
+
+    # Derived priority multipliers from user inputs
+    priority = _derive_priority(income_usd, travel_type, stay_style, ls, purpose)
+    a *= priority["a"]
+    b *= priority["b"]
+    c *= priority["c"]
+    d *= priority["d"]
+
+    # Re-clamp to 0-10 after priority scaling
+    a = min(10.0, max(0.0, a))
+    b = min(10.0, max(0.0, b))
+    c = min(10.0, max(0.0, c))
+    d = min(10.0, max(0.0, d))
 
     w_a, w_b, w_c, w_d = _get_block_weights(timeline)
     has_persona = bool(persona_type and persona_type in _PERSONA_WEIGHTS) or bool(
