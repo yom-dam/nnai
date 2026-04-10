@@ -5,6 +5,7 @@ import { useRouter } from "@/i18n/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import type { PersonaType } from "@/data/personas";
 import { PERSONAS } from "@/data/personas";
+import { House } from "lucide-react";
 import { ProgressBar } from "@/components/onboarding/progress-bar";
 import { SelectCard } from "@/components/onboarding/select-card";
 import dynamic from "next/dynamic";
@@ -336,13 +337,23 @@ export default function FormPage() {
     <div className="mx-auto flex min-h-screen max-w-sm w-full flex-col">
       {/* 프로그레스바 */}
       <div className="flex items-center gap-3 pt-6 px-4">
-        <button
-          type="button"
-          onClick={handleBack}
-          className={`shrink-0 text-sm text-muted-foreground transition-colors hover:text-foreground ${currentStep === 1 ? "invisible" : ""}`}
-        >
-          이전
-        </button>
+        {currentStep === 1 ? (
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <House className="size-4" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleBack}
+            className="shrink-0 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            이전
+          </button>
+        )}
         <ProgressBar current={currentStep} total={TOTAL_STEPS} />
       </div>
 
@@ -350,8 +361,9 @@ export default function FormPage() {
       <div className="flex flex-1 flex-col justify-start pt-24 px-4">
         {/* 스텝 캐릭터 — 배지 바로 위, 스텝 간 슬라이드 이동 */}
         <div className="relative h-12">
+          {personaType ? (
           <motion.img
-            src={personaType ? personaGif[personaType] ?? "/earth_64.gif" : "/earth_64.gif"}
+            src={personaGif[personaType] ?? "/earth_64.gif"}
             alt=""
             width={40}
             height={40}
@@ -363,6 +375,33 @@ export default function FormPage() {
             }}
             transition={{ type: "spring", stiffness: 200, damping: 20 }}
           />
+          ) : (
+          <motion.div
+            className="absolute bottom-0 flex"
+            animate={{
+              left: `${((currentStep - 1) / (TOTAL_STEPS - 1)) * 100}%`,
+              x: "-50%",
+            }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+          >
+            <img
+              src="/grace_64.gif"
+              alt=""
+              width={40}
+              height={40}
+              className="object-contain"
+              style={{ imageRendering: "pixelated" }}
+            />
+            <img
+              src="/rocky_64.gif"
+              alt=""
+              width={40}
+              height={40}
+              className="object-contain -ml-4"
+              style={{ imageRendering: "pixelated" }}
+            />
+          </motion.div>
+          )}
         </div>
 
         {/* 페르소나 배지 */}
