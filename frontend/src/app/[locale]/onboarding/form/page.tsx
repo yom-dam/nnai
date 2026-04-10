@@ -220,16 +220,11 @@ export default function FormPage() {
         preferred_countries: form.preferred_countries,
       };
 
-      const res = await fetch("/api/recommend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      // Save payload so result page can call /api/recommend itself
+      localStorage.setItem("recommend_payload", JSON.stringify(payload));
+      // Clear any stale tarot session from a previous run
+      localStorage.removeItem("tarot_session");
 
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
-
-      const data = await res.json();
-      sessionStorage.setItem("nnai_result", JSON.stringify(data));
       router.push("/result");
     } catch {
       setError("뭔가 막혔어요. 다시 해볼까요?");
