@@ -168,6 +168,7 @@ export default function FormPage() {
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autoAdvancePaused, setAutoAdvancePaused] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("persona_type") as PersonaType | null;
@@ -285,7 +286,8 @@ export default function FormPage() {
   }
 
   useEffect(() => {
-    if (currentStep >= 5) return; // Step 5 never auto-advances
+    if (autoAdvancePaused) return;
+    if (currentStep >= 5) return;
     if (!shouldAutoAdvance()) return;
 
     const timer = setTimeout(() => {
@@ -308,7 +310,12 @@ export default function FormPage() {
   ]);
 
   function handleBack() {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
+    if (currentStep > 1) {
+      setAutoAdvancePaused(true);
+      setCurrentStep(currentStep - 1);
+      // Re-enable auto-advance after user has time to interact
+      setTimeout(() => setAutoAdvancePaused(false), 1000);
+    }
   }
 
   return (
