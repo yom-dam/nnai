@@ -708,12 +708,25 @@ def _block_d(
     )
     wellbeing_score = wellbeing["total"]
 
-    # Add wellbeing proxy for "실제 생활 만족도" approximation while preserving total block weight.
+    # Dynamic sub-weights: companion-heavy when traveling with family/children
+    has_children = "자녀" in travel_type or "가족" in travel_type
+    has_family = has_children or "배우자" in travel_type or "파트너" in travel_type
+
+    if has_children:
+        # 자녀 동반: companion(안전+교육) 최우선, visa 비중 축소
+        w_visa, w_lang, w_comp, w_well = 0.10, 0.15, 0.45, 0.30
+    elif has_family:
+        # 배우자 동반: companion+wellbeing 강화
+        w_visa, w_lang, w_comp, w_well = 0.15, 0.15, 0.35, 0.35
+    else:
+        # 혼자: 기존 균형
+        w_visa, w_lang, w_comp, w_well = 0.30, 0.20, 0.25, 0.25
+
     raw = (
-        visa_score * 0.30
-        + lang_score * 0.20
-        + companion_score * 0.25
-        + wellbeing_score * 0.25
+        visa_score * w_visa
+        + lang_score * w_lang
+        + companion_score * w_comp
+        + wellbeing_score * w_well
     )
     return min(10.0, max(0.0, raw))
 
@@ -867,16 +880,21 @@ def _derive_priority(
             p_b -= 0.2    # 고소득: 비용 덜 중요
             p_a += 0.15   # 기본 적합도(안전/인프라) 더 중요
 
-    # ── Travel type → safety priority ──
+    # ── Travel type → safety/cost priority ──
+    is_solo = travel_type == "혼자 (솔로)" or not travel_type
     has_children = "자녀" in travel_type or "가족" in travel_type
     has_family = has_children or "배우자" in travel_type or "파트너" in travel_type
     if has_children:
-        p_a += 0.3    # 자녀 동반: 안전+인프라 최우선
-        p_d += 0.2    # 실용 조건(companion) 중요
-        p_b -= 0.1    # 비용보다 안전
+        p_a += 0.5    # 자녀 동반: 안전+인프라 최우선 (강화)
+        p_d += 0.4    # 실용 조건(companion, visa) 매우 중요
+        p_b -= 0.2    # 비용보다 안전
     elif has_family:
-        p_a += 0.15   # 배우자 동반: 안전 약간 상향
-        p_d += 0.1
+        p_a += 0.3    # 배우자 동반: 안전 상향 (강화)
+        p_d += 0.25   # 실용 조건 중요
+        p_b -= 0.1
+    elif is_solo:
+        p_b += 0.15   # 혼자: 비용 효율 상향
+        p_d -= 0.1    # 동행 조건 덜 중요
 
     # ── Stay style → community/visa priority ──
     if stay_style == "정착형":
@@ -1072,13 +1090,44 @@ def recommend_from_db(user_profile: dict, top_n: int = 5, debug_mode: bool = Fal
             rows.append((score, city, country, breakdown))
         return rows
 
+    def _collect_candidates_relaxed_income(require_must_have: bool) -> list[tuple[float, dict, dict, dict[str, float]]]:
+        """Fallback: skip income filter when strict filtering yields nothing."""
+        rows: list[tuple[float, dict, dict, dict[str, float]]] = []
+        for city in cities_list:
+            cid = city.get("country_id", "")
+            country = country_map.get(cid)
+            if country is None:
+                continue
+            # Skip income filter — keep timeline, continent, schengen
+            if not _passes_timeline_filter(country, timeline):
+                continue
+            if not _passes_continent_filter(cid, preferred):
+                continue
+            if not _passes_schengen_long_stay_filter(country, timeline, effective_income_usd):
+                continue
+            if require_must_have and not _passes_lifestyle_must_have(city, country, lifestyle_norm):
+                continue
+            breakdown = _compute_score_breakdown(
+                city=city, country=country, income_usd=effective_income_usd,
+                lifestyle=lifestyle_norm, persona_type=persona_type,
+                travel_type=travel_type, stay_style=stay_style,
+                tax_sensitivity=tax_sensitivity, children_ages=children_ages,
+                timeline=timeline, purpose=purpose, persona_vector=persona_vector,
+            )
+            rows.append((breakdown["total"], city, country, breakdown))
+        return rows
+
     must_have_active = any(p in _MUST_HAVE_LIFESTYLES for p in lifestyle_norm)
     candidates = _collect_candidates(require_must_have=must_have_active)
     must_have_relaxed = False
+    income_filter_relaxed = False
     if must_have_active and not candidates:
-        # Safety valve: if strict must-have produces empty list, fall back to soft ranking.
         candidates = _collect_candidates(require_must_have=False)
         must_have_relaxed = True
+    if not candidates:
+        # Fallback: relax income filter to avoid empty results
+        candidates = _collect_candidates_relaxed_income(require_must_have=False)
+        income_filter_relaxed = True
 
     # Sort descending by score
     candidates.sort(key=lambda x: x[0], reverse=True)

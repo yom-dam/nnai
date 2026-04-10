@@ -1,0 +1,13 @@
+{
+  "total_combos": 120000,
+  "elapsed_seconds": 35.5,
+  "errors_count": 0,
+  "empty_results_count": 0,
+  "score_anomalies_count": 0,
+  "differentiation_failures": 0,
+  "differentiation_total": 9,
+  "errors": [],
+  "empty_results": [],
+  "score_anomalies": [],
+  "diff_failures": []
+}
