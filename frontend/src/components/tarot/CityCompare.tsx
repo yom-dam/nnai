@@ -2,6 +2,17 @@
 
 import { motion } from "framer-motion";
 import { ShieldCheck, Wifi, Languages } from "lucide-react";
+
+const FLAG_EMOJI: Record<string, string> = {
+  PT: "🇵🇹", TH: "🇹🇭", ES: "🇪🇸", JP: "🇯🇵", DE: "🇩🇪",
+  FR: "🇫🇷", IT: "🇮🇹", GB: "🇬🇧", US: "🇺🇸", CA: "🇨🇦",
+  AU: "🇦🇺", NZ: "🇳🇿", KR: "🇰🇷", VN: "🇻🇳", ID: "🇮🇩",
+  MY: "🇲🇾", SG: "🇸🇬", PH: "🇵🇭", MX: "🇲🇽", CO: "🇨🇴",
+  CR: "🇨🇷", PA: "🇵🇦", BR: "🇧🇷", AR: "🇦🇷", CL: "🇨🇱",
+  EE: "🇪🇪", GE: "🇬🇪", HR: "🇭🇷", CZ: "🇨🇿", HU: "🇭🇺",
+  PL: "🇵🇱", RO: "🇷🇴", BG: "🇧🇬", GR: "🇬🇷", TR: "🇹🇷",
+  EG: "🇪🇬", ZA: "🇿🇦", KH: "🇰🇭", IN: "🇮🇳", UA: "🇺🇦",
+};
 import type { CityData } from "./types";
 
 interface CityCompareProps {
@@ -28,6 +39,7 @@ const fadeUp = (delay: number) => ({
 });
 
 function CityCard({ city, rank }: { city: CityData; rank: number }) {
+  const flag = FLAG_EMOJI[city.country_id] ?? "🌍";
   const visaBadgeText =
     city.visa_free_days > 0 && city.plan_b_trigger
       ? "🛂 무비자 90일 (셴겐)"
@@ -36,39 +48,30 @@ function CityCard({ city, rank }: { city: CityData; rank: number }) {
       : "🛂 비자 필요";
 
   return (
-    <div
-      className="border border-gray-200 border-l-4 bg-white p-5 flex flex-col gap-3 rounded-sm"
-      style={{ borderLeftColor: "#c9a84c" }}
-    >
+    <div className="border border-border border-l-4 border-l-primary bg-card p-5 flex flex-col gap-3 rounded-sm">
       {/* Rank + city name */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span
-          className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-sm"
-          style={{ background: "#c9a84c", color: "#1a1a2e" }}
-        >
+        <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-sm bg-primary text-primary-foreground">
           {rankBadge[rank] ?? `#${rank + 1}`}
         </span>
-        <span className="text-base font-bold text-gray-900">{city.city_kr}</span>
-        <span className="text-sm text-gray-400">{city.country}</span>
+        <span className="text-base font-bold text-foreground">
+          {flag} {city.city_kr}
+        </span>
+        <span className="text-sm text-muted-foreground">{city.country}</span>
       </div>
 
       {/* Insight */}
       {city.city_insight && (
-        <div
-          className="border-l-2 pl-3 py-0.5"
-          style={{ borderColor: "#c9a84c" }}
-        >
-          <p className="text-sm italic" style={{ color: "#c9a84c" }}>
-            {city.city_insight}
-          </p>
+        <div className="border-l-2 border-primary pl-3 py-0.5">
+          <p className="text-sm italic text-primary">{city.city_insight}</p>
         </div>
       )}
 
-      <div className="border-t border-gray-100" />
+      <div className="border-t border-border" />
 
       {/* Visa + budget info */}
-      <div className="space-y-1.5 text-sm text-gray-500">
-        <span className="inline-block rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+      <div className="space-y-1.5 text-sm text-muted-foreground">
+        <span className="inline-block rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
           {visaBadgeText}
         </span>
         <p>
@@ -84,8 +87,8 @@ function CityCard({ city, rank }: { city: CityData; rank: number }) {
         city.internet_mbps != null ||
         city.english_score != null) && (
         <>
-          <div className="border-t border-gray-100" />
-          <div className="grid grid-cols-3 text-xs text-gray-500 gap-1">
+          <div className="border-t border-border" />
+          <div className="grid grid-cols-3 text-xs text-muted-foreground gap-1">
             {city.safety_score != null && (
               <span className="inline-flex items-center gap-1">
                 <ShieldCheck className="size-3 shrink-0" />
@@ -111,14 +114,14 @@ function CityCard({ city, rank }: { city: CityData; rank: number }) {
       {/* Description */}
       {city.city_description && (
         <>
-          <div className="border-t border-gray-100" />
-          <p className="text-sm text-gray-700 leading-relaxed indent-2">
+          <div className="border-t border-border" />
+          <p className="text-sm text-muted-foreground leading-relaxed indent-2">
             {city.city_description}
           </p>
         </>
       )}
 
-      <div className="border-t border-gray-100" />
+      <div className="border-t border-border" />
 
       {/* Links */}
       <div className="flex flex-wrap gap-4">
@@ -127,8 +130,7 @@ function CityCard({ city, rank }: { city: CityData; rank: number }) {
             href={city.visa_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm hover:underline"
-            style={{ color: "#c9a84c" }}
+            className="text-sm text-primary hover:underline"
           >
             비자 정보 →
           </a>
@@ -138,8 +140,7 @@ function CityCard({ city, rank }: { city: CityData; rank: number }) {
             href={city.flatio_search_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm hover:underline"
-            style={{ color: "#c9a84c" }}
+            className="text-sm text-primary hover:underline"
           >
             숙소 찾기 →
           </a>
@@ -149,8 +150,7 @@ function CityCard({ city, rank }: { city: CityData; rank: number }) {
             href={city.anyplace_search_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm hover:underline"
-            style={{ color: "#c9a84c" }}
+            className="text-sm text-primary hover:underline"
           >
             Anyplace →
           </a>
@@ -160,8 +160,7 @@ function CityCard({ city, rank }: { city: CityData; rank: number }) {
             href={city.nomad_meetup_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm hover:underline"
-            style={{ color: "#c9a84c" }}
+            className="text-sm text-primary hover:underline"
           >
             밋업 →
           </a>
@@ -170,7 +169,7 @@ function CityCard({ city, rank }: { city: CityData; rank: number }) {
 
       {/* Data source */}
       {city.data_verified_date && (
-        <p className="text-xs text-gray-300 mt-1">
+        <p className="text-xs text-muted-foreground/50 mt-1">
           데이터 기준: {city.data_verified_date} · Numbeo, NomadList
         </p>
       )}
@@ -183,8 +182,8 @@ export default function CityCompare({ cities, onRetry }: CityCompareProps) {
     <div className="w-full max-w-5xl mx-auto px-4 py-10">
       {/* Header */}
       <motion.div {...fadeUp(0)} className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">도시 비교</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <h1 className="text-2xl font-bold text-foreground">도시 비교</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           추천된 {cities.length}개 도시를 나란히 비교해보세요
         </p>
       </motion.div>
@@ -203,7 +202,7 @@ export default function CityCompare({ cities, onRetry }: CityCompareProps) {
         <button
           type="button"
           onClick={onRetry}
-          className="text-sm text-gray-400 hover:text-gray-700 transition-colors py-2"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
         >
           처음부터 다시하기
         </button>

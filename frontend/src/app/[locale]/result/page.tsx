@@ -2,31 +2,16 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "@/i18n/navigation";
+import TarotDeck from "@/components/tarot/TarotDeck";
 import TarotReading from "@/components/tarot/TarotReading";
 import CityCompare from "@/components/tarot/CityCompare";
 import type { CityData, TarotSession } from "@/components/tarot/types";
 import { TAROT_SESSION_KEY } from "@/components/tarot/types";
-import { ShieldCheck, Wifi, Languages, Banknote, Lock } from "lucide-react";
 
 // ── Constants ──────────────────────────────────────────────────────
 
 const RECOMMEND_PAYLOAD_KEY = "recommend_payload";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.nnai.app";
-
-// ── Utility ────────────────────────────────────────────────────────
-
-const USD_TO_KRW = 1400;
-
-function toKRW(usd: number): string {
-  return `약 ${Math.round((usd * USD_TO_KRW) / 10000)}만원`;
-}
-
-function visaBadge(city: CityData): string {
-  if (city.visa_free_days > 0 && city.plan_b_trigger)
-    return "🛂 무비자 90일 (셴겐)";
-  if (city.visa_free_days > 0) return `🛂 무비자 ${city.visa_free_days}일`;
-  return "🛂 비자 필요";
-}
 
 // ── Stage type ─────────────────────────────────────────────────────
 
@@ -47,222 +32,6 @@ interface SessionV2 {
 
 const SESSION_V2_KEY = "result_session_v2";
 
-// ── Preview Card (Stage 1) ─────────────────────────────────────────
-
-function PreviewCard({
-  city,
-  rank,
-  selected,
-  onClick,
-  disabled,
-}: {
-  city: CityData;
-  rank: number;
-  selected: boolean;
-  onClick: () => void;
-  disabled: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled && !selected}
-      className={[
-        "w-full text-left rounded-lg border p-4 transition-all",
-        selected
-          ? "border-2 border-primary bg-primary/5 shadow-sm"
-          : disabled
-          ? "border-border bg-card opacity-50 cursor-not-allowed"
-          : "border-border bg-card hover:border-primary/50 hover:shadow-sm cursor-pointer",
-      ].join(" ")}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground w-5">
-            {rank + 1}.
-          </span>
-          <div>
-            <p className="font-semibold text-foreground">{city.city_kr}</p>
-            <p className="text-xs text-muted-foreground">{city.country}</p>
-          </div>
-        </div>
-        {selected && (
-          <span className="shrink-0 text-xs font-medium bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-            선택됨
-          </span>
-        )}
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-1">
-          <Banknote className="size-3 shrink-0" />
-          {toKRW(city.monthly_cost_usd)}/월
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <ShieldCheck className="size-3 shrink-0" />
-          {city.visa_free_days > 0
-            ? `무비자 ${city.visa_free_days}일`
-            : "비자 필요"}
-        </span>
-        {city.internet_mbps != null && (
-          <span className="inline-flex items-center gap-1">
-            <Wifi className="size-3 shrink-0" />
-            {city.internet_mbps}Mbps
-          </span>
-        )}
-      </div>
-    </button>
-  );
-}
-
-// ── Revealed City Card (Stage 2) ───────────────────────────────────
-
-function RevealedCard({
-  city,
-  rank,
-  selected,
-  onClick,
-}: {
-  city: CityData;
-  rank: number;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        "w-full text-left rounded-lg border p-5 transition-all",
-        selected
-          ? "border-2 border-primary bg-primary/5 shadow-md"
-          : "border-border bg-card hover:border-primary/50 hover:shadow-sm",
-      ].join(" ")}
-    >
-      {/* Header */}
-      <div className="flex items-center gap-2 flex-wrap mb-3">
-        <span
-          className="text-xs font-semibold px-2 py-0.5 rounded-sm"
-          style={{ background: "#c9a84c", color: "#1a1a2e" }}
-        >
-          {rank === 0 ? "1st" : rank === 1 ? "2nd" : "3rd"}
-        </span>
-        <span className="font-bold text-foreground">{city.city_kr}</span>
-        <span className="text-sm text-muted-foreground">{city.country}</span>
-        {selected && (
-          <span className="ml-auto text-xs font-medium bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-            선택됨
-          </span>
-        )}
-      </div>
-
-      {/* Insight */}
-      {city.city_insight && (
-        <p className="text-sm italic text-muted-foreground mb-3 pl-3 border-l-2 border-primary/50">
-          {city.city_insight}
-        </p>
-      )}
-
-      {/* Visa badge */}
-      <span className="inline-block rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground mb-2">
-        {visaBadge(city)}
-      </span>
-
-      {/* Visa detail */}
-      <p className="text-sm text-muted-foreground mb-1">
-        비자: {city.visa_type}
-        {city.stay_months != null && ` · ${city.stay_months}개월`}
-        {` · ${city.renewable ? "갱신 가능" : "갱신 불가"}`}
-      </p>
-
-      {/* Budget */}
-      <p className="text-sm font-medium text-foreground mb-3">
-        예산: {toKRW(city.monthly_cost_usd)} / 월
-      </p>
-
-      {/* Stats */}
-      {(city.safety_score != null ||
-        city.internet_mbps != null ||
-        city.english_score != null) && (
-        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
-          {city.safety_score != null && (
-            <span className="inline-flex items-center gap-1">
-              <ShieldCheck className="size-3 shrink-0" />
-              치안 {city.safety_score}/10
-            </span>
-          )}
-          {city.internet_mbps != null && (
-            <span className="inline-flex items-center gap-1">
-              <Wifi className="size-3 shrink-0" />
-              {city.internet_mbps}Mbps
-            </span>
-          )}
-          {city.english_score != null && (
-            <span className="inline-flex items-center gap-1">
-              <Languages className="size-3 shrink-0" />
-              영어 {city.english_score}/10
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Description */}
-      {city.city_description && (
-        <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-          {city.city_description}
-        </p>
-      )}
-
-      {/* Links */}
-      <div className="flex flex-wrap gap-3">
-        {city.visa_url && (
-          <a
-            href={city.visa_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="text-xs hover:underline"
-            style={{ color: "#c9a84c" }}
-          >
-            비자 정보 →
-          </a>
-        )}
-        {city.flatio_search_url && (
-          <a
-            href={city.flatio_search_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="text-xs hover:underline"
-            style={{ color: "#c9a84c" }}
-          >
-            숙소 찾기 →
-          </a>
-        )}
-      </div>
-    </button>
-  );
-}
-
-// ── Locked Card (Stage 2) ─────────────────────────────────────────
-
-function LockedCard({ city }: { city: CityData }) {
-  return (
-    <div className="rounded-lg border border-border bg-card/50 p-5 opacity-60 select-none">
-      <div className="flex items-center gap-3">
-        <Lock className="size-4 text-muted-foreground" />
-        <div>
-          <p className="font-semibold text-muted-foreground">{city.city_kr}</p>
-          <p className="text-xs text-muted-foreground">{city.country}</p>
-        </div>
-      </div>
-      <p className="mt-2 text-xs text-muted-foreground">
-        3장 중 선택되지 않은 카드
-      </p>
-    </div>
-  );
-}
-
 // ── Result Page ────────────────────────────────────────────────────
 
 export default function ResultPage() {
@@ -273,9 +42,10 @@ export default function ResultPage() {
   const [allCities, setAllCities] = useState<CityData[]>([]);
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
   const [revealedCities, setRevealedCities] = useState<CityData[] | null>(null);
-  const [readingCity, setReadingCity] = useState<CityData | null>(null);
   const [readingMarkdown, setReadingMarkdown] = useState<string>("");
-  const [parsedData, setParsedData] = useState<Record<string, unknown> | null>(null);
+  const [parsedData, setParsedData] = useState<Record<string, unknown> | null>(
+    null
+  );
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -295,7 +65,7 @@ export default function ResultPage() {
       };
       localStorage.setItem(SESSION_V2_KEY, JSON.stringify(session));
 
-      // Also keep legacy TarotSession key so OAuth redirect restore works
+      // Legacy TarotSession key for OAuth redirect restore
       const legacy: TarotSession = {
         session_id: session.session_id,
         selectedIndices: session.selectedIndices,
@@ -304,7 +74,7 @@ export default function ResultPage() {
         readingMarkdown: session.readingMarkdown,
         stage:
           session.stage === "selecting"
-            ? "deck"
+            ? "selecting"
             : session.stage === "revealed"
             ? "revealed"
             : session.stage === "reading"
@@ -315,7 +85,14 @@ export default function ResultPage() {
       };
       localStorage.setItem(TAROT_SESSION_KEY, JSON.stringify(legacy));
     },
-    [sessionId, allCities, selectedIndices, revealedCities, readingMarkdown, parsedData]
+    [
+      sessionId,
+      allCities,
+      selectedIndices,
+      revealedCities,
+      readingMarkdown,
+      parsedData,
+    ]
   );
 
   // ── API: recommend ───────────────────────────────────────────────
@@ -350,7 +127,6 @@ export default function ResultPage() {
       setAllCities(topCities);
       setSelectedIndices([]);
       setRevealedCities(null);
-      setReadingCity(null);
       setReadingMarkdown("");
 
       setStage("selecting");
@@ -366,14 +142,13 @@ export default function ResultPage() {
         stage: "selecting",
       };
       localStorage.setItem(SESSION_V2_KEY, JSON.stringify(session));
-      // legacy key
       const legacy: TarotSession = {
         session_id: data.session_id,
         selectedIndices: [],
         revealedCities: [],
         readingCityIndex: null,
         readingMarkdown: null,
-        stage: "deck",
+        stage: "selecting",
       };
       localStorage.setItem(TAROT_SESSION_KEY, JSON.stringify(legacy));
     } catch {
@@ -393,17 +168,16 @@ export default function ResultPage() {
         setSessionId(saved.session_id);
         setAllCities(saved.allCities ?? []);
         setSelectedIndices(saved.selectedIndices ?? []);
-        setRevealedCities(saved.revealedCities?.length ? saved.revealedCities : null);
+        setRevealedCities(
+          saved.revealedCities?.length ? saved.revealedCities : null
+        );
         setParsedData(saved.parsedData ?? null);
         setReadingMarkdown(saved.readingMarkdown ?? "");
 
         let resumeStage = saved.stage;
-        if (resumeStage === "reading") {
-          if (!saved.readingMarkdown) {
-            resumeStage = "revealed";
-          } else if (saved.readingCityIndex != null && saved.revealedCities) {
-            setReadingCity(saved.revealedCities[saved.readingCityIndex] ?? null);
-          }
+        // If reading but no data, fall back to revealed
+        if (resumeStage === "reading" && !saved.revealedCities?.length) {
+          resumeStage = "revealed";
         }
         setStage(resumeStage);
         return;
@@ -412,26 +186,24 @@ export default function ResultPage() {
       }
     }
 
-    // Fallback: try legacy tarot session (for OAuth redirect return)
+    // Fallback: legacy tarot session (for OAuth redirect return)
     const legacyStr = localStorage.getItem(TAROT_SESSION_KEY);
     if (legacyStr) {
       try {
         const saved = JSON.parse(legacyStr) as TarotSession;
         if (saved.session_id) {
           setSessionId(saved.session_id);
-          setRevealedCities(saved.revealedCities?.length ? saved.revealedCities : null);
+          setRevealedCities(
+            saved.revealedCities?.length ? saved.revealedCities : null
+          );
           setReadingMarkdown(saved.readingMarkdown ?? "");
 
-          // Map legacy stage
           let resumeStage: Stage = "selecting";
           if (saved.stage === "revealed") resumeStage = "revealed";
           else if (saved.stage === "reading") {
-            if (saved.readingMarkdown && saved.readingCityIndex != null && saved.revealedCities) {
-              setReadingCity(saved.revealedCities[saved.readingCityIndex] ?? null);
-              resumeStage = "reading";
-            } else {
-              resumeStage = "revealed";
-            }
+            resumeStage = saved.revealedCities?.length
+              ? "reading"
+              : "revealed";
           } else if (saved.stage === "comparing") resumeStage = "comparing";
 
           setStage(resumeStage);
@@ -451,7 +223,7 @@ export default function ResultPage() {
     startRecommend();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Select toggle (Stage 1) ──────────────────────────────────────
+  // ── Select toggle ────────────────────────────────────────────────
 
   function toggleSelect(i: number) {
     setSelectedIndices((prev) => {
@@ -504,13 +276,23 @@ export default function ResultPage() {
     }
   }
 
-  // ── Select city for reading → /api/detail ───────────────────────
+  // ── Auto-transition: revealed → reading after 2s ────────────────
 
-  const [selectedRevealedIndex, setSelectedRevealedIndex] = useState<
-    number | null
-  >(null);
+  useEffect(() => {
+    if (stage !== "revealed" || !revealedCities?.length) return;
+    const timer = setTimeout(() => {
+      setStage("reading");
+      saveSession({
+        revealedCities: revealedCities ?? [],
+        stage: "reading",
+      });
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [stage, revealedCities, saveSession]);
 
-  async function handleSelectForReading(cityIndex: number) {
+  // ── Request detail → OAuth gate + /api/detail ───────────────────
+
+  async function handleRequestDetail(cityIndex: number) {
     if (!revealedCities || !parsedData) return;
     setError(null);
 
@@ -529,7 +311,7 @@ export default function ResultPage() {
           readingCityIndex: cityIndex,
           readingMarkdown: null,
           parsedData,
-          stage: "revealed",
+          stage: "reading",
         };
         localStorage.setItem(SESSION_V2_KEY, JSON.stringify(v2));
         const legacy: TarotSession = {
@@ -538,7 +320,7 @@ export default function ResultPage() {
           revealedCities,
           readingCityIndex: cityIndex,
           readingMarkdown: null,
-          stage: "revealed",
+          stage: "reading",
         };
         localStorage.setItem(TAROT_SESSION_KEY, JSON.stringify(legacy));
         window.location.href = `${API_URL}/auth/google`;
@@ -553,19 +335,15 @@ export default function ResultPage() {
         readingCityIndex: cityIndex,
         readingMarkdown: null,
         parsedData,
-        stage: "revealed",
+        stage: "reading",
       };
       localStorage.setItem(SESSION_V2_KEY, JSON.stringify(v2));
       window.location.href = `${API_URL}/auth/google`;
       return;
     }
 
-    // Logged in
-    const city = revealedCities[cityIndex];
-    setReadingCity(city);
+    // Logged in — fetch detail
     setReadingMarkdown("");
-    setStage("reading");
-
     saveSession({
       revealedCities,
       readingCityIndex: cityIndex,
@@ -591,7 +369,6 @@ export default function ResultPage() {
       });
     } catch {
       setError("리딩을 불러오지 못했어요. 다시 시도해주세요.");
-      setStage("revealed");
     }
   }
 
@@ -613,249 +390,108 @@ export default function ResultPage() {
 
   // ── Render ──────────────────────────────────────────────────────
 
-  // Loading / Error
-  if (stage === "loading") {
-    if (error) {
-      return (
+  return (
+    <div className="dark min-h-screen bg-background text-foreground">
+      {/* Loading */}
+      {stage === "loading" && (
         <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-4">
-          <p className="text-sm text-destructive">{error}</p>
-          <button
-            type="button"
-            onClick={() => startRecommend()}
-            className="px-6 py-2 text-sm font-medium bg-primary text-primary-foreground rounded"
-          >
-            다시 시도
-          </button>
-          <button
-            type="button"
-            onClick={handleRetry}
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            처음부터 다시하기
-          </button>
+          {error ? (
+            <>
+              <p className="text-sm text-destructive">{error}</p>
+              <button
+                type="button"
+                onClick={() => startRecommend()}
+                className="px-6 py-2 text-sm font-medium bg-primary text-primary-foreground"
+              >
+                다시 시도
+              </button>
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                처음부터 다시하기
+              </button>
+            </>
+          ) : (
+            <p className="animate-pulse text-sm text-muted-foreground">
+              맞춤 도시를 분석하고 있어요...
+            </p>
+          )}
         </div>
-      );
-    }
+      )}
 
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="animate-pulse text-sm text-muted-foreground">
-          맞춤 도시를 분석하고 있어요...
-        </p>
-      </div>
-    );
-  }
-
-  // Stage 1: selecting
-  if (stage === "selecting") {
-    const count = selectedIndices.length;
-    const allSelected = count === 3;
-
-    return (
-      <div className="min-h-screen px-4 py-10">
-        <div className="max-w-lg mx-auto flex flex-col gap-6">
-          {/* Header */}
+      {/* Selecting: 5-card deck with backs */}
+      {stage === "selecting" && (
+        <div className="min-h-screen flex flex-col items-center justify-center px-4 py-10 gap-8">
           <div className="text-center">
-            <h1 className="text-xl font-bold text-foreground mb-1">
-              도시를 선택하세요
+            <h1 className="font-serif text-xl font-bold text-foreground mb-1">
+              당신의 도시를 선택하세요
             </h1>
             <p className="text-sm text-muted-foreground">
-              3장을 선택하면 상세 정보를 열 수 있어요
+              끌리는 카드 3장을 선택하면 도시가 열립니다
             </p>
           </div>
 
-          {/* Counter */}
-          <div className="flex items-center justify-center gap-2">
-            <div className="flex gap-1.5">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className={[
-                    "w-2 h-2 rounded-full transition-colors",
-                    i < count ? "bg-primary" : "bg-muted",
-                  ].join(" ")}
-                />
-              ))}
-            </div>
-            <span className="text-sm text-muted-foreground">
-              {count}/3 선택됨
-            </span>
-          </div>
-
-          {/* Error */}
           {error && (
             <p className="text-sm text-destructive text-center">{error}</p>
           )}
 
-          {/* City list */}
-          <div className="flex flex-col gap-3">
-            {allCities.map((city, i) => (
-              <PreviewCard
-                key={city.city}
-                city={city}
-                rank={i}
-                selected={selectedIndices.includes(i)}
-                onClick={() => toggleSelect(i)}
-                disabled={allSelected && !selectedIndices.includes(i)}
-              />
-            ))}
-          </div>
-
-          {/* Confirm button */}
-          {allSelected && (
-            <button
-              type="button"
-              onClick={handleConfirmSelection}
-              disabled={isLoading}
-              className="w-full py-3 rounded-lg text-sm font-semibold bg-primary text-primary-foreground disabled:opacity-60 transition-opacity"
-            >
-              {isLoading ? "열고 있어요..." : "선택 완료 →"}
-            </button>
-          )}
-
-
-          <button
-            type="button"
-            onClick={handleRetry}
-            className="text-sm text-muted-foreground hover:text-foreground text-center transition-colors"
-          >
-            처음부터 다시하기
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Stage 2: revealed
-  if (stage === "revealed") {
-    const lockedCities = allCities.filter(
-      (_, i) => !selectedIndices.includes(i)
-    );
-    const canRead = selectedRevealedIndex !== null;
-
-    return (
-      <div className="min-h-screen px-4 py-10">
-        <div className="max-w-lg mx-auto flex flex-col gap-6">
-          {/* Header */}
-          <div className="text-center">
-            <h1 className="text-xl font-bold text-foreground mb-1">
-              도시 상세 정보
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              자세히 알아보고 싶은 도시를 선택하세요
-            </p>
-          </div>
-
-          {/* Error */}
-          {error && (
-            <p className="text-sm text-destructive text-center">{error}</p>
-          )}
-
-          {/* Revealed cities */}
-          <div className="flex flex-col gap-4">
-            {(revealedCities ?? []).map((city, i) => (
-              <RevealedCard
-                key={city.city}
-                city={city}
-                rank={i}
-                selected={selectedRevealedIndex === i}
-                onClick={() =>
-                  setSelectedRevealedIndex((prev) => (prev === i ? null : i))
-                }
-              />
-            ))}
-          </div>
-
-          {/* Locked cities */}
-          {lockedCities.length > 0 && (
-            <div className="flex flex-col gap-3">
-              <p className="text-xs text-muted-foreground text-center">
-                선택되지 않은 도시
-              </p>
-              {lockedCities.map((city) => (
-                <LockedCard key={city.city} city={city} />
-              ))}
-            </div>
-          )}
-
-          {/* Reading CTA */}
-          <button
-            type="button"
-            onClick={() => {
-              if (selectedRevealedIndex !== null)
-                handleSelectForReading(selectedRevealedIndex);
-            }}
-            disabled={!canRead}
-            className="w-full py-3 rounded-lg text-sm font-semibold bg-primary text-primary-foreground disabled:opacity-40 transition-opacity"
-          >
-            리딩 받기 →
-          </button>
-
-          <button
-            type="button"
-            onClick={handleRetry}
-            className="text-sm text-muted-foreground hover:text-foreground text-center transition-colors"
-          >
-            처음부터 다시하기
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Stage 3: reading
-  if (stage === "reading") {
-    if (!readingCity) {
-      return (
-        <div className="flex min-h-screen items-center justify-center">
-          <p className="animate-pulse text-sm text-muted-foreground">
-            도시 정보를 불러오는 중이에요...
-          </p>
-        </div>
-      );
-    }
-
-    if (!readingMarkdown) {
-      return (
-        <div className="flex min-h-screen items-center justify-center">
-          <p className="animate-pulse text-sm text-muted-foreground">
-            {readingCity.city_kr} 리딩을 준비하고 있어요...
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="min-h-screen px-4 py-10">
-        <div className="max-w-lg mx-auto">
-          {error && (
-            <p className="text-sm text-destructive text-center mb-4">{error}</p>
-          )}
-          <TarotReading
-            city={readingCity}
-            markdown={readingMarkdown}
-            onCompare={handleCompare}
+          <TarotDeck
+            cities={allCities}
+            selectedIndices={selectedIndices}
+            revealedCities={null}
+            onToggleSelect={toggleSelect}
+            onConfirm={handleConfirmSelection}
+            isLoading={isLoading}
           />
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => setStage("revealed")}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              ← 다른 도시 보기
-            </button>
-          </div>
+
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            처음부터 다시하기
+          </button>
         </div>
-      </div>
-    );
-  }
+      )}
 
-  // Stage 4: comparing
-  if (stage === "comparing") {
-    return (
-      <CityCompare cities={revealedCities ?? []} onRetry={handleRetry} />
-    );
-  }
+      {/* Revealed: front faces shown, auto-transitions to reading */}
+      {stage === "revealed" && (
+        <div className="min-h-screen flex flex-col items-center justify-center px-4 py-10 gap-8">
+          <div className="text-center">
+            <h1 className="font-serif text-xl font-bold text-foreground mb-1">
+              카드가 열렸습니다
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              리딩을 준비하고 있어요...
+            </p>
+          </div>
 
-  return null;
+          <TarotDeck
+            cities={allCities}
+            selectedIndices={selectedIndices}
+            revealedCities={revealedCities}
+            onToggleSelect={() => {}}
+            onConfirm={() => {}}
+            isLoading={false}
+          />
+        </div>
+      )}
+
+      {/* Reading: sequential 3-card reading */}
+      {stage === "reading" && revealedCities && (
+        <TarotReading
+          cities={revealedCities}
+          onComplete={handleCompare}
+          onRequestDetail={handleRequestDetail}
+        />
+      )}
+
+      {/* Comparing: side-by-side city comparison */}
+      {stage === "comparing" && (
+        <CityCompare cities={revealedCities ?? []} onRetry={handleRetry} />
+      )}
+    </div>
+  );
 }
