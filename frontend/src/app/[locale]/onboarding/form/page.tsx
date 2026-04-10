@@ -38,6 +38,15 @@ const STAY_STYLE_OPTIONS = [
   { label: "여러 나라 자유롭게 이동하기", value: "이동형" },
 ];
 
+const BUDGET_RANGE_OPTIONS = [
+  { label: "200 이하", value: "100" },
+  { label: "200~400", value: "300" },
+  { label: "400~600", value: "500" },
+  { label: "600~800", value: "700" },
+  { label: "800 이상", value: "900" },
+  { label: "비공개", value: "0" },
+];
+
 const INCOME_RANGE_OPTIONS = [
   { label: "200 이하", value: "150" },
   { label: "200~300", value: "250" },
@@ -173,7 +182,7 @@ export default function FormPage() {
       case 2: return form.timeline !== "";
       case 3:
         if (isShortStay) {
-          return form.total_budget !== "" || form.income_range === "0";
+          return form.total_budget !== "";
         }
         return form.income_range !== "";
       case 4: return form.travel_type !== "";
@@ -363,31 +372,28 @@ export default function FormPage() {
                       이번 여정의 총 예산이 얼마예요?
                     </label>
                     <p className="text-xs text-muted-foreground/60">
-                      숙소, 식비, 교통 등 전체 예상 금액을 입력해주세요
+                      숙소, 식비, 교통 등 전체 예상 금액 (만원)
                     </p>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        placeholder="예: 500"
-                        value={form.total_budget}
-                        onChange={(e) => setForm({ ...form, total_budget: e.target.value, income_range: "" })}
-                        className={INPUT_CLASS}
-                      />
-                      <span className="text-sm text-muted-foreground shrink-0">만원</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {BUDGET_RANGE_OPTIONS.map((option) => {
+                        const isActive = form.total_budget === option.value;
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setForm({ ...form, total_budget: option.value, income_range: option.value === "0" ? "0" : "" })}
+                            className={`w-full border px-4 py-3.5 text-left text-sm font-medium transition-colors ${
+                              isActive
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border bg-muted text-foreground hover:bg-accent"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        );
+                      })}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setForm({ ...form, income_range: "0", total_budget: "" })}
-                      className={`w-full border px-4 py-3.5 text-left text-sm font-medium transition-colors ${
-                        form.income_range === "0"
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-muted text-foreground hover:bg-accent"
-                      }`}
-                    >
-                      비공개
-                    </button>
-                    {form.income_range === "0" && (
+                    {form.total_budget === "0" && (
                       <p className="text-xs text-destructive mt-1">비자 추천 정확도가 낮아질 수 있어요.</p>
                     )}
                   </div>
@@ -445,7 +451,7 @@ export default function FormPage() {
                   />
                 </div>
 
-                {hasSpouse(form.travel_type) && (
+                {hasSpouse(form.travel_type) && !isShortStay && (
                   <div className="space-y-2">
                     <label className="text-sm text-muted-foreground">배우자는 소득이 있나요?</label>
                     <SelectCard
@@ -455,15 +461,27 @@ export default function FormPage() {
                       mode="single"
                     />
                     {form.has_spouse_income === "있음" && (
-                      <div className="mt-3">
-                        <label className="text-sm text-muted-foreground">배우자의 수입 구간을 알려주세요.</label>
-                        <input
-                          type="number"
-                          placeholder="0"
-                          value={form.spouse_income_krw || ""}
-                          onChange={(e) => setForm({ ...form, spouse_income_krw: Number(e.target.value) || 0 })}
-                          className={INPUT_CLASS}
-                        />
+                      <div className="mt-3 space-y-2">
+                        <label className="text-sm text-muted-foreground">배우자의 월 소득 구간 (만원)</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {INCOME_RANGE_OPTIONS.filter(o => o.value !== "0").map((option) => {
+                            const isActive = String(form.spouse_income_krw) === option.value;
+                            return (
+                              <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => setForm({ ...form, spouse_income_krw: Number(option.value) })}
+                                className={`w-full border px-4 py-3.5 text-left text-sm font-medium transition-colors ${
+                                  isActive
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "border-border bg-muted text-foreground hover:bg-accent"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>

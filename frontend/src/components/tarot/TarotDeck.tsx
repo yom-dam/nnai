@@ -10,6 +10,7 @@ interface TarotDeckProps {
   revealedCities: CityData[] | null; // null = not yet revealed
   onReveal: (indices: number[]) => Promise<void>;
   onSelectForReading: (cityIndex: number) => void;
+  initialSelectedIndices?: number[];
 }
 
 const FAN_ANGLES = [-20, -10, 0, 10, 20];
@@ -20,8 +21,9 @@ export default function TarotDeck({
   revealedCities,
   onReveal,
   onSelectForReading,
+  initialSelectedIndices,
 }: TarotDeckProps) {
-  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+  const [selectedIndices, setSelectedIndices] = useState<number[]>(initialSelectedIndices ?? []);
   const [isLoading, setIsLoading] = useState(false);
   // After reveal, track which card is selected for reading
   const [readingIndex, setReadingIndex] = useState<number | null>(null);
@@ -31,8 +33,9 @@ export default function TarotDeck({
 
   function handleCardClick(i: number) {
     if (isRevealed) {
-      // Stage 2: selecting for reading
-      if (!revealedCities![i]) return; // locked card (shouldn't happen if revealedCities has all)
+      // Stage 2: selecting for reading — only revealed (selected) cards are clickable
+      const pos = selectedIndices.indexOf(i);
+      if (pos < 0 || !revealedCities![pos]) return; // locked card
       setReadingIndex(i);
       return;
     }
@@ -57,7 +60,10 @@ export default function TarotDeck({
 
   function handleReadingClick() {
     if (readingIndex === null) return;
-    onSelectForReading(readingIndex);
+    // Convert card slot index to revealedCities array position
+    const pos = selectedIndices.indexOf(readingIndex);
+    if (pos < 0) return;
+    onSelectForReading(pos);
   }
 
   const count = Math.min(cardCount, 5);
@@ -74,9 +80,12 @@ export default function TarotDeck({
           const yOffset = FAN_Y[i] ?? 0;
           const isSelected = selectedIndices.includes(i);
 
-          // In revealed stage: map card slot to revealed city if selected
+          // In revealed stage: map card slot to revealed city via selectedIndices order
           const revealedCity = isRevealed
-            ? (revealedCities[i] ?? null)
+            ? (() => {
+                const pos = selectedIndices.indexOf(i);
+                return pos >= 0 ? (revealedCities[pos] ?? null) : null;
+              })()
             : null;
           const isLocked = isRevealed && revealedCity === null;
           const isFlipped = isRevealed && revealedCity !== null;
@@ -138,7 +147,7 @@ export default function TarotDeck({
           >
             {readingIndex === null
               ? "리딩받고 싶은 도시 카드를 선택하세요"
-              : `${revealedCities[readingIndex]?.city_kr ?? ""} 리딩을 시작할게요`}
+              : `${revealedCities[selectedIndices.indexOf(readingIndex)]?.city_kr ?? ""} 리딩을 시작할게요`}
           </motion.p>
         )}
       </AnimatePresence>

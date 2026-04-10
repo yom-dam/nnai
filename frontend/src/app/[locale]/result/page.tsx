@@ -20,9 +20,9 @@ export default function ResultPage() {
 
   const [stage, setStage] = useState<TarotStage>("loading");
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [cardCount, setCardCount] = useState<number>(5);
   const [parsedData, setParsedData] = useState<Record<string, unknown> | null>(null);
   const [revealedCities, setRevealedCities] = useState<CityData[] | null>(null);
+  const [savedSelectedIndices, setSavedSelectedIndices] = useState<number[]>([]);
   const [readingCityIndex, setReadingCityIndex] = useState<number | null>(null);
   const [readingMarkdown, setReadingMarkdown] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -67,12 +67,10 @@ export default function ResultPage() {
       if (!res.ok) throw new Error(`recommend error: ${res.status}`);
       const data = await res.json() as {
         session_id: string;
-        card_count: number;
         parsed: Record<string, unknown>;
       };
 
       setSessionId(data.session_id);
-      setCardCount(data.card_count);
       setParsedData(data.parsed);
 
       const newStage: TarotStage = "deck";
@@ -103,6 +101,7 @@ export default function ResultPage() {
         // Restore state
         setSessionId(saved.session_id);
         setRevealedCities(saved.revealedCities?.length ? saved.revealedCities : null);
+        setSavedSelectedIndices(saved.selectedIndices ?? []);
         setReadingCityIndex(saved.readingCityIndex);
         setReadingMarkdown(saved.readingMarkdown);
 
@@ -301,7 +300,7 @@ export default function ResultPage() {
           <p className="text-sm text-muted-foreground">
             {revealedCities
               ? "리딩받고 싶은 도시 카드를 선택하세요"
-              : `${cardCount}장의 카드 중 3장을 골라보세요`}
+              : "5장의 카드 중 3장을 골라보세요"}
           </p>
         </div>
 
@@ -310,10 +309,11 @@ export default function ResultPage() {
         )}
 
         <TarotDeck
-          cardCount={cardCount}
+          cardCount={5}
           revealedCities={revealedCities}
           onReveal={handleReveal}
           onSelectForReading={handleSelectForReading}
+          initialSelectedIndices={savedSelectedIndices}
         />
 
         <button
