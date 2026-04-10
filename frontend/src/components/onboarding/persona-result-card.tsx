@@ -1,7 +1,16 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { PERSONAS, type PersonaType } from "@/data/personas";
+
+const personaGif: Record<PersonaType, string> = {
+  wanderer: "/wanderer.gif",
+  local: "/local.gif",
+  planner: "/planner.gif",
+  free_spirit: "/free_spirit.gif",
+  pioneer: "/pioneer.gif",
+};
 
 interface PersonaResultCardProps {
   personaType: PersonaType;
@@ -31,9 +40,21 @@ export function PersonaResultCard({ personaType, onFindCountry, onRetry }: Perso
         <p className="text-base text-muted-foreground mb-1">
           당신의 노마드 타입은,
         </p>
-        <h1 className="text-4xl font-bold text-primary mb-8">
-          {persona.label}
-        </h1>
+        <div className="flex items-end gap-2 mb-8">
+          <h1 className="text-4xl font-bold text-primary">
+            {persona.label}
+          </h1>
+          <div className="relative shrink-0" style={{ width: 36, height: 36 }}>
+            <Image
+              src={personaGif[personaType]}
+              alt={persona.label}
+              width={36}
+              height={36}
+              unoptimized
+            />
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-border" />
+          </div>
+        </div>
         <div className="space-y-1">
           {persona.description.map((line, i) => (
             <p key={i} className="text-sm text-muted-foreground leading-relaxed">
