@@ -413,7 +413,7 @@ export default function FormPage() {
         {/* 페르소나 배지 */}
         {personaType && (
           <div className="mb-6 border border-primary/20 bg-primary/5 px-3 py-2 text-center text-xs text-primary">
-            &apos;{PERSONAS[personaType].label}&apos;를 위한 도시를 찾아볼게요
+            {PERSONAS[personaType].label}를 위한 도시를 찾아볼게요
           </div>
         )}
 
