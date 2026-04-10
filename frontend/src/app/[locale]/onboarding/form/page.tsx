@@ -348,26 +348,21 @@ export default function FormPage() {
 
       {/* 콘텐츠 */}
       <div className="flex flex-1 flex-col justify-start pt-24 px-4">
-        {/* 스텝 캐릭터 — 배지 바로 위, 여백 0 */}
-        <div className="grid grid-cols-5 h-12">
-          {[1, 2, 3, 4, 5].map((step) => (
-            <div key={step} className="flex items-end justify-center">
-              {currentStep === step && (
-                <motion.img
-                  src={personaType ? personaGif[personaType] ?? "/earth_64.gif" : "/earth_64.gif"}
-                  alt=""
-                  width={40}
-                  height={40}
-                  className="object-contain"
-                  style={{ imageRendering: "pixelated" }}
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  key={`persona-${step}`}
-                />
-              )}
-            </div>
-          ))}
+        {/* 스텝 캐릭터 — 배지 바로 위, 스텝 간 슬라이드 이동 */}
+        <div className="relative h-12">
+          <motion.img
+            src={personaType ? personaGif[personaType] ?? "/earth_64.gif" : "/earth_64.gif"}
+            alt=""
+            width={40}
+            height={40}
+            className="absolute bottom-0 object-contain"
+            style={{ imageRendering: "pixelated" }}
+            animate={{
+              left: `${((currentStep - 1) / (TOTAL_STEPS - 1)) * 100}%`,
+              x: "-50%",
+            }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+          />
         </div>
 
         {/* 페르소나 배지 */}
