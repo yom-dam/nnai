@@ -77,25 +77,21 @@ export interface TarotCardProps {
 
 // ── Compass Rose SVG ──────────────────────────────────────────────
 
-function CompassRose({ diameter }: { diameter: number }) {
+function CompassRose({ diameter, active }: { diameter: number; active: boolean }) {
   const r = diameter / 2;
   const ir = r * 0.5;
   const dotR = r * 0.1;
+  const color = active ? "var(--primary)" : "var(--border)";
 
   return (
-    <svg width={diameter} height={diameter} viewBox={`0 0 ${diameter} ${diameter}`} fill="none">
-      {/* Outer circle */}
-      <circle cx={r} cy={r} r={r - 1} stroke="var(--primary)" strokeWidth={1} />
-      {/* Cross */}
-      <line x1={0} y1={r} x2={diameter} y2={r} stroke="var(--primary)" strokeWidth={0.8} />
-      <line x1={r} y1={0} x2={r} y2={diameter} stroke="var(--primary)" strokeWidth={0.8} />
-      {/* Diagonals */}
-      <line x1={r - r * 0.707} y1={r - r * 0.707} x2={r + r * 0.707} y2={r + r * 0.707} stroke="var(--primary)" strokeWidth={0.5} />
-      <line x1={r + r * 0.707} y1={r - r * 0.707} x2={r - r * 0.707} y2={r + r * 0.707} stroke="var(--primary)" strokeWidth={0.5} />
-      {/* Inner circle */}
-      <circle cx={r} cy={r} r={ir} stroke="var(--primary)" strokeWidth={0.8} />
-      {/* Center dot */}
-      <circle cx={r} cy={r} r={dotR} fill="var(--primary)" />
+    <svg width={diameter} height={diameter} viewBox={`0 0 ${diameter} ${diameter}`} fill="none" style={{ transition: "all 0.3s ease" }}>
+      <circle cx={r} cy={r} r={r - 1} stroke={color} strokeWidth={1} />
+      <line x1={0} y1={r} x2={diameter} y2={r} stroke={color} strokeWidth={0.8} />
+      <line x1={r} y1={0} x2={r} y2={diameter} stroke={color} strokeWidth={0.8} />
+      <line x1={r - r * 0.707} y1={r - r * 0.707} x2={r + r * 0.707} y2={r + r * 0.707} stroke={color} strokeWidth={0.5} />
+      <line x1={r + r * 0.707} y1={r - r * 0.707} x2={r - r * 0.707} y2={r + r * 0.707} stroke={color} strokeWidth={0.5} />
+      <circle cx={r} cy={r} r={ir} stroke={color} strokeWidth={0.8} />
+      <circle cx={r} cy={r} r={dotR} fill={color} />
     </svg>
   );
 }
@@ -130,7 +126,7 @@ function BackFace({ isSelected, size }: { isSelected: boolean; size: CardSize })
       />
 
       {/* Compass rose */}
-      <CompassRose diameter={cfg.compassD} />
+      <CompassRose diameter={cfg.compassD} active={isSelected} />
 
       {/* NNAI */}
       <span
