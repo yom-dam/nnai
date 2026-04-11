@@ -1,8 +1,11 @@
 """타로 세션 — 5장 추천 결과의 서버사이드 저장 및 reveal 게이팅."""
 from __future__ import annotations
 
+import logging
 import uuid
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # In-memory session store (추후 DB/Redis로 교체 가능)
 _sessions: dict[str, dict[str, Any]] = {}
@@ -15,6 +18,10 @@ def create_session(cities: list[dict]) -> str:
         "cities": cities,
         "revealed_indices": None,
     }
+    logger.info(
+        "[tarot_session] created session=%s, cities=%d",
+        session_id, len(cities),
+    )
     return session_id
 
 

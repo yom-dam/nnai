@@ -196,6 +196,9 @@ async def api_recommend(req: RecommendRequest, request: Request):
     )
     # 타로 세션: 5장 저장, 상세 데이터 미포함 응답
     from api.tarot_session import create_session
+    import logging
+    _logger = logging.getLogger(__name__)
+    _logger.info("[api/recommend] cities=%d before session create", len(cities))
     session_id = create_session(cities)
 
     return {

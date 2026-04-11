@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from datetime import date, datetime
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from utils.data_paths import resolve_data_path
 from api.schengen_calculator import SCHENGEN_COUNTRIES
@@ -1119,10 +1122,29 @@ def recommend_from_db(user_profile: dict, top_n: int = 5, debug_mode: bool = Fal
             rows.append((breakdown["total"], city, country, breakdown))
         return rows
 
+    def _collect_all_relaxed() -> list[tuple[float, dict, dict, dict[str, float]]]:
+        """최종 fallback: income + continent + timeline 필터 모두 해제."""
+        rows: list[tuple[float, dict, dict, dict[str, float]]] = []
+        for city in cities_list:
+            cid = city.get("country_id", "")
+            country = country_map.get(cid)
+            if country is None:
+                continue
+            breakdown = _compute_score_breakdown(
+                city=city, country=country, income_usd=effective_income_usd,
+                lifestyle=lifestyle_norm, persona_type=persona_type,
+                travel_type=travel_type, stay_style=stay_style,
+                tax_sensitivity=tax_sensitivity, children_ages=children_ages,
+                timeline=timeline, purpose=purpose, persona_vector=persona_vector,
+            )
+            rows.append((breakdown["total"], city, country, breakdown))
+        return rows
+
     must_have_active = any(p in _MUST_HAVE_LIFESTYLES for p in lifestyle_norm)
     candidates = _collect_candidates(require_must_have=must_have_active)
     must_have_relaxed = False
     income_filter_relaxed = False
+    all_filters_relaxed = False
     if must_have_active and not candidates:
         candidates = _collect_candidates(require_must_have=False)
         must_have_relaxed = True
@@ -1144,6 +1166,32 @@ def recommend_from_db(user_profile: dict, top_n: int = 5, debug_mode: bool = Fal
         top_cities_raw.append((score, city, country, breakdown))
         if len(top_cities_raw) == top_n:
             break
+
+    # ── Fallback: top_n 미달 시 단계적 완화 ──────────────────────
+    if len(top_cities_raw) < top_n:
+        # Phase 1: 같은 국가 2번째 도시 허용 (dedup 해제)
+        for score, city, country, breakdown in candidates:
+            cid = city.get("country_id", "")
+            entry = (score, city, country, breakdown)
+            if entry not in top_cities_raw:
+                top_cities_raw.append(entry)
+                if len(top_cities_raw) == top_n:
+                    break
+
+    if len(top_cities_raw) < top_n:
+        # Phase 2: 모든 필터 해제 (continent, timeline 포함)
+        all_relaxed = _collect_all_relaxed()
+        all_relaxed.sort(key=lambda x: x[0], reverse=True)
+        all_filters_relaxed = True
+        existing_keys = {(c.get("city", ""), c.get("country_id", "")) for _, c, _, _ in top_cities_raw}
+        for score, city, country, breakdown in all_relaxed:
+            key = (city.get("city", ""), city.get("country_id", ""))
+            if key in existing_keys:
+                continue
+            existing_keys.add(key)
+            top_cities_raw.append((score, city, country, breakdown))
+            if len(top_cities_raw) == top_n:
+                break
 
     # Build output city dicts
     result_country_ids = {city.get("country_id", "") for _, city, _, _ in top_cities_raw}
@@ -1274,7 +1322,27 @@ def recommend_from_db(user_profile: dict, top_n: int = 5, debug_mode: bool = Fal
                 "더 엄격한 매칭을 원하면 지역/예산 조건을 함께 좁혀주세요."
             )
 
+    if all_filters_relaxed:
+        if language == "English":
+            warnings.append(
+                "Some region/timeline filters were relaxed to provide enough results. "
+                "Try broader region preferences for more tailored matches."
+            )
+        else:
+            warnings.append(
+                "충분한 결과를 제공하기 위해 일부 지역/타임라인 조건이 완화되었습니다. "
+                "더 맞춤 결과를 원하면 지역 선호를 넓혀주세요."
+            )
+
     overall_warning = " ".join(warnings)
+
+    # ── Debug log (Railway 로그 확인용) ──────────────────────────
+    logger.info(
+        "[recommend] top_n=%d, returned=%d, income_filter_relaxed=%s, "
+        "all_filters_relaxed=%s, income_usd=%.0f",
+        top_n, len(top_cities), income_filter_relaxed,
+        all_filters_relaxed, effective_income_usd,
+    )
 
     result = {
         "top_cities":      top_cities,
@@ -1296,6 +1364,8 @@ def recommend_from_db(user_profile: dict, top_n: int = 5, debug_mode: bool = Fal
                 "must_have_lifestyle_active": must_have_active,
                 "must_have_lifestyle_relaxed": must_have_relaxed,
                 "preferred_countries": preferred,
+                "income_filter_relaxed": income_filter_relaxed,
+                "all_filters_relaxed": all_filters_relaxed,
             },
             "selection_rule": "국가 중복 제거 규칙으로 국가당 최고 점수 도시 1개만 선택",
         }

@@ -117,10 +117,18 @@ export default function ResultPage() {
       if (!res.ok) throw new Error(`recommend error: ${res.status}`);
       const data = (await res.json()) as {
         session_id: string;
+        card_count?: number;
         parsed: Record<string, unknown>;
       };
 
       const topCities = (data.parsed?.top_cities ?? []) as CityData[];
+      const cardCount = data.card_count ?? topCities.length;
+
+      if (cardCount < 5 || topCities.length < 5) {
+        setError("추천 도시를 불러오지 못했어요. 다시 시도해주세요.");
+        setStage("loading");
+        return;
+      }
 
       setSessionId(data.session_id);
       setParsedData(data.parsed);
