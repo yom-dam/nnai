@@ -9,56 +9,163 @@ import type { CityData } from "./types";
 
 export type DeckStage = "selecting" | "revealing" | "done";
 
-// ── City detail accordion ─────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────
 
 const USD_TO_KRW = 1400;
 function toKRW(usd: number): string {
   return `약 ${Math.round((usd * USD_TO_KRW) / 10000)}만원`;
 }
 
-function CityAccordion({ city }: { city: CityData }) {
+const FLAG_EMOJI: Record<string, string> = {
+  AD:"🇦🇩",AE:"🇦🇪",AL:"🇦🇱",AR:"🇦🇷",AT:"🇦🇹",AU:"🇦🇺",
+  BE:"🇧🇪",BG:"🇧🇬",BR:"🇧🇷",CA:"🇨🇦",CH:"🇨🇭",CL:"🇨🇱",
+  CN:"🇨🇳",CO:"🇨🇴",CR:"🇨🇷",CY:"🇨🇾",CZ:"🇨🇿",DE:"🇩🇪",
+  DK:"🇩🇰",EE:"🇪🇪",EG:"🇪🇬",ES:"🇪🇸",FI:"🇫🇮",FR:"🇫🇷",
+  GB:"🇬🇧",GE:"🇬🇪",GR:"🇬🇷",HR:"🇭🇷",HU:"🇭🇺",ID:"🇮🇩",
+  IE:"🇮🇪",IL:"🇮🇱",IN:"🇮🇳",IS:"🇮🇸",IT:"🇮🇹",JP:"🇯🇵",
+  KH:"🇰🇭",KR:"🇰🇷",MA:"🇲🇦",MK:"🇲🇰",MT:"🇲🇹",MX:"🇲🇽",
+  MY:"🇲🇾",NL:"🇳🇱",NO:"🇳🇴",NZ:"🇳🇿",PA:"🇵🇦",PE:"🇵🇪",
+  PH:"🇵🇭",PL:"🇵🇱",PT:"🇵🇹",RO:"🇷🇴",RS:"🇷🇸",SE:"🇸🇪",
+  SG:"🇸🇬",SI:"🇸🇮",TH:"🇹🇭",TR:"🇹🇷",TW:"🇹🇼",UA:"🇺🇦",
+  US:"🇺🇸",UY:"🇺🇾",VN:"🇻🇳",ZA:"🇿🇦",
+};
+
+// ── City Lightbox ─────────────────────────────────────────────────
+
+function CityLightbox({
+  city,
+  onClose,
+}: {
+  city: CityData;
+  onClose: () => void;
+}) {
+  const flag = FLAG_EMOJI[city.country_id] ?? "🌍";
+  const visaText =
+    city.visa_free_days > 0
+      ? `무비자 ${city.visa_free_days}일`
+      : "비자 필요";
+
   return (
     <motion.div
-      initial={{ height: 0, opacity: 0 }}
-      animate={{ height: "auto", opacity: 1 }}
-      exit={{ height: 0, opacity: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className="overflow-hidden"
-      style={{ width: 140 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
+      onClick={onClose}
     >
-      <div
-        className="px-3 py-3 space-y-2 text-xs"
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+        className="w-full max-w-sm overflow-y-auto max-h-[85vh]"
         style={{
-          background: "color-mix(in srgb, var(--muted) 30%, transparent)",
-          borderRadius: "0 0 12px 12px",
-          color: "var(--muted-foreground)",
+          background: "var(--card)",
+          border: "1px solid var(--border)",
+          borderRadius: 16,
         }}
+        onClick={(e) => e.stopPropagation()}
       >
-        <p>
-          {city.visa_type}
-          {city.stay_months != null && ` · ${city.stay_months}개월`}
-          {` · ${city.renewable ? "갱신 가능" : "갱신 불가"}`}
-        </p>
-        <p>{toKRW(city.monthly_cost_usd)} / 월</p>
-        {city.safety_score != null && <p>치안 {city.safety_score}/10</p>}
-        {city.english_score != null && <p>영어 {city.english_score}/10</p>}
-        {city.city_description && (
-          <p className="leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
-            {city.city_description}
+        {/* Header */}
+        <div className="flex flex-col items-center pt-8 pb-4 px-6">
+          <span style={{ fontSize: 40 }}>{flag}</span>
+          <h2 className="font-serif text-xl font-bold mt-2" style={{ color: "var(--foreground)" }}>
+            {city.city_kr}
+          </h2>
+          <p className="font-mono text-sm mt-0.5" style={{ color: "var(--muted-foreground)" }}>
+            {city.city}, {city.country}
           </p>
-        )}
-        <div className="flex flex-wrap gap-2 pt-1">
-          {city.visa_url && (
-            <a href={city.visa_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>비자 →</a>
-          )}
-          {city.flatio_search_url && (
-            <a href={city.flatio_search_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>숙소 →</a>
-          )}
-          {city.nomad_meetup_url && (
-            <a href={city.nomad_meetup_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>밋업 →</a>
+        </div>
+
+        {/* Metrics */}
+        <div className="flex justify-around font-mono text-center px-6 py-4"
+          style={{ borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}
+        >
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-lg">💰</span>
+            <span className="text-xs uppercase" style={{ color: "var(--muted-foreground)", letterSpacing: "0.05em" }}>Monthly</span>
+            <span className="text-sm font-bold" style={{ color: "var(--foreground)" }}>{toKRW(city.monthly_cost_usd)}</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-lg">🛂</span>
+            <span className="text-xs uppercase" style={{ color: "var(--muted-foreground)", letterSpacing: "0.05em" }}>Visa</span>
+            <span className="text-sm font-bold" style={{ color: "var(--foreground)" }}>{visaText}</span>
+          </div>
+          {city.internet_mbps != null && (
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-lg">📶</span>
+              <span className="text-xs uppercase" style={{ color: "var(--muted-foreground)", letterSpacing: "0.05em" }}>Internet</span>
+              <span className="text-sm font-bold" style={{ color: "var(--foreground)" }}>{city.internet_mbps}Mbps</span>
+            </div>
           )}
         </div>
-      </div>
+
+        {/* Detail info */}
+        <div className="px-6 py-5 space-y-4 text-sm" style={{ color: "var(--muted-foreground)" }}>
+          {/* Visa detail */}
+          <div className="space-y-1.5">
+            <p className="font-mono text-xs uppercase" style={{ letterSpacing: "0.05em", color: "var(--foreground)" }}>비자 정보</p>
+            <p>{city.visa_type}{city.stay_months != null && ` · ${city.stay_months}개월`}{` · ${city.renewable ? "갱신 가능" : "갱신 불가"}`}</p>
+          </div>
+
+          {/* Stats */}
+          {(city.safety_score != null || city.english_score != null) && (
+            <div className="flex gap-6">
+              {city.safety_score != null && <p>치안 {city.safety_score}/10</p>}
+              {city.english_score != null && <p>영어 {city.english_score}/10</p>}
+            </div>
+          )}
+
+          {/* Insight */}
+          {city.city_insight && (
+            <div style={{ borderLeft: "2px solid var(--primary)", paddingLeft: 12 }}>
+              <p className="text-sm italic" style={{ color: "var(--primary)" }}>{city.city_insight}</p>
+            </div>
+          )}
+
+          {/* Description */}
+          {city.city_description && (
+            <p className="leading-relaxed">{city.city_description}</p>
+          )}
+
+          {/* Links */}
+          <div className="flex flex-wrap gap-4 pt-2">
+            {city.visa_url && (
+              <a href={city.visa_url} target="_blank" rel="noopener noreferrer" className="text-sm" style={{ color: "var(--primary)" }}>비자 정보 →</a>
+            )}
+            {city.flatio_search_url && (
+              <a href={city.flatio_search_url} target="_blank" rel="noopener noreferrer" className="text-sm" style={{ color: "var(--primary)" }}>숙소 찾기 →</a>
+            )}
+            {city.anyplace_search_url && (
+              <a href={city.anyplace_search_url} target="_blank" rel="noopener noreferrer" className="text-sm" style={{ color: "var(--primary)" }}>Anyplace →</a>
+            )}
+            {city.nomad_meetup_url && (
+              <a href={city.nomad_meetup_url} target="_blank" rel="noopener noreferrer" className="text-sm" style={{ color: "var(--primary)" }}>밋업 →</a>
+            )}
+          </div>
+
+          {/* Data source */}
+          {city.data_verified_date && (
+            <p className="text-xs pt-2" style={{ color: "color-mix(in srgb, var(--muted-foreground) 50%, transparent)" }}>
+              데이터 기준: {city.data_verified_date} · Numbeo, NomadList
+            </p>
+          )}
+        </div>
+
+        {/* Close */}
+        <div className="px-6 pb-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full py-2.5 text-sm font-medium"
+            style={{ border: "1px solid var(--border)", color: "var(--foreground)" }}
+          >
+            닫기
+          </button>
+        </div>
+      </motion.div>
     </motion.div>
   );
 }
@@ -99,9 +206,9 @@ export default function TarotDeck({
   const isDone = stage === "done";
   const isPostReveal = isRevealing || isDone;
 
-  // ── Accordion state (done stage) ────────────────────────────────
+  // ── Lightbox state ──────────────────────────────────────────────
 
-  const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null);
+  const [lightboxCity, setLightboxCity] = useState<CityData | null>(null);
 
   // ── Per-card helpers ────────────────────────────────────────────
 
@@ -133,38 +240,29 @@ export default function TarotDeck({
 
     const opacity = locked && isPostReveal ? 0.15 : 1;
 
-    // Done stage: tappable revealed cards
     const handleClick = () => {
       if (isSelecting && !isLoading) {
         onToggleSelect(i);
-      } else if (isDone && isSelected) {
-        setExpandedCardIndex((prev) => (prev === i ? null : i));
+      } else if (isDone && isSelected && city) {
+        setLightboxCity(city);
       }
     };
 
     return (
-      <div key={i} className="flex flex-col items-center">
-        <motion.div
-          animate={{ opacity }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-          <TarotCard
-            state={state}
-            size="sm"
-            cityData={city}
-            isSelected={isSelecting && isSelected}
-            isFlipped={flipped}
-            onClick={(isSelecting || (isDone && isSelected)) ? handleClick : undefined}
-          />
-        </motion.div>
-
-        {/* Accordion detail — done stage */}
-        <AnimatePresence>
-          {isDone && expandedCardIndex === i && city && (
-            <CityAccordion city={city} />
-          )}
-        </AnimatePresence>
-      </div>
+      <motion.div
+        key={i}
+        animate={{ opacity }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <TarotCard
+          state={state}
+          size="sm"
+          cityData={city}
+          isSelected={isSelecting && isSelected}
+          isFlipped={flipped}
+          onClick={(isSelecting || (isDone && isSelected)) ? handleClick : undefined}
+        />
+      </motion.div>
     );
   }
 
@@ -174,17 +272,15 @@ export default function TarotDeck({
     <div className="flex flex-col items-center">
       {/* Cards — fixed position */}
       <div>
-        {/* Desktop: single row */}
-        <div className="hidden md:flex justify-center items-start gap-3">
+        <div className="hidden md:flex justify-center gap-3">
           {Array.from({ length: count }, (_, i) => renderCard(i))}
         </div>
-        {/* Mobile: 3 + 2 */}
         <div className="flex flex-col items-center gap-3 md:hidden">
-          <div className="flex justify-center items-start gap-3">
+          <div className="flex justify-center gap-3">
             {Array.from({ length: Math.min(3, count) }, (_, i) => renderCard(i))}
           </div>
           {count > 3 && (
-            <div className="flex justify-center items-start gap-3">
+            <div className="flex justify-center gap-3">
               {Array.from({ length: count - 3 }, (_, j) => renderCard(j + 3))}
             </div>
           )}
@@ -218,7 +314,7 @@ export default function TarotDeck({
         </AnimatePresence>
       </div>
 
-      {/* Done: guide + retry */}
+      {/* Done: hint + actions */}
       {isDone && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -250,6 +346,16 @@ export default function TarotDeck({
           </div>
         </motion.div>
       )}
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightboxCity && (
+          <CityLightbox
+            city={lightboxCity}
+            onClose={() => setLightboxCity(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
