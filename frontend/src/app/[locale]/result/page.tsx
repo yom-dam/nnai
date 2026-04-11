@@ -117,6 +117,9 @@ export default function ResultPage() {
         return;
       }
 
+      // Payload consumed — remove so refresh won't re-trigger
+      localStorage.removeItem(RECOMMEND_PAYLOAD_KEY);
+
       setSessionId(data.session_id);
       setParsedData(data.parsed);
       setAllCities(topCities);
@@ -143,63 +146,58 @@ export default function ResultPage() {
   // ── Mount: restore or start ──────────────────────────────────────
 
   useEffect(() => {
+    const hasNewPayload = !!localStorage.getItem(RECOMMEND_PAYLOAD_KEY);
+
+    // If there's a fresh recommend payload, always start fresh
+    // (user just came from the form — ignore any stale session)
+    if (hasNewPayload) {
+      localStorage.removeItem(SESSION_V2_KEY);
+      localStorage.removeItem(TAROT_SESSION_KEY);
+      startRecommend();
+      return;
+    }
+
+    // No new payload — try to restore previous session
     const savedStr = localStorage.getItem(SESSION_V2_KEY);
     if (savedStr) {
       try {
         const saved = JSON.parse(savedStr) as SessionV2;
-        if (saved.stage === "selecting") {
-          // Don't restore selecting — start fresh
-          localStorage.removeItem(SESSION_V2_KEY);
-          localStorage.removeItem(TAROT_SESSION_KEY);
-        } else {
+        if (saved.stage !== "selecting" && saved.revealedCities?.length) {
           setSessionId(saved.session_id);
           setAllCities(saved.allCities ?? []);
           setSelectedIndices(saved.selectedIndices ?? []);
-          setRevealedCities(saved.revealedCities?.length ? saved.revealedCities : null);
+          setRevealedCities(saved.revealedCities);
           setParsedData(saved.parsedData ?? null);
-
-          let resumeStage: Stage = saved.stage;
-          if ((resumeStage === "reading" || resumeStage === "revealing") && !saved.revealedCities?.length) {
-            resumeStage = "selecting";
-          }
-          if (resumeStage !== "selecting" && resumeStage !== "loading") {
-            setFlippedIndices([0, 1, 2]);
-          }
-          // Skip revealing on restore — jump to complete
-          if (resumeStage === "revealing" || resumeStage === "reading") {
-            resumeStage = "complete";
-          }
-          setStage(resumeStage);
-          return;
-        }
-      } catch {
-        localStorage.removeItem(SESSION_V2_KEY);
-      }
-    }
-
-    // Legacy fallback (OAuth redirect)
-    const legacyStr = localStorage.getItem(TAROT_SESSION_KEY);
-    if (legacyStr) {
-      try {
-        const saved = JSON.parse(legacyStr) as TarotSession;
-        if (saved.session_id && saved.stage !== "selecting") {
-          setSessionId(saved.session_id);
-          setRevealedCities(saved.revealedCities?.length ? saved.revealedCities : null);
           setFlippedIndices([0, 1, 2]);
           setStage(saved.stage === "comparing" ? "comparing" : "complete");
           return;
         }
       } catch {
-        localStorage.removeItem(TAROT_SESSION_KEY);
+        // corrupted — ignore
       }
+      localStorage.removeItem(SESSION_V2_KEY);
     }
 
-    // No session — start fresh
-    if (!localStorage.getItem(RECOMMEND_PAYLOAD_KEY)) {
-      router.replace("/onboarding/form");
-      return;
+    // Legacy fallback (OAuth redirect return)
+    const legacyStr = localStorage.getItem(TAROT_SESSION_KEY);
+    if (legacyStr) {
+      try {
+        const saved = JSON.parse(legacyStr) as TarotSession;
+        if (saved.session_id && saved.revealedCities?.length) {
+          setSessionId(saved.session_id);
+          setRevealedCities(saved.revealedCities);
+          setFlippedIndices([0, 1, 2]);
+          setStage(saved.stage === "comparing" ? "comparing" : "complete");
+          return;
+        }
+      } catch {
+        // corrupted — ignore
+      }
+      localStorage.removeItem(TAROT_SESSION_KEY);
     }
-    startRecommend();
+
+    // No payload, no session — redirect to form
+    router.replace("/onboarding/form");
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Card selection ──────────────────────────────────────────────
