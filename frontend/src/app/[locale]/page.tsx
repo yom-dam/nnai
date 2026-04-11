@@ -48,6 +48,37 @@ export default function Home() {
             유형 테스트를 먼저 하면 추천이 더 정확해져요
           </p>
         </motion.div>
+
+        {/* Demo: skip form, go straight to card flow */}
+        <motion.div {...fadeUp(1.0)}>
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.setItem("recommend_payload", JSON.stringify({
+                nationality: "한국",
+                income_krw: 400,
+                immigration_purpose: "원격 근무",
+                lifestyle: ["일하기 좋은 인프라"],
+                languages: [],
+                timeline: "6개월 중기 체류",
+                preferred_countries: [],
+                preferred_language: "한국어",
+                persona_type: null,
+                income_type: "",
+                travel_type: "혼자 (솔로)",
+                children_ages: null,
+                dual_nationality: false,
+                readiness_stage: "",
+                has_spouse_income: "없음",
+                spouse_income_krw: 0,
+              }));
+              window.location.href = "/result";
+            }}
+            className="block w-full py-2.5 text-center text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+          >
+            카드 플로우 미리보기
+          </button>
+        </motion.div>
       </div>
     </div>
   );
