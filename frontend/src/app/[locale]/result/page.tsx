@@ -48,6 +48,7 @@ export default function ResultPage() {
   );
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
 
   // ── Persist session ──────────────────────────────────────────────
 
@@ -187,6 +188,10 @@ export default function ResultPage() {
         if (resumeStage === "reading" && !saved.revealedCities?.length) {
           resumeStage = "revealed";
         }
+        // If resuming at revealed/reading/comparing, cards are already flipped
+        if (resumeStage === "revealed" || resumeStage === "reading" || resumeStage === "comparing") {
+          setFlippedIndices([0, 1, 2]);
+        }
         setStage(resumeStage);
         return;
       } catch {
@@ -266,6 +271,7 @@ export default function ResultPage() {
       const data = (await res.json()) as { revealed_cities: CityData[] };
 
       setRevealedCities(data.revealed_cities);
+      setFlippedIndices([]);
       setStage("revealed");
 
       saveSession({
@@ -275,6 +281,9 @@ export default function ResultPage() {
         readingMarkdown: null,
         stage: "revealed",
       });
+
+      // Sequential flip sequence
+      startRevealSequence();
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : "카드 열기에 실패했어요.";
@@ -284,19 +293,26 @@ export default function ResultPage() {
     }
   }
 
-  // ── Auto-transition: revealed → reading after 2s ────────────────
+  // ── Sequential flip → auto-transition to reading ────────────────
 
-  useEffect(() => {
-    if (stage !== "revealed" || !revealedCities?.length) return;
-    const timer = setTimeout(() => {
+  function startRevealSequence() {
+    const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+    (async () => {
+      await delay(400);
+      setFlippedIndices([0]);
+      await delay(1100);
+      setFlippedIndices([0, 1]);
+      await delay(1100);
+      setFlippedIndices([0, 1, 2]);
+      await delay(1000);
       setStage("reading");
       saveSession({
         revealedCities: revealedCities ?? [],
         stage: "reading",
       });
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [stage, revealedCities, saveSession]);
+    })();
+  }
 
   // ── Request detail → OAuth gate + /api/detail ───────────────────
 
@@ -449,6 +465,7 @@ export default function ResultPage() {
             cities={allCities}
             selectedIndices={selectedIndices}
             revealedCities={null}
+            flippedIndices={[]}
             onToggleSelect={toggleSelect}
             onConfirm={handleConfirmSelection}
             isLoading={isLoading}
@@ -472,6 +489,7 @@ export default function ResultPage() {
             cities={allCities}
             selectedIndices={selectedIndices}
             revealedCities={revealedCities}
+            flippedIndices={flippedIndices}
             onToggleSelect={() => {}}
             onConfirm={() => {}}
             isLoading={false}

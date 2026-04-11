@@ -56,6 +56,7 @@ interface TarotCardProps {
   state: "back" | "front" | "locked";
   cityData?: CityData | null;
   isSelected?: boolean;
+  isFlipped?: boolean;
   onClick?: () => void;
 }
 
@@ -66,10 +67,9 @@ function CornerFlourish({
   position: "tl" | "tr" | "bl" | "br";
 }) {
   const base = "absolute bg-border";
-  const arm = 20; // px length of each arm
-  const t = 2; // px thickness
+  const arm = 20;
+  const t = 2;
 
-  // Each L has a horizontal and a vertical arm
   const posMap: Record<string, { h: string; v: string }> = {
     tl: {
       h: `top-0 left-0 rounded-tl-sm`,
@@ -93,16 +93,8 @@ function CornerFlourish({
 
   return (
     <>
-      {/* horizontal arm */}
-      <div
-        className={`${base} ${p.h}`}
-        style={{ width: arm, height: t }}
-      />
-      {/* vertical arm */}
-      <div
-        className={`${base} ${p.v}`}
-        style={{ width: t, height: arm }}
-      />
+      <div className={`${base} ${p.h}`} style={{ width: arm, height: t }} />
+      <div className={`${base} ${p.v}`} style={{ width: t, height: arm }} />
     </>
   );
 }
@@ -111,57 +103,13 @@ function CornerFlourish({
 function CompassRose() {
   return (
     <div className="relative flex items-center justify-center" style={{ width: 80, height: 80 }}>
-      {/* Outer circle */}
-      <div
-        className="absolute rounded-full border border-border"
-        style={{ width: 80, height: 80 }}
-      />
-
-      {/* Cardinal rays — horizontal */}
-      <div
-        className="absolute bg-border"
-        style={{ width: 80, height: 1, top: "50%", left: 0, transform: "translateY(-50%)" }}
-      />
-      {/* Cardinal rays — vertical */}
-      <div
-        className="absolute bg-border"
-        style={{ width: 1, height: 80, left: "50%", top: 0, transform: "translateX(-50%)" }}
-      />
-
-      {/* Diagonal rays — 45deg */}
-      <div
-        className="absolute bg-border"
-        style={{
-          width: 80,
-          height: 1,
-          top: "50%",
-          left: 0,
-          transform: "translateY(-50%) rotate(45deg)",
-        }}
-      />
-      {/* Diagonal rays — -45deg */}
-      <div
-        className="absolute bg-border"
-        style={{
-          width: 80,
-          height: 1,
-          top: "50%",
-          left: 0,
-          transform: "translateY(-50%) rotate(-45deg)",
-        }}
-      />
-
-      {/* Inner circle */}
-      <div
-        className="absolute rounded-full border border-primary"
-        style={{ width: 40, height: 40 }}
-      />
-
-      {/* Center dot */}
-      <div
-        className="absolute rounded-full bg-primary"
-        style={{ width: 8, height: 8 }}
-      />
+      <div className="absolute rounded-full border border-border" style={{ width: 80, height: 80 }} />
+      <div className="absolute bg-border" style={{ width: 80, height: 1, top: "50%", left: 0, transform: "translateY(-50%)" }} />
+      <div className="absolute bg-border" style={{ width: 1, height: 80, left: "50%", top: 0, transform: "translateX(-50%)" }} />
+      <div className="absolute bg-border" style={{ width: 80, height: 1, top: "50%", left: 0, transform: "translateY(-50%) rotate(45deg)" }} />
+      <div className="absolute bg-border" style={{ width: 80, height: 1, top: "50%", left: 0, transform: "translateY(-50%) rotate(-45deg)" }} />
+      <div className="absolute rounded-full border border-primary" style={{ width: 40, height: 40 }} />
+      <div className="absolute rounded-full bg-primary" style={{ width: 8, height: 8 }} />
     </div>
   );
 }
@@ -170,35 +118,28 @@ function CompassRose() {
 function BackFace({ isSelected }: { isSelected: boolean }) {
   return (
     <div
-      className={`relative w-full h-full rounded-lg flex flex-col items-center justify-center gap-4 bg-card border-[1.5px] ${
+      className={`absolute inset-0 rounded-lg flex flex-col items-center justify-center gap-4 bg-card border-[1.5px] ${
         isSelected ? "border-primary" : "border-border"
       }`}
-      style={
-        isSelected
-          ? { boxShadow: "0 0 16px 4px var(--ring)" }
-          : undefined
-      }
+      style={{
+        backfaceVisibility: "hidden",
+        WebkitBackfaceVisibility: "hidden",
+        ...(isSelected ? { boxShadow: "0 0 16px 4px var(--ring)" } : {}),
+      }}
     >
-      {/* Inner border */}
       <div
         className={`absolute rounded border ${
           isSelected ? "border-primary" : "border-border"
         } pointer-events-none`}
         style={{ inset: 6 }}
       />
-
-      {/* Corner flourishes (inside inner border) */}
       <div className="absolute pointer-events-none" style={{ inset: 6 }}>
         <CornerFlourish position="tl" />
         <CornerFlourish position="tr" />
         <CornerFlourish position="bl" />
         <CornerFlourish position="br" />
       </div>
-
-      {/* Compass rose */}
       <CompassRose />
-
-      {/* NNAI text */}
       <span className="font-mono text-[10px] tracking-[0.35em] text-border">
         NNAI
       </span>
@@ -211,100 +152,109 @@ function FrontFace({ cityData }: { cityData: CityData }) {
   const flag = FLAG_EMOJI[cityData.country_id] ?? "🌍";
   const visaText =
     cityData.visa_free_days > 0
-      ? `무비자 ${cityData.visa_free_days}일`
+      ? `${cityData.visa_free_days}일`
       : "비자 필요";
 
   return (
-    <motion.div
-      className="w-full h-full rounded-lg flex flex-col items-center justify-center px-4 py-5 bg-card border-[1.5px] border-border"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
+    <div
+      className="absolute inset-0 rounded-lg flex flex-col items-center justify-center px-4 py-5 bg-card border-[1.5px] border-border"
+      style={{
+        backfaceVisibility: "hidden",
+        WebkitBackfaceVisibility: "hidden",
+        transform: "rotateY(180deg)",
+      }}
     >
       {/* Flag */}
       <span className="leading-none" style={{ fontSize: 32 }}>
         {flag}
       </span>
 
-      {/* City name EN */}
-      <p className="font-mono text-sm font-medium text-foreground mt-2 text-center leading-tight">
-        {cityData.city}
-      </p>
-
       {/* City name KR */}
-      <p className="font-serif text-lg font-bold text-foreground text-center leading-tight">
+      <p className="font-serif text-lg font-bold text-foreground text-center leading-tight mt-2">
         {cityData.city_kr}
       </p>
 
+      {/* City name EN + country */}
+      <p className="font-mono text-xs text-muted-foreground text-center leading-tight mt-0.5 tracking-wide">
+        {cityData.city}, {cityData.country_id}
+      </p>
+
       {/* Gold divider */}
-      <div className="w-full h-px bg-border my-3.5" />
+      <div className="w-full h-px bg-border my-3" />
 
-      {/* Metrics */}
-      <div className="w-full space-y-2">
-        {/* Monthly cost */}
-        <MetricRow icon="💰" label="MONTHLY" value={toKRW(cityData.monthly_cost_usd)} />
-
-        {/* Visa-free */}
-        <MetricRow icon="🛂" label="VISA-FREE" value={visaText} />
-
-        {/* Internet */}
+      {/* Metrics — horizontal compact */}
+      <div className="w-full flex justify-around font-mono text-center">
+        <div className="flex flex-col items-center gap-0.5">
+          <span style={{ fontSize: 16 }}>💰</span>
+          <span className="text-[13px] font-medium text-foreground">
+            {toKRW(cityData.monthly_cost_usd)}
+          </span>
+        </div>
+        <div className="flex flex-col items-center gap-0.5">
+          <span style={{ fontSize: 16 }}>🛂</span>
+          <span className="text-[13px] font-medium text-foreground">
+            {visaText}
+          </span>
+        </div>
         {cityData.internet_mbps != null && (
-          <MetricRow icon="📶" label="INTERNET" value={`${cityData.internet_mbps} Mbps`} />
+          <div className="flex flex-col items-center gap-0.5">
+            <span style={{ fontSize: 16 }}>📶</span>
+            <span className="text-[13px] font-medium text-foreground">
+              {cityData.internet_mbps}
+            </span>
+          </div>
         )}
-      </div>
-
-      {/* Bottom divider */}
-      <div className="w-full h-px bg-border mt-3.5" />
-    </motion.div>
-  );
-}
-
-/* ── Metric Row ── */
-function MetricRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: string;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <span style={{ fontSize: 16, lineHeight: 1 }}>{icon}</span>
-      <div className="flex flex-col">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground leading-tight">
-          {label}
-        </span>
-        <span className="font-mono text-[13px] font-medium text-foreground leading-tight">
-          {value}
-        </span>
       </div>
     </div>
   );
 }
+
+/* ── Flip animation variants ── */
+const cardVariants = {
+  back: { rotateY: 0 },
+  front: { rotateY: 180 },
+};
 
 /* ── Main Component ── */
 export default function TarotCard({
   state,
   cityData,
   isSelected = false,
+  isFlipped = false,
   onClick,
 }: TarotCardProps) {
   const isLocked = state === "locked";
 
   return (
-    <motion.div
-      className={`relative select-none aspect-[2/3] ${isLocked ? "" : "cursor-pointer"}`}
-      whileTap={isLocked ? undefined : { scale: 1.02 }}
-      transition={{ duration: 0.1 }}
+    <div
+      className={`select-none aspect-[2/3] ${isLocked ? "" : "cursor-pointer"}`}
+      style={{ perspective: 1000 }}
       onClick={isLocked ? undefined : onClick}
     >
-      {state === "front" && cityData ? (
-        <FrontFace cityData={cityData} />
-      ) : (
+      <motion.div
+        className="relative w-full h-full"
+        style={{ transformStyle: "preserve-3d" }}
+        animate={isFlipped ? "front" : "back"}
+        variants={cardVariants}
+        transition={{ duration: 0.6, ease: "easeInOut" }}
+      >
+        {/* Back face — rotateY 0 (visible when not flipped) */}
         <BackFace isSelected={isSelected} />
-      )}
+
+        {/* Front face — rotateY 180 (visible when flipped) */}
+        {cityData ? (
+          <FrontFace cityData={cityData} />
+        ) : (
+          <div
+            className="absolute inset-0 rounded-lg bg-card border-[1.5px] border-border"
+            style={{
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+              transform: "rotateY(180deg)",
+            }}
+          />
+        )}
+      </motion.div>
 
       {/* Lock overlay */}
       {isLocked && (
@@ -312,6 +262,6 @@ export default function TarotCard({
           <span style={{ fontSize: 32 }}>🔒</span>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
