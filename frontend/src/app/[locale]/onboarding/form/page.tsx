@@ -122,7 +122,7 @@ const INITIAL_FORM: FormData = {
   tax_sensitivity: "",
   travel_type: "",
   children_ages: [],
-  has_spouse_income: "없음",
+  has_spouse_income: "",
   spouse_income_krw: 0,
   preferred_countries: [],
   lifestyle: [],
@@ -229,7 +229,7 @@ export default function FormPage() {
         total_budget_krw: isShortStay && form.total_budget ? Number(form.total_budget) : null,
         tax_sensitivity: isShortStay ? "" : form.tax_sensitivity,
         children_ages: hasChildren(form.travel_type) ? form.children_ages : null,
-        has_spouse_income: hasSpouse(form.travel_type) ? form.has_spouse_income : "없음",
+        has_spouse_income: hasSpouse(form.travel_type) ? (form.has_spouse_income || "없음") : "없음",
         spouse_income_krw: hasSpouse(form.travel_type) && form.has_spouse_income === "있음" ? form.spouse_income_krw : 0,
         income_type: "",
         lifestyle: form.lifestyle,
@@ -278,6 +278,7 @@ export default function FormPage() {
         if (children) return false; // multi-select → needs button
         if (spouse) {
           if (!isShortStay) {
+            if (form.has_spouse_income === "") return false; // 아직 선택 안 함
             if (form.has_spouse_income === "없음") return true;
             if (form.has_spouse_income === "있음") return form.spouse_income_krw > 0;
             return false;
@@ -324,7 +325,7 @@ export default function FormPage() {
       case 1: resetFields.immigration_purpose = ""; break;
       case 2: resetFields.timeline = ""; resetFields.stay_style = ""; break;
       case 3: resetFields.income_range = ""; resetFields.total_budget = ""; resetFields.tax_sensitivity = ""; break;
-      case 4: resetFields.travel_type = ""; resetFields.has_spouse_income = "없음"; resetFields.spouse_income_krw = 0; resetFields.children_ages = []; break;
+      case 4: resetFields.travel_type = ""; resetFields.has_spouse_income = ""; resetFields.spouse_income_krw = 0; resetFields.children_ages = []; break;
     }
 
     setForm((f) => ({ ...f, ...resetFields }));
