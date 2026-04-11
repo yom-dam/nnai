@@ -79,22 +79,22 @@ function CityCardWithAccordion({ city }: { city: CityData }) {
               {/* Links */}
               <div className="flex flex-wrap gap-3 text-xs">
                 {city.visa_url && (
-                  <a href={city.visa_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)" }}>
+                  <a href={city.visa_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>
                     비자 정보 →
                   </a>
                 )}
                 {city.flatio_search_url && (
-                  <a href={city.flatio_search_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)" }}>
+                  <a href={city.flatio_search_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>
                     숙소 찾기 →
                   </a>
                 )}
                 {city.anyplace_search_url && (
-                  <a href={city.anyplace_search_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)" }}>
+                  <a href={city.anyplace_search_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>
                     Anyplace →
                   </a>
                 )}
                 {city.nomad_meetup_url && (
-                  <a href={city.nomad_meetup_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)" }}>
+                  <a href={city.nomad_meetup_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>
                     밋업 →
                   </a>
                 )}

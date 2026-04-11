@@ -85,17 +85,17 @@ function CompassRose({ diameter }: { diameter: number }) {
   return (
     <svg width={diameter} height={diameter} viewBox={`0 0 ${diameter} ${diameter}`} fill="none">
       {/* Outer circle */}
-      <circle cx={r} cy={r} r={r - 1} stroke="var(--accent)" strokeWidth={1} />
+      <circle cx={r} cy={r} r={r - 1} stroke="var(--primary)" strokeWidth={1} />
       {/* Cross */}
-      <line x1={0} y1={r} x2={diameter} y2={r} stroke="var(--accent)" strokeWidth={0.8} />
-      <line x1={r} y1={0} x2={r} y2={diameter} stroke="var(--accent)" strokeWidth={0.8} />
+      <line x1={0} y1={r} x2={diameter} y2={r} stroke="var(--primary)" strokeWidth={0.8} />
+      <line x1={r} y1={0} x2={r} y2={diameter} stroke="var(--primary)" strokeWidth={0.8} />
       {/* Diagonals */}
-      <line x1={r - r * 0.707} y1={r - r * 0.707} x2={r + r * 0.707} y2={r + r * 0.707} stroke="var(--accent)" strokeWidth={0.5} />
-      <line x1={r + r * 0.707} y1={r - r * 0.707} x2={r - r * 0.707} y2={r + r * 0.707} stroke="var(--accent)" strokeWidth={0.5} />
+      <line x1={r - r * 0.707} y1={r - r * 0.707} x2={r + r * 0.707} y2={r + r * 0.707} stroke="var(--primary)" strokeWidth={0.5} />
+      <line x1={r + r * 0.707} y1={r - r * 0.707} x2={r - r * 0.707} y2={r + r * 0.707} stroke="var(--primary)" strokeWidth={0.5} />
       {/* Inner circle */}
-      <circle cx={r} cy={r} r={ir} stroke="var(--accent)" strokeWidth={0.8} />
+      <circle cx={r} cy={r} r={ir} stroke="var(--primary)" strokeWidth={0.8} />
       {/* Center dot */}
-      <circle cx={r} cy={r} r={dotR} fill="var(--accent)" />
+      <circle cx={r} cy={r} r={dotR} fill="var(--primary)" />
     </svg>
   );
 }
@@ -112,9 +112,9 @@ function BackFace({ isSelected, size }: { isSelected: boolean; size: CardSize })
         borderRadius: 12,
         background: "var(--card)",
         border: isSelected
-          ? "2px solid #c9a84c"
+          ? "2px solid var(--primary)"
           : "1px solid var(--border)",
-        boxShadow: isSelected ? "0 0 20px 4px rgba(201,168,76,0.35), 0 0 60px 8px rgba(201,168,76,0.12)" : "none",
+        boxShadow: isSelected ? "0 0 20px 4px var(--ring)" : "none",
         backfaceVisibility: "hidden",
         WebkitBackfaceVisibility: "hidden",
       }}
